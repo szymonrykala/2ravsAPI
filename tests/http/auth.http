@@ -1,0 +1,6 @@
+@baseAddress = 'http://192.168.43.253:8080'
+
+POST $baseAddress+/auth HTTP/1.1
+content-type: application/json
+
+{}
