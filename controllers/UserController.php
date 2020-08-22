@@ -7,38 +7,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 require_once __DIR__ . "/Controller.php";
 
 
-
-// class Vieww
-// {
-//     public $response = null;
-//     public function __construct()
-//     {
-//         $this->response = new Response();
-//         $this->response->withHeader('content-type', 'application/json');
-//     }
-
-//     public function set(array $data, int $code)
-//     {
-//     }
-
-//     public function response(){
-//         return $this->response->withStatus($this->d);
-//     }
-// }
-
 class UserController extends Controller
 {
     private $User;
     private $Acces;
-    // private $View;
     protected $DIcontainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIcontainer = $DIcontainer;
+        parent::__construct($DIcontainer);
         $this->User = $DIcontainer->get('User');
-        $this->Log = $DIcontainer->get("Log");
-        // $this->View = new View();
     }
 
     /* {
@@ -62,10 +40,15 @@ class UserController extends Controller
                 'password' => $userPassword,
                 'id' => $userID,
                 'acces_id' => $accesID,
-                'login_fails' => $loginFails
+                'login_fails' => $loginFails,
+                'activated' => $activated
             ) = $this->User->read(array('email' => $email))[0];
         } catch (NothingFoundException $e) {
             throw new AuthenticationException('(email)');
+        }
+
+        if ((bool)$activated === false) {
+            throw new ActivationException("User account is not activated");
         }
 
         if ($loginFails >= 5) {
@@ -142,16 +125,33 @@ class UserController extends Controller
 
         /* Mail->register($key)->sendTo($email); */
 
-        $response->getBody()->write("rejestracja");
-        return $response;
+        // $response->getBody()->write("");
+        return $response->withStatus(201, "User registered");
     }
 
     //##########################
+    // /users/activate?key=<string key>
     public function activateUser(Request $request, Response $response, $args): Response
     {
+        $key = $this->getQueryParam($request, 'key')[0];
 
-        $response->getBody()->write("User controller");
-        return $response;
+        if (!$this->User->exist(['action_key' => $key])) {
+            //if user with given key was not found
+            throw new ActivationException('no such activation key, or user already activated');
+        }
+
+        list(
+            'id' => $userID,
+            'email' => $email,
+        ) = $this->User->read(['action_key' => $key])[0];
+
+        $this->User->update($userID, ['activated' => 1, 'action_key' => '1']);
+        $this->Log->create([
+            'user_id' => $userID,
+            'message' => "Account user $email was activated"
+        ]);
+        // $response->getBody();
+        return $response->withStatus(201, "User activated");
     }
 
     public function resendActivationEmail(Request $request, Response $response, $args): Response
@@ -172,8 +172,8 @@ class UserController extends Controller
     public function getAllUsers(Request $request, Response $response, $args): Response
     {
 
-        $response->getBody()->write("User controller");
-        return $response;
+        $response->getBody()->write('');
+        return $response->withStatus(200);
     }
 
     public function getSpecificUser(Request $request, Response $response, $args): Response

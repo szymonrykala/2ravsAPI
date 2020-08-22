@@ -43,6 +43,7 @@ function myErrorHandler(Exception $e)
 {
     $data = [
         'succes' => false,
+        'status' => $e->httpCode,
         'error' => [
             'message' => $e->getMessage(),
             'code' => $e->getCode()
@@ -51,7 +52,6 @@ function myErrorHandler(Exception $e)
     http_response_code($e->httpCode);
     header('content-type:application/json');
     echo json_encode($data);
-
     return true;
 }
 
@@ -66,8 +66,8 @@ set_exception_handler("myErrorHandler");
 
 
 $rootApp->post('/auth', \UserController::class . ':verifyUser'); //open endpoint
-$rootApp->get('/activate', \UserController::class . ':activateUser'); // open endpoint
 $rootApp->post('/users', \UserController::class . ':registerNewUser'); // open endpoint
+$rootApp->get('/users/activate', \UserController::class . ':activateUser'); // open endpoint
 
 $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 

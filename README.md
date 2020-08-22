@@ -1,61 +1,67 @@
 # 2ravsAPI
+
 Room Reservation and Visualisation System API
 
 ## Changelog
-* not yet
+
+-   change endpoint /activate --> /users/activate
+-   Added ActivationException - 3007
+-   done activation
 
 ## API endpoints
+
 1. Open:
-    * POST /auth
-    * GET /activate
-    * POST /users
+    - POST /auth <--user authorization
+    - GET  /users/activate <-- account activation
+    - POST /users <-- user registration
 
 2. Closed:
-    * GET /logs
-    * GET /logs/search
-    * DELETE /logs/{id}
 
-    * GET /addresses
-    * POST /addresses
+    - GET /logs
+    - GET /logs/search
+    - DELETE /logs/{id}
 
-    * GET /addresses/{id}
-    * PATCH /addresses/{id}
-    * DELETE /addresses/{id}
+    - GET /addresses
+    - POST /addresses
 
-    * GET /acces
-    * POST /acces
+    - GET /addresses/{id}
+    - PATCH /addresses/{id}
+    - DELETE /addresses/{id}
 
-    * GET /acces/{id}
-    * PATCH /acces/{id}
-    * DELETE /acces/{id}
+    - GET /acces
+    - POST /acces
 
-    * GET /reservations
-    * POST /reservations
-    * GET /reservations/{id}
-    * PATCH /reservations/{id}
-    * DELETE /reservations/{id}
+    - GET /acces/{id}
+    - PATCH /acces/{id}
+    - DELETE /acces/{id}
 
-    * GET reservations/search
+    - GET /reservations
+    - POST /reservations
+    - GET /reservations/{id}
+    - PATCH /reservations/{id}
+    - DELETE /reservations/{id}
 
-    * GET /users
+    - GET reservations/search
 
-    * GET /users/{id}
-    * PATCH /users/{id}
-    * DELETE /users/{id}
-    * GET /users/{id}/reservations
+    - GET /users
 
-    * GET /buildings
-    * POST /buildings
-    * GET /buildings/search
+    - GET /users/{id}
+    - PATCH /users/{id}
+    - DELETE /users/{id}
+    - GET /users/{id}/reservations
 
-    * GET /buildings/{id}
-    * PATCH /buildings/{id}
-    * DELETE /buildings/{id}
-    * GET /buildings/{id}/reservations
+    - GET /buildings
+    - POST /buildings
+    - GET /buildings/search
 
-    * GET /buildings/{id}/rooms
-    * POST /buildings/{id}/rooms
+    - GET /buildings/{id}
+    - PATCH /buildings/{id}
+    - DELETE /buildings/{id}
+    - GET /buildings/{id}/reservations
 
-    * GET /buildings/{id}/rooms/{idp}
-    * PATCH /buildings/{id}/rooms/{idp}
-    * DELETE /buildings/{id}/rooms/{idp}
+    - GET /buildings/{id}/rooms
+    - POST /buildings/{id}/rooms
+
+    - GET /buildings/{id}/rooms/{idp}
+    - PATCH /buildings/{id}/rooms/{idp}
+    - DELETE /buildings/{id}/rooms/{idp}
