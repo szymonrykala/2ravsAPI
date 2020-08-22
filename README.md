@@ -17,7 +17,7 @@ Room Reservation and Visualisation System API
 
     * GET /addresses
     * POST /addresses
-    * 
+
     * GET /addresses/{id}
     * PATCH /addresses/{id}
     * DELETE /addresses/{id}
