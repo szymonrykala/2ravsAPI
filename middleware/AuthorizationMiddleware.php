@@ -42,10 +42,10 @@ class AuthorizationMiddleware
 
     public function getTarget(Request $request): string
     {
-        $path = explode('/', $request->getRequestTarget());
+        $uri = explode('?', $request->getRequestTarget())[0];
+        $path = explode('/', $uri);
         $len = count($path) - 1;
         $target = is_numeric($path[$len]) ? $path[$len - 1] : $path[$len];
-        // echo $target;
 
         return $target;
     }

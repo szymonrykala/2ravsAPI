@@ -23,7 +23,7 @@ class JSONMiddleware
         if ($body !== null) {
             $body = json_decode($body);
         }
-        $data = ['succes' => true, 'status' => $reason, 'data' => $body];
+        $data = ['succes' => true, 'data' => $body];
 
         $response = new Response();
         $response->getBody()->write(json_encode($data));

@@ -16,7 +16,7 @@ class UserController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->User = $DIcontainer->get('User');
+        $this->User = $this->DIcontainer->get('User');
     }
 
     /* {
@@ -169,22 +169,52 @@ class UserController extends Controller
         return $response;
     }
 
+    // GET /users?ext=<acces_id>
     public function getAllUsers(Request $request, Response $response, $args): Response
     {
+        $ext = $this->getQueryParam($request, 'ext');
+        if (in_array('acces_id', $ext)) {
+            $Acces = $this->DIcontainer->get('Acces');
+        }
 
-        $response->getBody()->write('');
+        $users = $this->User->read();
+        foreach ($users as &$user) {
+            if (in_array('acces_id', $ext)) {
+                $user['acces'] = $Acces->read(['id' => $user['acces_id']])[0];
+                unset($user['acces_id']);
+            }
+            unset($user['password']);
+            unset($user['action_key']);
+        }
+        $response->getBody()->write(json_encode($users));
         return $response->withStatus(200);
     }
 
+    // GET /users/{user_id}?ext=<acces_id>
     public function getSpecificUser(Request $request, Response $response, $args): Response
     {
+        $userID = $args['user_id'];
+        $ext = $this->getQueryParam($request, 'ext');
+        if (in_array('acces_id', $ext)) {
+            $Acces = $this->DIcontainer->get('Acces');
+        }
 
-        $response->getBody()->write("User controller");
-        return $response;
+        $user = $this->User->read(['id' => $userID])[0];
+
+        if (in_array('acces_id', $ext)) {
+            $user['acces'] = $Acces->read(['id' => $user['acces_id']])[0];
+            unset($user['acces_id']);
+        }
+        unset($user['password']);
+        unset($user['action_key']);
+
+        $response->getBody()->write(json_encode($user));
+        return $response->withStatus(200);
     }
 
     public function updateUserInformations(Request $request, Response $response, $args): Response
     {
+        
 
         $response->getBody()->write("User controller");
         return $response;

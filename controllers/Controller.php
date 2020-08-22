@@ -15,8 +15,8 @@ abstract class Controller
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DI = $DIcontainer;
-        $this->Log = $this->DI->get("Log");
+        $this->DIcontainer = $DIcontainer;
+        $this->Log = $this->DIcontainer->get("Log");
     }
 
     protected function generateToken(int $userID, int $accesID, string $email): string

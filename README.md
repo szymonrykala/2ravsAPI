@@ -8,11 +8,14 @@ Room Reservation and Visualisation System API
 -   Added ActivationException - 3007
 -   done activation
 
+-   GET user and users informations 
+
 ## API endpoints
 
 1. Open:
+
     - POST /auth <--user authorization
-    - GET  /users/activate <-- account activation
+    - GET /users/activate <-- account activation
     - POST /users <-- user registration
 
 2. Closed:
@@ -43,9 +46,9 @@ Room Reservation and Visualisation System API
 
     - GET reservations/search
 
-    - GET /users
+    - GET /users <-- getting users informations
 
-    - GET /users/{id}
+    - GET /users/{id} <-- getting spec. user informations
     - PATCH /users/{id}
     - DELETE /users/{id}
     - GET /users/{id}/reservations

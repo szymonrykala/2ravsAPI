@@ -2,7 +2,7 @@
 
 class NothingFoundException extends Exception
 {
-    public $httpCode = 204;
+    public $httpCode = 404;
     public function __construct(string $source)
     {
         $this->source = $source;
