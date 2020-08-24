@@ -7,7 +7,7 @@ class RequiredParameterException extends Exception
     {
         $params = "";
         foreach ($requiredParameters as $param=>$value) {
-            $params .= "\"$param\", ";
+            $params .= "'$param', ";
         }
         $message = "Parameters $params are required";
         $code = 3002;

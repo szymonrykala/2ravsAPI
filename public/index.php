@@ -88,12 +88,15 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/acces', function (\Slim\Routing\RouteCollectorProxy $acces) {
-        $acces->get('', \AccesController::class . ':getAllAccesTypes');
-        $acces->post('', \AccesController::class . ':createNewAccesType');
-        $acces->get('/{acces_id:[0-9]+}', \AccesController::class . ':getAccesTypeByID');
-        $acces->patch('/{acces_id:[0-9]+}', \AccesController::class . ':updateAccesType');
-        $acces->delete('/{acces_id:[0-9]+}', \AccesController::class . ':deleteAccesType');
+    $app->group('/acces', function (\Slim\Routing\RouteCollectorProxy $acceses) {
+        $acceses->get('', \AccesController::class . ':getAllAccesTypes');
+        $acceses->post('', \AccesController::class . ':createNewAccesType');
+        
+        $acceses->group('/{acces_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $acces) {
+            $acces->get('', \AccesController::class . ':getAccesTypeByID');
+            $acces->patch('', \AccesController::class . ':updateAccesType');
+            $acces->delete('', \AccesController::class . ':deleteAccesType');
+        });
     });
 
     $app->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
@@ -112,7 +115,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
         $user->get('', \UserController::class . ':getAllUsers');
 
-        $user->group('/{user_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
+        $user->group('/{userID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
             $specUser->get('', \UserController::class . ':getSpecificUser');
             $specUser->patch('', \UserController::class . ':updateUserInformations');
             $specUser->delete('', \UserController::class . ':deleteUser');

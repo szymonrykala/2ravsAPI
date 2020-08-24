@@ -12,11 +12,13 @@ class AuthorizationMiddleware
 {
     private $accesTable = array();
     private $target = '';
+    private $resourceNumber = null;
     private $Acces = null;
 
     public function __construct(DI\Container $container)
     {
         $this->Acces = $container->get("Acces");
+        $this->User = $container->get("User");
     }
 
     public function __invoke(Request $request, RequestHandler $handler): Response
@@ -25,6 +27,13 @@ class AuthorizationMiddleware
         $this->target = $this->getTarget($request);
 
         $userAccesID = $request->getAttribute("acces_id");
+        $userID = $request->getAttribute("user_id");
+        list("acces_id" => $currentAccesID) = $this->User->read(['id' => $userID])[0];
+
+        if ($userAccesID !== $currentAccesID) {
+            throw new AuthorizationException("Your acces has changed - please login again");
+        }
+
         $this->fillAccesTable($request);
 
         if ($this->accesTable[$this->target][$method] === false) {
@@ -45,15 +54,22 @@ class AuthorizationMiddleware
         $uri = explode('?', $request->getRequestTarget())[0];
         $path = explode('/', $uri);
         $len = count($path) - 1;
-        $target = is_numeric($path[$len]) ? $path[$len - 1] : $path[$len];
-
-        return $target;
+        if (is_numeric($path[$len])) {
+            $this->resourceNumber = array_pop($path);
+        }
+        $resource =  array_pop($path);
+        return $resource;
     }
 
     public function fillAccesTable(Request $request): void
     {
         list("acces_id" => $accesID, "user_id" => $userID) = $request->getAttributes();
         $result = $this->Acces->read(["id" => $accesID])[0];
+
+        $sameUser = false;
+        if ($this->target === 'users') {
+            $sameUser = ((int) $this->resourceNumber === (int) $userID);
+        }
 
         $this->accesTable = array(
             'statistics' => array(
@@ -86,8 +102,8 @@ class AuthorizationMiddleware
             'users' => array(
                 'GET' => 1,
                 'POST' => 1,
-                'PATCH' => $result['users_edit'],
-                'DELETE' => $result["users_edit"]
+                'PATCH' => $sameUser || $result['users_edit'],
+                'DELETE' => $sameUser || $result["users_edit"]
             ),
             'logs' => array(
                 'GET' => $result['logs_view'],

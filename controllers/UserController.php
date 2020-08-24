@@ -68,6 +68,7 @@ class UserController extends Controller
                 'user_id' => $userID,
                 'message' => "User $email veryfing failed"
             ));
+            throw new AuthenticationException("password is not correct");
         }
 
         $response->getBody()->write(json_encode($data));
@@ -193,7 +194,7 @@ class UserController extends Controller
     // GET /users/{user_id}?ext=<acces_id>
     public function getSpecificUser(Request $request, Response $response, $args): Response
     {
-        $userID = $args['user_id'];
+        $userID = $args['userID'];
         $ext = $this->getQueryParam($request, 'ext');
         if (in_array('acces_id', $ext)) {
             $Acces = $this->DIcontainer->get('Acces');
@@ -212,16 +213,85 @@ class UserController extends Controller
         return $response->withStatus(200);
     }
 
+    //some data have to be passed else "bad request"
+    /* optional: 
+    {
+        "name":{string},
+        "surname":{string},
+        "email":{string}
+        "password":{string},
+        "new_password":{string},
+    } */
     public function updateUserInformations(Request $request, Response $response, $args): Response
     {
-        
+        $qData = $this->getFrom($request);
+        $currentUser = (int) $request->getAttribute('user_id');
+        $editedUser = $args['userID'];
+        $accesID = $request->getAttribute('acces_id');
+        $userEmail = $request->getAttribute('email');
 
-        $response->getBody()->write("User controller");
-        return $response;
+        $data = [];
+        if (isset($qData['name'])) {
+            $data['name'] = $qData['name'];
+        }
+
+        if (isset($qData['surname'])) {
+            $data['surname'] = $qData['surname'];
+        }
+
+        if (isset($qData['email']) && $qData['email'] !== $userEmail) {
+            if (!filter_var($qData['email'], FILTER_VALIDATE_EMAIL)) {
+                throw new CredentialsPolicyException('email is not correct format');
+            }
+            $data['email'] = $qData['email'];
+        }
+
+        if (
+            (isset($qData['password']) && !isset($qData['new_password'])) ||
+            (!isset($qData['password']) && isset($qData['new_password']))
+        ) {
+            throw new RequiredParameterException(["password" => 0, "new_password" => 1]);
+        } elseif (isset($qData['password']) && isset($qData['new_password'])) {
+
+            list('password' => $passwordHash) = $this->User->read(['id' => $editedUser])[0];
+
+            if (password_verify($qData['password'], $passwordHash)) {
+                $password = $qData['new_password'];
+
+                $passLen = strlen($password);
+                preg_match_all('/[0-9]/', $password, $numsCount);
+                if ($passLen < 10 || $passLen > 20) {
+                    throw new CredentialsPolicyException('unwanted password length (min=10, max=20)');
+                } elseif (strpos(' ', $password)) {
+                    throw new CredentialsPolicyException('unwanted spaces in password');
+                } elseif (count($numsCount[0]) < 4) {
+                    throw new CredentialsPolicyException('password requires 4 digits');
+                }
+                $options = [
+                    'cost' => 12,
+                ];
+                $data['password'] = password_hash($password, PASSWORD_BCRYPT, $options);
+            }
+        }
+        $dataString = implode(',', array_keys($data));
+        $this->User->update($editedUser, $data);
+        $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data: $dataString"]);
+        // $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
     }
 
     public function deleteUser(Request $request, Response $response, $args): Response
     {
+        $deletedUser = (int) $args['userID'];
+        $userEmail = $request->getAttribute('email');
+
+        list('email' => $deletedUserEmail) = $this->User->read(['id' => $deletedUser])[0];
+
+        $this->User->delete($deletedUser);
+        $this->Log->create([
+            'user_id' => $deletedUser,
+            "message" => "User $userEmail deleted $deletedUserEmail"
+        ]);
 
         $response->getBody()->write("User controller");
         return $response;
