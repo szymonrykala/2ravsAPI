@@ -102,7 +102,7 @@ class Reservation extends Model
         } else {
             //room is bookable?
             if ((bool)$roomExist[0]['blockade']) {
-                throw new ReservationException("Specified room is not bookable");
+                throw new ReservationLockException("Specified room is not bookable");
             }
         }
 

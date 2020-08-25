@@ -70,6 +70,7 @@ class ReservationController extends Controller
         return $response;
     }
 
+
     public function confirmReservation(Request $request, Response $response, $args): Response
     {
         $response->getBody()->write("Middleware");
@@ -116,22 +117,94 @@ class ReservationController extends Controller
         return $response;
     }
 
-
+    // POST /buildings/{building_id}/rooms/{room_id}/reservations
+    /* {
+        "title":"rezerwacja v1",
+        "subtitle":"podtytuł rezerwacji, opis",
+        "start_time":"10:00",
+        "end_time":"11:15",
+        "date":"2020-08-28"
+    } */
     public function createReservation(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Middleware");
-        return $response->withHeader('Content-Type', 'application/json');
+        $currentUser = $request->getAttribute('user_id');
+        $currentUserMail = $request->getAttribute('email');
+        $buildingID = (int)$args['building_id'];
+        $roomID = (int)$args['room_id'];
+
+        list(
+            "title" => $title,
+            "subtitle" => $subtitle,
+            "start_time" => $startTime,
+            "end_time" => $endTime,
+            "date" => $date
+        ) = $this->getFrom($request, [
+            "title" => 'string',
+            "subtitle" => "string",
+            "start_time" => "string",
+            "end_time" => "string",
+            "date" => "string"
+        ]);
+
+        $reservationID = $this->Reservation->create([
+            "title" => $title,
+            "subtitle" => $subtitle,
+            "start_time" => $startTime,
+            "end_time" => $endTime,
+            "date" => $date,
+            "room_id" => $roomID,
+            "building_id" => $buildingID,
+            "user_id" => $currentUser
+        ]);
+        $this->Log->create([
+            'user_id' => $currentUser,
+            'reservation_id' => $reservationID,
+            'room_id' => $roomID,
+            'building_id' => $buildingID,
+            'message' => "User $currentUserMail created reservation"
+        ]);
+
+        return $response->withStatus(201, "Reservation created");
     }
 
+    // PATCH /reservations/{reservation_id}
+    /* {
+        "title":"rezerwacja v1",
+        "subtitle":"podtytuł rezerwacji, opis",
+        "start_time":"10:00",
+        "end_time":"11:15",
+        "date":"2020-08-28"
+    } */
     public function updateReservationByID(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Middleware");
-        return $response->withHeader('Content-Type', 'application/json');
+        $data = $request->getParsedBody();
+        $reservationID = $args['reservation_id'];
+        $currentUser = $request->getAttribute('user_id');
+        $currentUserMail = $request->getAttribute('email');
+
+        $this->Reservation->update($reservationID, $data);
+        $this->Log->create([
+            'user_id' => $currentUser,
+            'reservation_id' => $reservationID,
+            'message' => "User $currentUserMail deleted reservation id=$reservationID"
+        ]);
+        return $response->withStatus(200, "Reservation updated");
     }
 
+    // DELETE /reservations/{reservation_id}
     public function deleteReservationsByID(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Middleware");
-        return $response->withHeader('Content-Type', 'application/json');
+        $currentUser = $request->getAttribute('user_id');
+        $currentUserMail = $request->getAttribute('email');
+        $reservationID = (int)$args['reservation_id'];
+
+        $this->Reservation->delete((int) $args['reservation_id']);
+        $this->Log->create([
+            'user_id' => (int)$currentUser,
+            'reservation_id' => $reservationID,
+            'message' => "User $currentUserMail deleted reservation with id=$reservationID"
+        ]);
+
+        return $response->withStatus(200);
     }
 }

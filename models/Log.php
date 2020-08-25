@@ -4,7 +4,7 @@ require_once __DIR__ . '/Model.php';
 class Log extends Model
 {
     protected $tableName = 'logs';
-    public $unUpdateAble = array('id', 'created_at', 'building_id', 'room_id', 'reservation_id');
+    public $unUpdateAble = array('id', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id');
 
     public function __construct(DBInterface $db)
     {
@@ -38,9 +38,6 @@ class Log extends Model
         foreach ($data as $key => &$value) {
             if (empty($value)) {
                 throw new EmptyVariableException($key);
-            }
-            if (in_array($key, $this->unUpdateAble)) {
-                throw new UnUpdateableParameterException($key);
             }
         }
 

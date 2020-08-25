@@ -41,9 +41,9 @@ Room Reservation and Visualisation System API
 
     - GET /reservations     👌
     - GET /reservations/{id}    👌
-    - POST /reservations        
+    - POST /reservations    👌
     - PATCH /reservations/{id}
-    - DELETE /reservations/{id}
+    - DELETE /reservations/{id}     👌bug
 
     - GET reservations/search
 
