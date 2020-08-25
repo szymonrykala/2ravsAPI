@@ -16,25 +16,25 @@ class Reservation extends Model
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'room_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'building_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'user_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'confirming_user_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'confirmed':
                     $value = (bool) $value;
                     break;
                 default:
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    $value = (string) filter_var($value, FILTER_SANITIZE_STRING);
                     break;
             }
         }

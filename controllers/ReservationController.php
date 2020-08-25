@@ -17,7 +17,7 @@ class ReservationController extends Controller
     }
 
     // ?ext=user_id,building_id,room_id...
-    public function handleExtensions(array $reservations, $extensions): array
+    public function handleExtensions(array $reservations,array $extensions): array
     {
         if (in_array('room_id', $extensions)) {
             $Room = $this->DIcontainer->get('Room');
@@ -42,10 +42,14 @@ class ReservationController extends Controller
             if (in_array('user_id', $extensions)) {
                 $reservation['user'] = $User->read(['id' => $reservation['user_id']])[0];
                 unset($reservation['user_id']);
+                unset($reservation['user']['password']);
+                unset($reservation['user']['action_key']);
             }
             if (in_array('confirming_user_id', $extensions) && !empty($reservation['confirming_user_id'])) {
                 $reservation['confirming_user'] = $User->read(['id' => $reservation['confirming_user_id']])[0];
                 unset($reservation['confirming_user_id']);
+                unset($reservation['confirming_user']['password']);
+                unset($reservation['confirming_user']['action_key']);
             }
         }
         return $reservations;

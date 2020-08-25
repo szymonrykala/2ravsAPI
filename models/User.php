@@ -15,30 +15,6 @@ class User extends Model
     {
         foreach ($data as $key => &$value) {
             switch ($key) {
-                case 'name':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'surname':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'password':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'last_login':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'email':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'updated_at':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'created_at':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'action_key':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
                 case 'id':
                     $value = (int) $value;
                     break;
@@ -52,7 +28,7 @@ class User extends Model
                     $value = (bool) $value;
                     break;
                 default:
-                    unset($data[$key]);
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
                     break;
             }
         }

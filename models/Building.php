@@ -19,7 +19,7 @@ class Building extends Model
                     $value = filter_var($value, FILTER_SANITIZE_STRING);
                     break;
                 default:
-                    $value = (string) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
             }
         }
