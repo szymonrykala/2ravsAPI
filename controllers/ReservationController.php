@@ -17,8 +17,10 @@ class ReservationController extends Controller
     }
 
     // ?ext=user_id,building_id,room_id...
-    public function handleExtensions(array $reservations,array $extensions): array
+    private function handleExtensions(array $reservations, Request $request): array
     {
+        $extensions = $this->getQueryParam($request, 'ext');
+
         if (in_array('room_id', $extensions)) {
             $Room = $this->DIcontainer->get('Room');
         }
@@ -28,7 +30,6 @@ class ReservationController extends Controller
         if (in_array('user_id', $extensions) || in_array('confirming_user_id', $extensions)) {
             $User = $this->DIcontainer->get('User');
         }
-
 
         foreach ($reservations as &$reservation) {
             if (in_array('room_id', $extensions)) {
@@ -44,22 +45,29 @@ class ReservationController extends Controller
                 unset($reservation['user_id']);
                 unset($reservation['user']['password']);
                 unset($reservation['user']['action_key']);
+                unset($reservation['user']['login_fails']);
             }
-            if (in_array('confirming_user_id', $extensions) && !empty($reservation['confirming_user_id'])) {
+            if (in_array('confirming_user_id', $extensions) && $reservation['confirmed']) {
                 $reservation['confirming_user'] = $User->read(['id' => $reservation['confirming_user_id']])[0];
                 unset($reservation['confirming_user_id']);
                 unset($reservation['confirming_user']['password']);
                 unset($reservation['confirming_user']['action_key']);
+                unset($reservation['confirming_user']['login_fails']);
+            } else {
+                $reservation['confirming_user_id'] = null;
             }
         }
         return $reservations;
     }
 
+    // GET /reservations
     public function getAllReservations(Request $request, Response $response, $args): Response
     {
+        $data = $this->Reservation->read();
+        $data = $this->handleExtensions($data, $request);
 
-        $response->getBody()->write("Middleware");
-        return $response->withHeader('Content-Type', 'application/json');
+        $response->getBody()->write(json_encode($data));
+        return $response;
     }
 
     public function confirmReservation(Request $request, Response $response, $args): Response
@@ -68,28 +76,46 @@ class ReservationController extends Controller
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    // GET /reservations/{reservation_id}
     public function getReservationByID(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Middleware");
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
-    public function getUserReservations(Request $request, Response $response, $args): Response
-    {
-        $extensions = $this->getQueryParam($request, 'ext');
-        
-        $data = $this->Reservation->read(['user_id' => $args['userID']]);
-        $data = $this->handleExtensions($data,$extensions);
+        $data = $this->Reservation->read(['id' => $args['reservation_id']]);
+        $data = $this->handleExtensions($data, $request);
 
         $response->getBody()->write(json_encode($data));
         return $response;
     }
 
+    // GET /users/{userID}/reservations
+    public function getUserReservations(Request $request, Response $response, $args): Response
+    {
+        $data = $this->Reservation->read(['user_id' => $args['userID']]);
+        $data = $this->handleExtensions($data, $request);
+
+        $response->getBody()->write(json_encode($data));
+        return $response;
+    }
+
+    // GET building/{building_id}/reservations
     public function getReservationsInBuilding(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Middleware");
-        return $response->withHeader('Content-Type', 'application/json');
+        $data = $this->Reservation->read(['building_id' => $args['building_id']]);
+        $data = $this->handleExtensions($data, $request);
+
+        $response->getBody()->write(json_encode($data));
+        return $response;
     }
+
+    // GET building/{building_id}/rooms/{room_id}/reservations
+    public function getRoomReservations(Request $request, Response $response, $args): Response
+    {
+        $data = $this->Reservation->read(['building_id' => $args['building_id'], 'room_id' => $args['room_id']]);
+        $data = $this->handleExtensions($data, $request);
+
+        $response->getBody()->write(json_encode($data));
+        return $response;
+    }
+
 
     public function createReservation(Request $request, Response $response, $args): Response
     {

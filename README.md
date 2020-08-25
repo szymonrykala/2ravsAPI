@@ -39,9 +39,9 @@ Room Reservation and Visualisation System API
     - PATCH /acces/{id}
     - DELETE /acces/{id}
 
-    - GET /reservations
-    - POST /reservations
-    - GET /reservations/{id}
+    - GET /reservations     👌
+    - GET /reservations/{id}    👌
+    - POST /reservations        
     - PATCH /reservations/{id}
     - DELETE /reservations/{id}
 
@@ -60,11 +60,12 @@ Room Reservation and Visualisation System API
     - GET /buildings/{id}
     - PATCH /buildings/{id}
     - DELETE /buildings/{id}
-    - GET /buildings/{id}/reservations
+    - GET /buildings/{id}/reservations      👌
 
     - GET /buildings/{id}/rooms
     - POST /buildings/{id}/rooms
 
     - GET /buildings/{id}/rooms/{idp}
+    - GET /buildings/{id}/rooms/{idp}/reservations      👌
     - PATCH /buildings/{id}/rooms/{idp}
     - DELETE /buildings/{id}/rooms/{idp}

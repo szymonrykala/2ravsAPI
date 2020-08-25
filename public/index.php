@@ -101,7 +101,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
     $app->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
         $reservations->get('', \ReservationController::class . ':getAllReservations');
-        $reservations->post('', \ReservationController::class . ':createReservation');
+        // $reservations->post('', \ReservationController::class . ':createReservation');
         $reservations->delete('/{reservation_id:.*[0-9]+}', \ReservationController::class . ':deleteReservationsByID');
 
         $reservations->group('/{reservation_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $reservation) {
@@ -128,7 +128,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         $buildings->get('/search', \BuildingController::class . ':searchBuildings');
         $buildings->post('', \BuildingController::class . ':createNewBuilding');
 
-        $buildings->group('/{buildingID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
+        $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
             $specBuilding->get('', \BuildingController::class . ':getBuildingByID');
             $specBuilding->patch('', \BuildingController::class . ':updateBuilding');
             $specBuilding->delete('', \BuildingController::class . ':deleteBuilding');
@@ -142,8 +142,8 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
                     $room->get('', \RoomController::class . ':getRoomByID');
                     $room->patch('', \RoomController::class . ':updateRoomByID');
                     $room->delete('', \RoomController::class . ':deleteRoomByID'); //serveral ID's
-                    // $room->get('/reservations', \ReservationController::class . ':getRoomReservations');
-                    // $room->post('/reservations', \ReservationController::class . ':createReservation');
+                    $room->get('/reservations', \ReservationController::class . ':getRoomReservations');
+                    $room->post('/reservations', \ReservationController::class . ':createReservation');
                 });
             });
         });
