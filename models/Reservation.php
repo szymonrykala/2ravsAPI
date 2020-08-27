@@ -33,6 +33,9 @@ class Reservation extends Model
                 case 'confirmed':
                     $value = (bool) $value;
                     break;
+                case 'deleted':
+                    $value = (bool) $value;
+                    break;
                 default:
                     $value = (string) filter_var($value, FILTER_SANITIZE_STRING);
                     break;
@@ -50,7 +53,7 @@ class Reservation extends Model
         }
         $result = $this->DB->query(
             "SELECT COUNT(id) AS 'conflict' FROM $this->tableName WHERE 
-               room_id=:room_id AND 
+               room_id=:room_id AND deleted=:deleted AND
                     (
                          start_time BETWEEN :start_time AND :end_time
                          OR
@@ -61,7 +64,8 @@ class Reservation extends Model
                 ':start_time' => $startTime,
                 ':end_time' => $endTime,
                 ':room_id' => $roomID,
-                ':date' => $date
+                ':date' => $date,
+                ':deleted' => false
             )
         )[0];
 
@@ -79,6 +83,20 @@ class Reservation extends Model
                 throw new EmptyVariableException($key);
             }
         }
+
+        //checking time
+        $Date = new DateTime();
+
+        $currentDate = $Date->format('Y-m-d');
+        $currentTime = $Date->format('H:i:s');
+        if ($currentDate > $data['date']) {
+            throw new ReservationException("Reservation date is too late");
+        } elseif ($currentDate == $data['date'] && $currentTime >= $data['start_time']) {
+            throw new ReservationException("Reservation time is too late");
+        }
+
+
+        $oldTime = "23:35:19";
 
         //building exist?
         $buildingExist = $this->DB->query(

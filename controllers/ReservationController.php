@@ -199,6 +199,7 @@ class ReservationController extends Controller
         $reservationID = (int)$args['reservation_id'];
 
         $this->Reservation->delete((int) $args['reservation_id']);
+        
         $this->Log->create([
             'user_id' => (int)$currentUser,
             'reservation_id' => $reservationID,
