@@ -10,6 +10,7 @@ Room Reservation and Visualisation System API
 
 - user controller finished
 - checking same user in auth middleware 
+- getting deleted reservations by ?deleted=true 
 
 ## API endpoints
 

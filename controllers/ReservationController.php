@@ -63,7 +63,7 @@ class ReservationController extends Controller
     // GET /reservations
     public function getAllReservations(Request $request, Response $response, $args): Response
     {
-        $data = $this->Reservation->read();
+        $data = $this->Reservation->read(['deleted' => $this->deleted($request)]);
         $data = $this->handleExtensions($data, $request);
 
         $response->getBody()->write(json_encode($data));
@@ -90,7 +90,11 @@ class ReservationController extends Controller
     // GET /users/{userID}/reservations
     public function getUserReservations(Request $request, Response $response, $args): Response
     {
-        $data = $this->Reservation->read(['user_id' => $args['userID']]);
+
+        $data = $this->Reservation->read([
+            'user_id' => $args['userID'],
+            'deleted' => $this->deleted($request)
+        ]);
         $data = $this->handleExtensions($data, $request);
 
         $response->getBody()->write(json_encode($data));
@@ -100,7 +104,10 @@ class ReservationController extends Controller
     // GET building/{building_id}/reservations
     public function getReservationsInBuilding(Request $request, Response $response, $args): Response
     {
-        $data = $this->Reservation->read(['building_id' => $args['building_id']]);
+        $data = $this->Reservation->read([
+            'building_id' => $args['building_id'],
+            'deleted' => $this->deleted($request)
+        ]);
         $data = $this->handleExtensions($data, $request);
 
         $response->getBody()->write(json_encode($data));
@@ -110,7 +117,11 @@ class ReservationController extends Controller
     // GET building/{building_id}/rooms/{room_id}/reservations
     public function getRoomReservations(Request $request, Response $response, $args): Response
     {
-        $data = $this->Reservation->read(['building_id' => $args['building_id'], 'room_id' => $args['room_id']]);
+        $data = $this->Reservation->read([
+            'building_id' => $args['building_id'],
+            'room_id' => $args['room_id'],
+            'deleted' => $this->deleted($request)
+        ]);
         $data = $this->handleExtensions($data, $request);
 
         $response->getBody()->write(json_encode($data));
@@ -199,7 +210,7 @@ class ReservationController extends Controller
         $reservationID = (int)$args['reservation_id'];
 
         $this->Reservation->delete((int) $args['reservation_id']);
-        
+
         $this->Log->create([
             'user_id' => (int)$currentUser,
             'reservation_id' => $reservationID,

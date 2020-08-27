@@ -42,6 +42,17 @@ abstract class Controller
         return base64_encode(random_bytes($len));
     }
 
+    protected function deleted($request): bool
+    {
+        if (
+            isset($this->getQueryParam($request, 'deleted')[0]) &&
+            $this->getQueryParam($request, 'deleted')[0] == 'true'
+        ) {
+            return true;
+        }
+        return false;
+    }
+
     protected function getQueryParam(Request $request, string $key): array
     {
         $result = array();
