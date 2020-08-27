@@ -209,13 +209,24 @@ class ReservationController extends Controller
         $currentUserMail = $request->getAttribute('email');
         $reservationID = (int)$args['reservation_id'];
 
-        $this->Reservation->delete((int) $args['reservation_id']);
+        $reservation = $this->Reservation->read(['id' => $reservationID])[0];
 
-        $this->Log->create([
-            'user_id' => (int)$currentUser,
-            'reservation_id' => $reservationID,
-            'message' => "User $currentUserMail deleted reservation with id=$reservationID"
-        ]);
+        if ($reservation['deleted'] === false) {
+            $this->Reservation->update($reservationID, ['deleted' => true]);
+            $this->Log->create([
+                'user_id' => (int)$currentUser,
+                'reservation_id' => $reservationID,
+                'message' => "User $currentUserMail deleted reservation"
+            ]);
+        } else {
+            $this->Log->create([
+                'user_id' => (int)$currentUser,
+                'reservation_id' => $reservationID,
+                'message' => "User $currentUserMail hard deleted reservation"
+            ]);
+
+            $this->Reservation->delete((int) $args['reservation_id']);
+        }
 
         return $response->withStatus(200);
     }

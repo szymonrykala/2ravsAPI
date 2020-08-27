@@ -3,14 +3,18 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[27-08-2020]
+- getting deleted reservations by ?deleted=true 
+- on hard delete reservation - logs are deleted
 
+[25-08-2020]
+- user controller finished
+- checking same user in auth middleware 
+
+[24-08-2020]
 -   change endpoint /activate --> /users/activate
 -   Added ActivationException - 3007
 -   done activation
-
-- user controller finished
-- checking same user in auth middleware 
-- getting deleted reservations by ?deleted=true 
 
 ## API endpoints
 
