@@ -4,6 +4,8 @@ Room Reservation and Visualisation System API
 
 ## Changelog
 [09-09-2020]
+- cathing integrity error in db interface [23000 state]
+- acces Controller ready
 - controllers inheritance
 - Controller::delete() method true when delete is 'true' or '1' 
 
@@ -41,12 +43,12 @@ Room Reservation and Visualisation System API
     - PATCH /addresses/{id}
     - DELETE /addresses/{id}
 
-    - GET /acces
-    - POST /acces
+    - GET /acces    👌
+    - POST /acces    👌
 
-    - GET /acces/{id}
-    - PATCH /acces/{id}
-    - DELETE /acces/{id}
+    - GET /acces/{id}    👌
+    - PATCH /acces/{id}    👌
+    - DELETE /acces/{id}    👌
 
     - GET /reservations     👌
     - GET /reservations/{id}    👌

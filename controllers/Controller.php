@@ -11,7 +11,7 @@ use Psr\Container\ContainerInterface;
 
 abstract class Controller
 {
-    protected $DI = null;
+    protected $DIcontainer = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

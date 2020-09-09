@@ -190,14 +190,13 @@ class ReservationController extends Controller
     {
         $data = $request->getParsedBody();
         $reservationID = $args['reservation_id'];
-        $currentUser = $request->getAttribute('user_id');
         $currentUserMail = $request->getAttribute('email');
 
         $this->Reservation->update($reservationID, $data);
         $this->Log->create([
-            'user_id' => $currentUser,
+            'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $reservationID,
-            'message' => "User $currentUserMail deleted reservation id=$reservationID"
+            'message' => "User $currentUserMail updated reservation"
         ]);
         return $response->withStatus(200, "Reservation updated");
     }

@@ -4,7 +4,7 @@ require_once __DIR__ . '/Model.php';
 class Acces extends Model
 {
     protected $tableName = 'acceses';
-    public $unUpdateAble=array('id');
+    public $unUpdateAble = array('id');
 
     public function __construct(DBInterface $db)
     {
