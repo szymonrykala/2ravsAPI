@@ -32,8 +32,13 @@ class Database implements DBInterface
             $stmt->execute($params);
         } catch (PDOException $e) {
             // throw new Exception("DBInterface query error: " . $e->getMessage(), 500, $e);
-            echo $e->getMessage();
+            switch($e->getCode()){
+                case 23000:
+                    throw new APIException("Unique names are required: ".substr($e->getMessage(),17),400);
+                break;
+            }
             echo $e->getCode();
+            echo $e->getMessage();
             exit();
         }
 
