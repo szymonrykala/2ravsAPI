@@ -19,6 +19,8 @@ define('ROOM_TYPE_BASE', 'room_type');
 
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
 
+date_default_timezone_set("Europe/Warsaw");
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 require_once __DIR__ . '/../interfaces/DBInterface.php';
@@ -63,6 +65,7 @@ require_once __DIR__ . '/../exceptions/AuthenticationFailsCountException.php';
 require_once __DIR__ . '/../exceptions/CredentialsPolicyException.php';
 require_once __DIR__ . '/../exceptions/AuthorizationException.php';
 require_once __DIR__ . '/../exceptions/ActivationException.php';
+require_once __DIR__ . '/../exceptions/ReservationLockException.php';
 
 
 

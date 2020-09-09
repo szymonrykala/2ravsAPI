@@ -28,7 +28,7 @@ class Room extends Model
                     $value = (bool) $value;
                     break;
                 default:
-                    $value = (string) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
             }
         }

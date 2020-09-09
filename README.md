@@ -3,13 +3,18 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[27-08-2020]
+- getting deleted reservations by ?deleted=true 
+- on hard delete reservation - logs are deleted
 
+[25-08-2020]
+- user controller finished
+- checking same user in auth middleware 
+
+[24-08-2020]
 -   change endpoint /activate --> /users/activate
 -   Added ActivationException - 3007
 -   done activation
-
-- user controller finished
-- checking same user in auth middleware 
 
 ## API endpoints
 
@@ -39,11 +44,12 @@ Room Reservation and Visualisation System API
     - PATCH /acces/{id}
     - DELETE /acces/{id}
 
-    - GET /reservations
-    - POST /reservations
-    - GET /reservations/{id}
-    - PATCH /reservations/{id}
-    - DELETE /reservations/{id}
+    - GET /reservations     👌
+    - GET /reservations/{id}    👌
+    - POST /reservations    👌
+    - PATCH /reservations/{id}    👌
+    - PATCH /reservations/{id}/confirm
+    - DELETE /reservations/{id}     👌bug
 
     - GET reservations/search
 
@@ -60,11 +66,12 @@ Room Reservation and Visualisation System API
     - GET /buildings/{id}
     - PATCH /buildings/{id}
     - DELETE /buildings/{id}
-    - GET /buildings/{id}/reservations
+    - GET /buildings/{id}/reservations      👌
 
     - GET /buildings/{id}/rooms
     - POST /buildings/{id}/rooms
 
     - GET /buildings/{id}/rooms/{idp}
+    - GET /buildings/{id}/rooms/{idp}/reservations      👌
     - PATCH /buildings/{id}/rooms/{idp}
     - DELETE /buildings/{id}/rooms/{idp}

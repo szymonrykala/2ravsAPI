@@ -115,9 +115,9 @@ abstract class Model
 
     public function delete(int $id): void
     {
-        // if (!$this->exist(array('id' => $id))) {
-        //     throw new NothingFoundException($this->tableName);
-        // }
+        if (!$this->exist(array('id' => $id))) {
+            throw new NothingFoundException($this->tableName);
+        }
         $this->DB->query(
             "DELETE FROM $this->tableName WHERE id=:id",
             array(':id' => $id)
