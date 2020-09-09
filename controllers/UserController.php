@@ -56,7 +56,12 @@ class UserController extends Controller
         }
 
         if (password_verify($password, $userPassword)) {
-            $data = array("jwt" => $this->generateToken($userID, $accesID, $email));
+            $Acces = $this->DIcontainer->get('Acces');
+            $data = array(
+                "jwt" => $this->generateToken($userID, $accesID, $email),
+                'userID' => $userID,
+                "acces" => $Acces->read(['id' => $accesID])
+            );
             $this->User->update($userID, array('login_fails' => 0));
             $this->Log->create(array(
                 'user_id' => $userID,
