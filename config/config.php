@@ -66,6 +66,7 @@ require_once __DIR__ . '/../exceptions/CredentialsPolicyException.php';
 require_once __DIR__ . '/../exceptions/AuthorizationException.php';
 require_once __DIR__ . '/../exceptions/ActivationException.php';
 require_once __DIR__ . '/../exceptions/ReservationLockException.php';
+require_once __DIR__ . '/../exceptions/APIException.php';
 
 
 
