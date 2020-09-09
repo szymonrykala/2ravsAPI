@@ -216,7 +216,7 @@ class ReservationController extends Controller
             $this->Log->create([
                 'user_id' => (int)$currentUser,
                 'reservation_id' => $reservationID,
-                'message' => "User $currentUserMail deleted reservation"
+                'message' => "User $currentUserMail moved reservation to trash"
             ]);
         } else {
             $this->Log->create([

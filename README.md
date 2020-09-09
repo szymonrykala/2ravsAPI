@@ -3,6 +3,10 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[09-09-2020]
+- controllers inheritance
+- Controller::delete() method true when delete is 'true' or '1' 
+
 [27-08-2020]
 - getting deleted reservations by ?deleted=true 
 - on hard delete reservation - logs are deleted

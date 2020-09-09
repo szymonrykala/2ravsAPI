@@ -4,19 +4,17 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AddressController
-{
+require_once __DIR__ . "/Controller.php";
 
+class AddressController extends Controller
+{
     private $Address;
-    private $View;
     protected $DIContainer;
 
-
-    public function __construct(ContainerInterface $DIContainer)
+    public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIContainer = $DIContainer;
-        $this->Address = $this->DIContainer->get('Address');
-        $this->View = $this->DIContainer->get('View');
+        parent::__construct($DIcontainer);
+        $this->Address = $this->DIcontainer->get('Address');
     }
 
     public function getAddress(Request $request, Response $response, $args): Response

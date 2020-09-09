@@ -44,11 +44,11 @@ abstract class Controller
 
     protected function deleted($request): bool
     {
-        if (
-            isset($this->getQueryParam($request, 'deleted')[0]) &&
-            $this->getQueryParam($request, 'deleted')[0] == 'true'
-        ) {
-            return true;
+        if (isset($this->getQueryParam($request, 'deleted')[0])) {
+            $var = $this->getQueryParam($request, 'deleted')[0];
+            if ($var === 'true' || $var === '1') {
+                return true;
+            }
         }
         return false;
     }

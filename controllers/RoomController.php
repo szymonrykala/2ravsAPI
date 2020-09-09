@@ -5,7 +5,9 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\InvalidArgumentException;
 
-class RoomController
+require_once __DIR__ . "/Controller.php";
+
+class RoomController extends Controller
 {
     protected $DIcontainer;
     private $View;
@@ -15,11 +17,9 @@ class RoomController
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIcontainer = $DIcontainer;
+        parent::__construct($DIcontainer);
         $this->Room = $this->DIcontainer->get('Room');
-        $this->Building = $this->DIcontainer->get('Building');
         $this->RoomType = $this->DIcontainer->get('RoomType');
-        $this->View = $this->DIcontainer->get('View');
     }
 
     public function getAllRoomsInBuilding(Request $request, Response $response, $args): Response

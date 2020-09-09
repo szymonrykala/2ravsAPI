@@ -4,17 +4,17 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-class LogController
+require_once __DIR__ . "/Controller.php";
+
+class LogController extends Controller
 {
     protected $DIcontainer;
-    private $View;
-    private $Logs;
+    private $Log;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIcontainer = $DIcontainer;
-        $this->Logs = $this->DIcontainer->get('Log');
-        $this->View = $this->DIcontainer->get('View');
+        parent::__construct($DIcontainer);
+        $this->Log = $this->DIcontainer->get('Reservation');
     }
 
     public function getAllLogs(Request $request, Response $response, $args): Response

@@ -4,19 +4,17 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class BuildingController
+require_once __DIR__ . "/Controller.php";
+
+class BuildingController extends Controller
 {
-    private $Building;
     private $Address; // relation; building addres
-    private $View;
     protected $DIcontainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIcontainer = $DIcontainer;
+        parent::__construct($DIcontainer);
         $this->Building = $this->DIcontainer->get('Building');
-        $this->Address = $this->DIcontainer->get('Address');
-        $this->View = $this->DIcontainer->get('View');
     }
 
     public function getAllBuildings(Request $request, Response $response, $args): Response

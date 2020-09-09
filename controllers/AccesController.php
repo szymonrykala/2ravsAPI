@@ -4,17 +4,16 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
+require_once __DIR__ . "/Controller.php";
 
-class AccesController
+class AccesController extends Controller
 {
-    private $Acces = null;
-    public $View = null;
+    private $Acces;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIcontainer = $DIcontainer;
+        parent::__construct($DIcontainer);
         $this->Acces = $DIcontainer->get('Acces');
-        $this->View = $DIcontainer->get('View');
     }
 
     public function createNewAccesType(Request $request, Response $response, $args): Response
