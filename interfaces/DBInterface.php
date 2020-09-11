@@ -34,7 +34,7 @@ class Database implements DBInterface
             // throw new Exception("DBInterface query error: " . $e->getMessage(), 500, $e);
             switch ($e->getCode()) {
                 case 23000:
-                    throw new APIException("Unique names are required: " . substr($e->getMessage(), 17), 400);
+                    throw new APIException("Database Integrity: " . substr($e->getMessage(), 17), 400);
                     break;
                 case 42000:
                     throw new APIException("SQL Syntax error:" . substr($e->getMessage(), 17), 500);
