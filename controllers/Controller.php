@@ -118,6 +118,34 @@ abstract class Controller
         return $data;
     }
 
+    protected function getSearchParams(Request $request): array
+    {
+        /**
+         * Getting Search params from query string and from request body['search'] array if it exist
+         * body['search'] have priority in values
+         * 
+         * @param Request $request
+         * 
+         * @return array
+          */
+        $queryString = $request->getUri()->getQuery();
+
+        preg_match_all('/(\w+)=([A-z0-9]+)/', $queryString, $regexOut);
+        $queryParams = [];
+        foreach ($regexOut[1] as $number => $key) {
+            $queryParams[$key] = $regexOut[2][$number];
+        }
+
+        $dataParams = $request->getParsedBody();
+        if (isset($dataParams['search'])) {
+            foreach ($dataParams['search'] as $key => $value) {
+                $queryParams[$key] = $value;
+            }
+        }
+
+        return $queryParams;
+    }
+
     // ?ext=user_id,building_id,room_id...
     protected function handleExtensions(array $dataArray, Request $request): array
     {

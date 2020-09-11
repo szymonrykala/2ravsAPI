@@ -56,8 +56,7 @@ class AuthorizationMiddleware
         $len = count($path) - 1;
         if (is_numeric($path[$len])) {
             $this->resourceNumber = array_pop($path);
-        }
-        if ($path[$len] == 'search') {
+        } elseif ($path[$len] == 'search') {
             array_pop($path);
         }
         $resource =  array_pop($path);

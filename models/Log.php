@@ -5,6 +5,7 @@ class Log extends Model
 {
     protected $tableName = 'logs';
     public $unUpdateAble = array('id', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id');
+    public $columns = ['id', 'message', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id'];
 
     public function __construct(DBInterface $db)
     {
@@ -14,6 +15,9 @@ class Log extends Model
     public function parseData(array $data): array
     {
         foreach ($data as $key => &$value) {
+            if ($value === null) {
+                continue;
+            }
             switch ($key) {
                 case "message":
                     $value = filter_var($value, FILTER_SANITIZE_STRING);

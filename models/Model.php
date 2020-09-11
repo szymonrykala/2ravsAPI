@@ -3,6 +3,7 @@
 abstract class Model
 {
     public $unUpdateAble = array();
+    public $columns = [];
     protected $DB = null;
     protected $tableName = null;
 
@@ -36,6 +37,9 @@ abstract class Model
 
     public function read(array $params = array(), string $sortKey = 'id', string $direction  = 'DESC'): array
     {
+        /* 
+        maybe make filtering by columns in array like in search?
+         */
         $params = $this->parseData($params);
 
         $sql = "SELECT * FROM $this->tableName WHERE 1=1";
@@ -67,6 +71,9 @@ abstract class Model
         $queryParams = array();
 
         foreach ($params as $key => $value) {
+            if (!in_array($key, $this->columns)) {
+                continue;
+            }
             $sql .= " AND $key LIKE :$key";
             $queryParams[":$key"] = "%$value%";
         }
