@@ -59,6 +59,9 @@ class AuthorizationMiddleware
         } elseif ($path[$len] == 'search') {
             array_pop($path);
         }
+        if ($path[$len] == 'search') {
+            array_pop($path);
+        }
         $resource =  array_pop($path);
         return $resource;
     }
