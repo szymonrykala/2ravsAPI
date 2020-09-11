@@ -95,6 +95,12 @@ class AuthorizationMiddleware
                 'PATCH' => $result['buildings_edit'],
                 'DELETE' => $result['buildings_edit']
             ),
+            'addresses' => [
+                'GET' => $result['buildings_view'],
+                'POST' => $result['buildings_edit'],
+                'PATCH' => $result['buildings_edit'],
+                'DELETE' => $result['buildings_edit']
+            ],
             'rooms' => array(
                 'GET' => $result['rooms_view'],
                 'POST' => $result['rooms_edit'],
@@ -102,8 +108,8 @@ class AuthorizationMiddleware
                 'DELETE' => $result['rooms_edit']
             ),
             'users' => array(
-                'GET' => 1,
-                'POST' => 1,
+                'GET' => true,
+                'POST' => true,
                 'PATCH' => $sameUser || $result['users_edit'],
                 'DELETE' => $sameUser || $result["users_edit"]
             ),
