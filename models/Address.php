@@ -5,6 +5,7 @@ class Address extends Model
 {
     protected $tableName = 'addresses';
     public $unUpdateAble = array('id');
+    public $columns = ['id','country','town','postal_code','street','number'];
 
     public function __construct(DBInterface $db)
     {
@@ -36,7 +37,7 @@ class Address extends Model
             }
         }
 
-        if ($this->exist(array($data))) {
+        if ($this->exist($data)) {
             throw new AlreadyExistException($data);
         }
 

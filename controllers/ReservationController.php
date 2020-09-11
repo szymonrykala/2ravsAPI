@@ -149,10 +149,12 @@ class ReservationController extends Controller
         $currentUserMail = $request->getAttribute('email');
 
         $this->Reservation->update($reservationID, $data);
+        
+        $dataString = implode(',', array_keys($data));
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $reservationID,
-            'message' => "User $currentUserMail updated reservation"
+            'message' => "User $currentUserMail updated reservation data: $dataString"
         ]);
         return $response->withStatus(200, "Succesfully updated");
     }

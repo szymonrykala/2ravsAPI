@@ -3,9 +3,13 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[11-09-2020]
+- addressController ready
+- fixed auth middleware
+
 [09-09-2020]
 - cathing integrity error in db interface [23000 state]
-- acces Controller ready
+- accesController ready
 - controllers inheritance
 - Controller::deleted() method true when delete is 'true' or '1' 
 
