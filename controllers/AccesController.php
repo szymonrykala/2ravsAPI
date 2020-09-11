@@ -54,10 +54,10 @@ class AccesController extends Controller
             throw new APIException("Acces name need to have at least 4 characters", 400);
         }
 
-        $this->Acces->create($data);
+        $newID = $this->Acces->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " created new acces class '" . $data['name'] . "' "
+            "message" => "User " . $request->getAttribute('email') . " created new acces class '" . $data['name'] . "' id=$newID "
         ]);
         $response->getBody()->write("Created");
         return $response;

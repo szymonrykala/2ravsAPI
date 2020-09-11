@@ -16,50 +16,6 @@ class ReservationController extends Controller
         $this->Reservation = $this->DIcontainer->get('Reservation');
     }
 
-    // ?ext=user_id,building_id,room_id...
-    private function handleExtensions(array $reservations, Request $request): array
-    {
-        $extensions = $this->getQueryParam($request, 'ext');
-
-        if (in_array('room_id', $extensions)) {
-            $Room = $this->DIcontainer->get('Room');
-        }
-        if (in_array('building_id', $extensions)) {
-            $Building = $this->DIcontainer->get('Building');
-        }
-        if (in_array('user_id', $extensions) || in_array('confirming_user_id', $extensions)) {
-            $User = $this->DIcontainer->get('User');
-        }
-
-        foreach ($reservations as &$reservation) {
-            if (in_array('room_id', $extensions)) {
-                $reservation['room'] = $Room->read(['id' => $reservation['room_id']])[0];
-                unset($reservation['room_id']);
-            }
-            if (in_array('building_id', $extensions)) {
-                $reservation['building'] = $Building->read(['id' => $reservation['building_id']])[0];
-                unset($reservation['building_id']);
-            }
-            if (in_array('user_id', $extensions)) {
-                $reservation['user'] = $User->read(['id' => $reservation['user_id']])[0];
-                unset($reservation['user_id']);
-                unset($reservation['user']['password']);
-                unset($reservation['user']['action_key']);
-                unset($reservation['user']['login_fails']);
-            }
-            if (in_array('confirming_user_id', $extensions) && $reservation['confirmed']) {
-                $reservation['confirming_user'] = $User->read(['id' => $reservation['confirming_user_id']])[0];
-                unset($reservation['confirming_user_id']);
-                unset($reservation['confirming_user']['password']);
-                unset($reservation['confirming_user']['action_key']);
-                unset($reservation['confirming_user']['login_fails']);
-            } else {
-                $reservation['confirming_user_id'] = null;
-            }
-        }
-        return $reservations;
-    }
-
     // GET /reservations
     public function getAllReservations(Request $request, Response $response, $args): Response
     {
@@ -198,7 +154,7 @@ class ReservationController extends Controller
             'reservation_id' => $reservationID,
             'message' => "User $currentUserMail updated reservation"
         ]);
-        return $response->withStatus(200, "Reservation updated");
+        return $response->withStatus(200, "Succesfully updated");
     }
 
     // DELETE /reservations/{reservation_id}
@@ -227,6 +183,6 @@ class ReservationController extends Controller
             $this->Reservation->delete((int) $args['reservation_id']);
         }
 
-        return $response->withStatus(200);
+        return $response->withStatus(204, "Succesfully deleted");
     }
 }
