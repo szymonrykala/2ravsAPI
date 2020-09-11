@@ -7,7 +7,7 @@ Room Reservation and Visualisation System API
 - cathing integrity error in db interface [23000 state]
 - acces Controller ready
 - controllers inheritance
-- Controller::delete() method true when delete is 'true' or '1' 
+- Controller::deleted() method true when delete is 'true' or '1' 
 
 [27-08-2020]
 - getting deleted reservations by ?deleted=true 
