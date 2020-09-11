@@ -117,4 +117,64 @@ abstract class Controller
         }
         return $data;
     }
+
+    // ?ext=user_id,building_id,room_id...
+    protected function handleExtensions(array $dataArray, Request $request): array
+    {
+        $extensions = $this->getQueryParam($request, 'ext');
+
+        $roomMark = false;
+        $buildingMark = false;
+        $userMark = in_array('user_id', $extensions);
+        $reservationMark = false;
+        $confirmedMark = in_array('confirming_user_id', $extensions);
+
+        if (in_array('room_id', $extensions)) {
+            $Room = $this->DIcontainer->get('Room');
+            $roomMark = true;
+        }
+        if (in_array('building_id', $extensions)) {
+            $Building = $this->DIcontainer->get('Building');
+            $buildingMark = true;
+        }
+        if (in_array('reservation_id', $extensions)) {
+            $Reservation = $this->DIcontainer->get('Reservation');
+            $reservationMark = true;
+        }
+        if ($userMark || $confirmedMark) {
+            $User = $this->DIcontainer->get('User');
+        }
+
+        foreach ($dataArray as &$dataEntry) {
+            if ($roomMark && $dataEntry['room_id'] !== null) {
+                $dataEntry['room'] = $Room->read(['id' => $dataEntry['room_id']])[0];
+                unset($dataEntry['room_id']);
+            }
+            if ($buildingMark && $dataEntry['building_id'] !== null) {
+                $dataEntry['building'] = $Building->read(['id' => $dataEntry['building_id']])[0];
+                unset($dataEntry['building_id']);
+            }
+            if ($reservationMark && $dataEntry['reservation_id'] !== null) {
+                $dataEntry['reservation'] = $Reservation->read(['id' => $dataEntry['reservation_id']])[0];
+                unset($dataEntry['reservation_id']);
+            }
+            if ($userMark && $dataEntry['user_id'] !== null) {
+                $dataEntry['user'] = $User->read(['id' => $dataEntry['user_id']])[0];
+                unset($dataEntry['user_id']);
+                unset($dataEntry['user']['password']);
+                unset($dataEntry['user']['action_key']);
+                unset($dataEntry['user']['login_fails']);
+            }
+            if ($confirmedMark && $dataEntry['confirming_user_id'] !== null) {
+                $dataEntry['confirming_user'] = $User->read(['id' => $dataEntry['confirming_user_id']])[0];
+                unset($dataEntry['confirming_user_id']);
+                unset($dataEntry['confirming_user']['password']);
+                unset($dataEntry['confirming_user']['action_key']);
+                unset($dataEntry['confirming_user']['login_fails']);
+            } elseif (isset($dataEntry['confirmed'])) {
+                $dataEntry['confirming_user_id'] = null;
+            }
+        }
+        return $dataArray;
+    }
 }
