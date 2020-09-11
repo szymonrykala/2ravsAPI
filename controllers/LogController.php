@@ -8,6 +8,10 @@ require_once __DIR__ . "/Controller.php";
 
 class LogController extends Controller
 {
+    /**
+     * Implement endpoints related with logs routs
+     * 
+    */
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
@@ -16,6 +20,16 @@ class LogController extends Controller
     // GET /logs
     public function getAllLogs(Request $request, Response $response, $args): Response
     {
+        /**
+         * Getting all logs from database
+         * /logs
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
         $data = $this->handleExtensions($this->Log->read(), $request);
         $response->getBody()->write(json_encode($data));
         return $response;
@@ -26,6 +40,17 @@ class LogController extends Controller
     /* {    "IDs":[log_id,log_id,log_id,log_id,log_id,...]    } */
     public function deleteLogByID(Request $request, Response $response, $args): Response
     {
+        /**
+         * Deleting Logs by id from /logs/{log_id} or request body "IDs":[]
+         * /logs/{log_id}
+         * { "IDs":[log_id,log_id,log_id,log_id,log_id,...] }
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
         $logID = (int) $args['log_id'];
         if ($logID < 0) {
             $data = $request->getParsedBody();
@@ -49,6 +74,8 @@ class LogController extends Controller
         /**
          * Searching for Logs with parameters given in Request(query string or body['search'])
          * Founded results are written into the response body
+         * /logs/search?<queryString>
+         * { "search":{"key":"value","key2":"value2"}}
          * 
          * @param Request $request 
          * @param Response $response 
