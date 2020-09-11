@@ -34,7 +34,7 @@ abstract class Model
         return $exist;
     }
 
-    public function read(array $params = array()): array
+    public function read(array $params = array(), string $sortKey = 'id', string $direction  = 'DESC'): array
     {
         $params = $this->parseData($params);
 
@@ -45,6 +45,7 @@ abstract class Model
             $sql .= " AND $key=:$key";
             $queryParams[":$key"] = $value;
         }
+        $sql .= " ORDER BY $sortKey $direction";
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
@@ -58,7 +59,7 @@ abstract class Model
     }
 
     // searching with LIKE %param%
-    public function search(array $params)
+    public function search(array $params, string $sortKey = 'id', string $direction  = 'DESC')
     {
         $params = $this->parseData($params);
 
@@ -69,6 +70,7 @@ abstract class Model
             $sql .= " AND $key LIKE :$key";
             $queryParams[":$key"] = "%$value%";
         }
+        $sql .= " ORDER BY $sortKey $direction";
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
