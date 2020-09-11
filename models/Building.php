@@ -4,7 +4,8 @@ require_once __DIR__ . '/Model.php';
 class Building extends Model
 {
     protected $tableName = 'buildings';
-    public $unUpdateAble = array('id', 'user_id', 'created_at', 'confirmed_at');
+    public $unUpdateAble = array('id');
+    public $columns = ['id','name', 'rooms_count','address_id'];
 
     public function __construct(DBInterface $db)
     {
@@ -36,7 +37,7 @@ class Building extends Model
             }
         }
 
-        if ($this->exist(array($data))) {
+        if ($this->exist($data)) {
             throw new AlreadyExistException($data);
         }
 

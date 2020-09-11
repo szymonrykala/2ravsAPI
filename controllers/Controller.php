@@ -127,7 +127,7 @@ abstract class Controller
          * @param Request $request
          * 
          * @return array
-          */
+         */
         $queryString = $request->getUri()->getQuery();
 
         preg_match_all('/(\w+)=([A-z0-9]+)/', $queryString, $regexOut);
@@ -137,7 +137,7 @@ abstract class Controller
         }
 
         $dataParams = $request->getParsedBody();
-        if (isset($dataParams['search'])) {
+        if (isset($dataParams['search']) & is_array($dataParams['search'])) {
             foreach ($dataParams['search'] as $key => $value) {
                 $queryParams[$key] = $value;
             }
@@ -151,23 +151,24 @@ abstract class Controller
     {
         $extensions = $this->getQueryParam($request, 'ext');
 
-        $roomMark = false;
-        $buildingMark = false;
+        $roomMark = in_array('room_id', $extensions);
+        $buildingMark = in_array('building_id', $extensions);
         $userMark = in_array('user_id', $extensions);
-        $reservationMark = false;
+        $reservationMark = in_array('reservation_id', $extensions);
+        $addressMark = in_array('address_id', $extensions);
         $confirmedMark = in_array('confirming_user_id', $extensions);
 
-        if (in_array('room_id', $extensions)) {
+        if ($roomMark) {
             $Room = $this->DIcontainer->get('Room');
-            $roomMark = true;
         }
-        if (in_array('building_id', $extensions)) {
+        if ($buildingMark) {
             $Building = $this->DIcontainer->get('Building');
-            $buildingMark = true;
         }
-        if (in_array('reservation_id', $extensions)) {
+        if ($addressMark) {
+            $Address = $this->DIcontainer->get('Address');
+        }
+        if ($reservationMark) {
             $Reservation = $this->DIcontainer->get('Reservation');
-            $reservationMark = true;
         }
         if ($userMark || $confirmedMark) {
             $User = $this->DIcontainer->get('User');
@@ -181,6 +182,10 @@ abstract class Controller
             if ($buildingMark && $dataEntry['building_id'] !== null) {
                 $dataEntry['building'] = $Building->read(['id' => $dataEntry['building_id']])[0];
                 unset($dataEntry['building_id']);
+            }
+            if ($addressMark && $dataEntry['address_id'] !== null) {
+                $dataEntry['address'] = $Address->read(['id' => $dataEntry['address_id']])[0];
+                unset($dataEntry['address_id']);
             }
             if ($reservationMark && $dataEntry['reservation_id'] !== null) {
                 $dataEntry['reservation'] = $Reservation->read(['id' => $dataEntry['reservation_id']])[0];

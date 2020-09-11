@@ -4,6 +4,7 @@ Room Reservation and Visualisation System API
 
 ## Changelog
 [11-09-2020]
+- BuildingsController ready
 - addressController ready
 - fixed auth middleware
 
@@ -36,16 +37,16 @@ Room Reservation and Visualisation System API
 
 2. Closed:
 
-    - GET /logs
-    - GET /logs/search
-    - DELETE /logs/{id}
+    - GET /logs    👌
+    - GET /logs/search    👌
+    - DELETE /logs/{id}    👌
 
-    - GET /addresses
-    - POST /addresses
+    - GET /addresses    👌
+    - POST /addresses    👌
 
-    - GET /addresses/{id}
-    - PATCH /addresses/{id}
-    - DELETE /addresses/{id}
+    - GET /addresses/{id}    👌
+    - PATCH /addresses/{id}    👌
+    - DELETE /addresses/{id}    👌
 
     - GET /acces    👌
     - POST /acces    👌
@@ -69,13 +70,13 @@ Room Reservation and Visualisation System API
     - DELETE /users/{id}    👌
     - GET /users/{id}/reservations  👌
 
-    - GET /buildings
-    - POST /buildings
-    - GET /buildings/search
+    - GET /buildings    👌
+    - POST /buildings    👌
+    - GET /buildings/search    👌
 
-    - GET /buildings/{id}
-    - PATCH /buildings/{id}
-    - DELETE /buildings/{id}
+    - GET /buildings/{id}    👌
+    - PATCH /buildings/{id}    👌
+    - DELETE /buildings/{id}    👌
     - GET /buildings/{id}/reservations      👌
 
     - GET /buildings/{id}/rooms
