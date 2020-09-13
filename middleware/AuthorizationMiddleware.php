@@ -107,6 +107,12 @@ class AuthorizationMiddleware
                 'PATCH' => $result['rooms_edit'],
                 'DELETE' => $result['rooms_edit']
             ),
+            'types' => array(
+                'GET' => $result['rooms_view'],
+                'POST' => $result['rooms_edit'],
+                'PATCH' => $result['rooms_edit'],
+                'DELETE' => $result['rooms_edit']
+            ),
             'users' => array(
                 'GET' => true,
                 'POST' => true,
