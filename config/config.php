@@ -50,6 +50,7 @@ require_once __DIR__ . '/../controllers/LogController.php';
 require_once __DIR__ . '/../controllers/RoomController.php';
 require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AddressController.php';
+require_once __DIR__ . '/../controllers/RoomTypeController.php';
 
 
 require_once __DIR__ . '/../exceptions/NothingFoundException.php';

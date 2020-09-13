@@ -131,8 +131,8 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
             $rooms->get('/types', \RoomTypeController::class . ':getAllTypes');
             $rooms->post('/types', \RoomTypeController::class . ':createType');
-            $rooms->patch('/types', \RoomTypeController::class . ':updateType');
-            $rooms->delete('/types', \RoomTypeController::class . ':deleteType');
+            $rooms->patch('/types/{room_type_id:[0-9]+}', \RoomTypeController::class . ':updateType');
+            $rooms->delete('/types/{room_type_id:[0-9]+}', \RoomTypeController::class . ':deleteType');
 
             $rooms->get('', \RoomController::class . ':getAllRooms');
             $rooms->get('/{room_id}', \RoomController::class . ':getRoom');
