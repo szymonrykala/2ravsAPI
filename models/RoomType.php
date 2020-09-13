@@ -3,6 +3,9 @@ require_once __DIR__ . '/Model.php';
 
 class RoomType extends Model
 {
+    /**
+     * Responsible for operation with room_types table in database
+    */
     protected $tableName = 'room_types';
     public $unUpdateAble = array('id');
 
@@ -13,6 +16,12 @@ class RoomType extends Model
 
     public function parseData(array $data): array
     {
+        /**
+         * Used for parsing data to right data type
+         * 
+         * @param array $data 
+         * @return array $data
+        */
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'id':
@@ -28,6 +37,12 @@ class RoomType extends Model
 
     public function create(array $data): int
     {
+        /**
+         * Creating new room type in database 
+         * 
+         * @param array $data array with params:name
+         * @return int inserted item index
+        */
         $data = $this->parseData($data);
 
         if (empty($data['name'])) {

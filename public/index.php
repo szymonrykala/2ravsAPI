@@ -91,7 +91,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
     $app->group('/acces', function (\Slim\Routing\RouteCollectorProxy $acceses) {
         $acceses->get('', \AccesController::class . ':getAllAccesTypes');
         $acceses->post('', \AccesController::class . ':createNewAccesType');
-        
+
         $acceses->group('/{acces_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $acces) {
             $acces->get('', \AccesController::class . ':getAccesTypeByID');
             $acces->patch('', \AccesController::class . ':updateAccesType');
@@ -126,10 +126,20 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
     $app->group('/buildings', function (\Slim\Routing\RouteCollectorProxy $buildings) {
         $buildings->get('', \BuildingController::class . ':getAllBuildings');
         $buildings->get('/search', \BuildingController::class . ':searchBuildings');
-        $buildings->post('', \BuildingController::class . ':createNewBuilding');
+        $buildings->post('', \BuildingController::class . ':createBuilding');
+
+        $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
+            $rooms->get('/types', \RoomTypeController::class . ':getAllTypes');
+            $rooms->post('/types', \RoomTypeController::class . ':createType');
+            $rooms->patch('/types', \RoomTypeController::class . ':updateType');
+            $rooms->delete('/types', \RoomTypeController::class . ':deleteType');
+
+            $rooms->get('', \RoomController::class . ':getAllRooms');
+            $rooms->get('/{room_id}', \RoomController::class . ':getRoom');
+        });
 
         $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
-            $specBuilding->get('', \BuildingController::class . ':getBuildingByID');
+            $specBuilding->get('', \BuildingController::class . ':getBuilding');
             $specBuilding->patch('', \BuildingController::class . ':updateBuilding');
             $specBuilding->delete('', \BuildingController::class . ':deleteBuilding');
             $specBuilding->get('/reservations', \ReservationController::class . ':getReservationsInBuilding');
