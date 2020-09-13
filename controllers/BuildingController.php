@@ -21,12 +21,12 @@ class BuildingController extends Controller
         $this->Building = $this->DIcontainer->get('Building');
     }
 
-    // GET /buildings/{building_id}
+    // GET /buildings
     public function getAllBuildings(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all buildings
-         * /buildings/{building_id}
+         * /buildings
          * 
          * @param Request $request 
          * @param Response $response 
@@ -63,7 +63,7 @@ class BuildingController extends Controller
     }
 
     // GET /buildings/{building_id}
-    public function getBuildingByID(Request $request, Response $response, $args): Response
+    public function getBuilding(Request $request, Response $response, $args): Response
     {
         /**
          * Getting building by building_id
@@ -85,7 +85,7 @@ class BuildingController extends Controller
     }
 
     // POST /buildings
-    public function createNewBuilding(Request $request, Response $response, $args): Response
+    public function createBuilding(Request $request, Response $response, $args): Response
     {
         /**
          * Creating new Building with data from request body

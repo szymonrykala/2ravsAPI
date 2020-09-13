@@ -3,6 +3,11 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[13-09-2020]
+- added /buildings/rooms/types get,post,patch,delete and get /buildings/rooms
+- implemented roomController
+- added roomType controller
+
 [11-09-2020]
 - BuildingsController ready
 - addressController ready
@@ -79,10 +84,18 @@ Room Reservation and Visualisation System API
     - DELETE /buildings/{id}    👌
     - GET /buildings/{id}/reservations      👌
 
-    - GET /buildings/{id}/rooms
-    - POST /buildings/{id}/rooms
+    
+    - GET /buildings/rooms/types
+    - POST /buildings/rooms/types
+    - PATCH /buildings/rooms/types
+    - DELETE /buildings/rooms/types
 
-    - GET /buildings/{id}/rooms/{idp}
+    - GET /buildings/rooms    👌
+
+    - GET /buildings/{id}/rooms    👌
+    - POST /buildings/{id}/rooms    👌
+
+    - GET /buildings/{id}/rooms/{idp}    👌
     - GET /buildings/{id}/rooms/{idp}/reservations      👌
-    - PATCH /buildings/{id}/rooms/{idp}
-    - DELETE /buildings/{id}/rooms/{idp}
+    - PATCH /buildings/{id}/rooms/{idp}    👌
+    - DELETE /buildings/{id}/rooms/{idp}    👌

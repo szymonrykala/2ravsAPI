@@ -5,6 +5,10 @@ class Room extends Model
 {
     protected $tableName = 'rooms';
     public $unUpdateAble = array('id');
+    public $columns = [
+        'id', 'name', 'building_id', 'room_type_id', 'seats_count', 'floor',
+        'equipment', 'blockade', 'state'
+    ];
 
     public function __construct(DBInterface $db)
     {

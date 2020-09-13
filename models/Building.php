@@ -3,6 +3,9 @@ require_once __DIR__ . '/Model.php';
 
 class Building extends Model
 {
+    /**
+     * Responsible for operation with buildings table in database
+    */
     protected $tableName = 'buildings';
     public $unUpdateAble = array('id');
     public $columns = ['id','name', 'rooms_count','address_id'];
@@ -14,6 +17,12 @@ class Building extends Model
 
     public function parseData(array $data): array
     {
+        /**
+         * Used for parsing data to right data type
+         * 
+         * @param array $data 
+         * @return array $data
+        */
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'name':
@@ -29,7 +38,12 @@ class Building extends Model
 
     public function create(array $data): int
     {
-
+        /**
+         * Creating new Building in database 
+         * 
+         * @param array $data array with params:name
+         * @return int inserted item index
+        */
         $data = $this->parseData($data);
         foreach ($data as $key => $value) {
             if (empty($value)) {
