@@ -30,10 +30,13 @@ class JWTMiddleware
 
         $response = $handler->handle($request); //handling request by API
 
+        $code = $response->getStatusCode();
+        $reason = $response->getReasonPhrase();
         $existingContent = (string) $response->getBody();
+
         $response = new Response();
         $response->getBody()->write($existingContent);
-        return $response;
+        return $response->withStatus($code,$reason);
     }
 
     public function recieveToken(Request $request): string
