@@ -11,7 +11,7 @@ class LogController extends Controller
     /**
      * Implement endpoints related with logs routs
      * 
-    */
+     */
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
@@ -22,7 +22,7 @@ class LogController extends Controller
     {
         /**
          * Getting all logs from database
-         * /logs
+         * GET /logs
          * 
          * @param Request $request 
          * @param Response $response 
@@ -32,7 +32,7 @@ class LogController extends Controller
          */
         $data = $this->handleExtensions($this->Log->read(), $request);
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // DELETE /logs/{log_id}
@@ -41,8 +41,8 @@ class LogController extends Controller
     public function deleteLogByID(Request $request, Response $response, $args): Response
     {
         /**
-         * Deleting Logs by id from /logs/{log_id} or request body "IDs":[]
-         * /logs/{log_id}
+         * Deleting Logs by id from /logs/{log_id} or request body "IDs":[] when log_id<0
+         * DELETE /logs/{log_id}
          * { "IDs":[log_id,log_id,log_id,log_id,log_id,...] }
          * 
          * @param Request $request 
@@ -65,16 +65,16 @@ class LogController extends Controller
             $this->Log->delete($logID);
         }
 
-        return $response->withStatus(204, "Succesfully deleted");
+        return $response->withStatus(204, "Deleted");
     }
 
-
+    // GET /logs
     public function searchLogs(Request $request, Response $response, $args): Response
     {
         /**
          * Searching for Logs with parameters given in Request(query string or body['search'])
          * Founded results are written into the response body
-         * /logs/search?<queryString>
+         * GET /logs/search?<queryString>
          * { "search":{"key":"value","key2":"value2"}}
          * 
          * @param Request $request 

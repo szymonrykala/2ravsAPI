@@ -42,8 +42,15 @@ abstract class Controller
         return base64_encode(random_bytes($len));
     }
 
-    protected function deleted($request): bool
+    protected function deleted(Request $request): bool
     {
+        /**
+         * checking if deleted flag param is ste to '1' or 'true' in query string
+         * 
+         * @param Request $request
+         * 
+         * @return bool $deleted
+         */
         if (isset($this->getQueryParam($request, 'deleted')[0])) {
             $var = $this->getQueryParam($request, 'deleted')[0];
             if ($var === 'true' || $var === '1') {
@@ -53,8 +60,17 @@ abstract class Controller
         return false;
     }
 
-    protected function getQueryParam(Request $request, string $key): array
+    protected function getQueryParam(Request $request, string $key = null): array
     {
+        /**
+         * Getting query param from query string
+         * getting params if $key is not defined 
+         * 
+         * @param Request $request
+         * @param string $key 
+         * 
+         * @return array $param
+         */
         $result = array();
         $queryString = $request->getUri()->getQuery();
 
@@ -87,6 +103,15 @@ abstract class Controller
 
     protected function getFrom(Request $request, array $rquiredParameters = array()): array
     {
+        /**
+         * Getting data defined in $rquiredParameters with given type
+         * if $rquiredParameters is not defined, getting all params given by user
+         * 
+         * @param Request $request
+         * @param array $rquiredParameters param => type, ...
+         * 
+         * @return array $data
+         */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
             throw new IncorrectRequestBodyException();
@@ -126,7 +151,7 @@ abstract class Controller
          * 
          * @param Request $request
          * 
-         * @return array
+         * @return array $queryParams
          */
         $queryString = $request->getUri()->getQuery();
 
@@ -149,6 +174,15 @@ abstract class Controller
     // ?ext=user_id,building_id,room_id...
     protected function handleExtensions(array $dataArray, Request $request): array
     {
+        /**
+         * Handling extensions requested by user
+         * ex.: address_id extendes data with specific address data
+         * 
+         * @param array $dataArray
+         * @param Request $request
+         * 
+         * @return array $dataArray 
+         */
         $extensions = $this->getQueryParam($request, 'ext');
 
         $roomMark = in_array('room_id', $extensions);

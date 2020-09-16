@@ -32,7 +32,7 @@ class AccesController extends Controller
          */
         $data = $this->Acces->read();
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     public function getAccesTypeByID(Request $request, Response $response, $args): Response
@@ -50,7 +50,7 @@ class AccesController extends Controller
          */
         $data = $this->Acces->read(['id' => $args['acces_id']])[0];
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     public function createNewAccesType(Request $request, Response $response, $args): Response

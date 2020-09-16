@@ -13,7 +13,6 @@ class AddressController extends Controller
      * 
      */
     private $Address;
-    protected $DIContainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -26,7 +25,7 @@ class AddressController extends Controller
     {
         /**
          * Getting specific address by address_id from database
-         * /addresses/{address_id}
+         * GET /addresses/{address_id}
          * 
          * @param Request $request 
          * @param Response $response 
@@ -36,7 +35,7 @@ class AddressController extends Controller
          */
         $data = $this->Address->read(['id' => (int)$args['address_id']])[0];
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // GET /addresses
@@ -44,7 +43,7 @@ class AddressController extends Controller
     {
         /**
          * Getting all addresses in database
-         * /addresses
+         * GET /addresses
          * 
          * @param Request $request 
          * @param Response $response 
@@ -54,7 +53,7 @@ class AddressController extends Controller
          */
         $data = $this->Address->read();
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // POST /addresses
@@ -62,6 +61,7 @@ class AddressController extends Controller
     {
         /**
          * Creating new Address from request body data
+         * POST /addresses
          * {
          *      "country":"",
          *      "town":"",
@@ -89,35 +89,15 @@ class AddressController extends Controller
             "user_id" => $request->getAttribute('user_id'),
             "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex"
         ]);
-        return $response->withStatus(201, "Succesfully created");
+        return $response->withStatus(201);
     }
 
-    // DELETE /addresses/{address_id}
-    public function deleteAddress(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Deleting Addres with given id
-         * /addresses/{address_id}
-         *
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $this->Address->delete((int)$args['address_id']);
-        $this->Log->create([
-            'user_id' => (int)$request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " deleted Address id=" . $args['address_id']
-        ]);
-        return $response->withStatus(204, "Succesfully deleted");
-    }
-
-    //PATCH /addresses/{address_id}
+    // PATCH /addresses/{address_id}
     public function updateAddress(Request $request, Response $response, $args): Response
     {
         /**
          * Updating address with given id with data from request body 
+         * PATCH /addresses/{address_id}
          *  
          * @param Request $request 
          * @param Response $response 
@@ -134,6 +114,28 @@ class AddressController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data: $dataString"
         ]);
-        return $response->withStatus(204, "Succesfully updated");
+        return $response->withStatus(204, "Updated");
     }
+
+    // DELETE /addresses/{address_id}
+    public function deleteAddress(Request $request, Response $response, $args): Response
+    {
+        /**
+         * Deleting Addres with given id
+         * DELETE /addresses/{address_id}
+         *
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        $this->Address->delete((int)$args['address_id']);
+        $this->Log->create([
+            'user_id' => (int)$request->getAttribute('user_id'),
+            'message' => "User " . $request->getAttribute('email') . " deleted Address id=" . $args['address_id']
+        ]);
+        return $response->withStatus(204, "Deleted");
+    }
+
 }

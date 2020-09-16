@@ -18,26 +18,60 @@ class RoomTypeController extends Controller
         $this->Type = $this->DIcontainer->get('RoomType');
     }
 
+    // GET /buildings/rooms/types
     public function getAllTypes(Request $request, Response $response, $args): Response
     {
+        /**
+         * Getting all room types,
+         * returning array of items
+         * GET /buildings/rooms/types
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $data = $this->Type->read();
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
+    // POST /buildings/rooms/types
     public function createType(Request $request, Response $response, $args): Response
     {
+        /**
+         * Creating new room type,
+         * POST /buildings/rooms/types
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $data = $this->getFrom($request, ["name" => "string"]);
         $lastIndex = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'message' => "User " . $request->getAttribute('email') . " created new room type id=$lastIndex"
         ]);
-        return $response->withStatus(204, "Succesfully created");
+        return $response->withStatus(201);
     }
 
+    // PATCH /buildings/rooms/types/{room_type_id}
     public function updateType(Request $request, Response $response, $args): Response
     {
+        /**
+         * Updating room type by room_type_id,
+         * PATCH /buildings/rooms/types/{room_type_id}
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $typeID = (int)$args['room_type_id'];
 
         $data = $this->getFrom($request);
@@ -48,17 +82,28 @@ class RoomTypeController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID . " data: $dataString"
         ]);
-        return $response->withStatus(204, "Succesfully updated");
+        return $response->withStatus(204, "Updated");
     }
 
+    // DELETE /buildings/rooms/types/{room_type_id}
     public function deleteType(Request $request, Response $response, $args): Response
     {
+        /**
+         * Deleting room type by room_type_id,
+         * DELETE /buildings/rooms/types/{room_type_id}
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $typeID = (int)$args['room_type_id'];
         $this->Type->delete($typeID);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID
         ]);
-        return $response->withStatus(204, "Succesfully deleted");
+        return $response->withStatus(204, "Deleted");
     }
 }

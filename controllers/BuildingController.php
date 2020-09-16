@@ -25,8 +25,9 @@ class BuildingController extends Controller
     public function getAllBuildings(Request $request, Response $response, $args): Response
     {
         /**
-         * Getting all buildings
-         * /buildings
+         * Getting all buildings from database
+         * returning array of buildings
+         * GET /buildings
          * 
          * @param Request $request 
          * @param Response $response 
@@ -36,7 +37,7 @@ class BuildingController extends Controller
          */
         $data = $this->handleExtensions($this->Building->read(), $request);
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // GET /buildings/search
@@ -45,12 +46,12 @@ class BuildingController extends Controller
         /**
          * Searching for Building with parameters given in Request(query string or body['search'])
          * Founded results are written into the response body
-         * /buildings/search?<queryString>
+         * GET /buildings/search?<queryString>
          * { "search":{"key":"value","key2":"value2"}}
          * 
          * @param Request $request 
          * @param Response $response 
-         * @param $args
+         * @param array $args
          * 
          * @return Response 
          */
@@ -66,8 +67,8 @@ class BuildingController extends Controller
     public function getBuilding(Request $request, Response $response, $args): Response
     {
         /**
-         * Getting building by building_id
-         * /buildings/{building_id}
+         * Getting building by building_id with all extensions
+         * GET /buildings/{building_id}
          * 
          * @param Request $request 
          * @param Response $response 
@@ -81,7 +82,7 @@ class BuildingController extends Controller
         $data['address'] = $Address->read(['id' => $data['address_id']])[0];
         unset($data['address_id']);
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // POST /buildings
@@ -89,16 +90,16 @@ class BuildingController extends Controller
     {
         /**
          * Creating new Building with data from request body
+         * POST /buildings
          * {
          *      "name":"",
          *      "rooms_count":20,
          *      "address_id":2
          * }
-         * /buildings
          * 
          * @param Request $request 
          * @param Response $response 
-         * @param $args
+         * @param array $args
          * 
          * @return Response 
          */
@@ -112,7 +113,7 @@ class BuildingController extends Controller
             'building_id' => $lastIndex,
             'message' => "User $userMail created Building id=$lastIndex"
         ]);
-        return $response->withStatus(204, "Succesfully created");
+        return $response->withStatus(201);
     }
 
     // PATCH /buildings/{building_id}
@@ -120,14 +121,19 @@ class BuildingController extends Controller
     {
         /**
          * Updating sepcific BUilding with data from request body
-         * /building/{building_id}
+         * PATCH /building/{building_id}
+         * {
+         *      "name":"",
+         *      "rooms_count":20,
+         *      "address_id":2
+         * }
          * 
          * @param Request $request 
          * @param Response $response 
-         * @param $args
+         * @param array $args
          * 
          * @return Response 
-        */
+         */
         $data = $this->getFrom($request);
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');
@@ -142,23 +148,22 @@ class BuildingController extends Controller
             'building_id' => $buildingID,
             'message' => "user $userMail updated Building id=$buildingID data: $dataString"
         ]);
-        return $response->withStatus(204, "Succesfully updated");
+        return $response->withStatus(204, "Updated");
     }
 
     // DELETE /buildings/{building_id}
     public function deleteBuilding(Request $request, Response $response, $args): Response
     {
-        /* dont work becouse of db integrity */
         /**
          * Deleting specific building by building_id
-         * /buildings
+         * DELETE /buildings/{building_id}
          * 
          * @param Request $request 
          * @param Response $response 
-         * @param $args
+         * @param array $args
          * 
          * @return Response 
-        */
+         */
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');
         $buildingID = (int)$args['building_id'];
@@ -170,6 +175,6 @@ class BuildingController extends Controller
             'message' => "User $userMail deleted Building id=$buildingID"
         ]);
 
-        return $response->withStatus(204, "Succesfully deleted");
+        return $response->withStatus(204, "Deleted");
     }
 }
