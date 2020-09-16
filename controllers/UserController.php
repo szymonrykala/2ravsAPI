@@ -19,12 +19,23 @@ class UserController extends Controller
         $this->User = $this->DIcontainer->get('User');
     }
 
-    /* {
-        email:{"type":"string"}
-        password:{"type":"string"}
-    } */
+    // POST /auth
     public function verifyUser(Request $request, Response $response, $args): Response
     {
+        /**
+         * Verifying User by email and password
+         * POST /auth
+         * {
+         *    email:{"type":"string"},
+         *    password:{"type":"string"}
+         * }
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         list(
             'email' => $email,
             'password' => $password
@@ -77,18 +88,28 @@ class UserController extends Controller
         }
 
         $response->getBody()->write(json_encode($data));
-        // $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
-    /* {
-        "name":{"type":"string"},
-        "surname":{"type":"string"},
-        "email":{"type":"string"},
-        "password":{"type":"string","min":10,"max":20}
-    } */
+    // POST /users
     public function registerNewUser(Request $request, Response $response, $args): Response
     {
+        /**
+         * Creating new User
+         * POST /users
+         * {
+         *    "name":{"type":"string"},
+         *    "surname":{"type":"string"},
+         *    "email":{"type":"string"},
+         *    "password":{"type":"string","min":10,"max":20}
+         * }
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         list(
             'name' => $name,
             'surname' => $surname,
@@ -132,13 +153,22 @@ class UserController extends Controller
         /* Mail->register($key)->sendTo($email); */
 
         // $response->getBody()->write("");
-        return $response->withStatus(201, "User registered");
+        return $response->withStatus(201);
     }
 
-    //##########################
-    // /users/activate?key=<string key>
+    // GET /users/activate?key=<string key>
     public function activateUser(Request $request, Response $response, $args): Response
     {
+        /**
+         * Activating user and redirect user to given url
+         * GET /users/activate?key=<string key>
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $key = $this->getQueryParam($request, 'key')[0];
 
         if (!$this->User->exist(['action_key' => $key])) {
@@ -156,28 +186,31 @@ class UserController extends Controller
             'user_id' => $userID,
             'message' => "Account user $email was activated"
         ]);
-        // $response->getBody();
-        return $response->withStatus(201, "User activated");
+
+        //redirect
+        return $response;
     }
 
     public function resendActivationEmail(Request $request, Response $response, $args): Response
     {
-
-        $response->getBody()->write("User controller");
-        return $response;
-    }
-    //###########################
-
-    public function logoutUser(Request $request, Response $response, $args): Response
-    {
-
-        $response->getBody()->write("User controller");
+        throw new APIException("UserController::resendActivationEmail not implemented", 501);
         return $response;
     }
 
     // GET /users?ext=<acces_id>
     public function getAllUsers(Request $request, Response $response, $args): Response
     {
+        /**
+         * Getting all users
+         * returning array of items
+         * GET /users?ext=<acces_id>
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $ext = $this->getQueryParam($request, 'ext');
         if (in_array('acces_id', $ext)) {
             $Acces = $this->DIcontainer->get('Acces');
@@ -199,6 +232,16 @@ class UserController extends Controller
     // GET /users/{user_id}?ext=<acces_id>
     public function getSpecificUser(Request $request, Response $response, $args): Response
     {
+        /**
+         * Getting specific User by user_id
+         * GET /users/{user_id}?ext=<acces_id>
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $userID = $args['userID'];
         $ext = $this->getQueryParam($request, 'ext');
         if (in_array('acces_id', $ext)) {
@@ -218,17 +261,26 @@ class UserController extends Controller
         return $response->withStatus(200);
     }
 
-    //some data have to be passed else "bad request"
-    /* optional: 
-    {
-        "name":{string},
-        "surname":{string},
-        "email":{string}
-        "password":{string},
-        "new_password":{string},
-    } */
+    // PATCH /users/{user_id}
     public function updateUserInformations(Request $request, Response $response, $args): Response
     {
+        /**
+         * Updating user informations by user_id
+         * PATCH /users/{user_id}
+         * {
+         *    "name":{string},
+         *    "surname":{string},
+         *    "email":{string}
+         *    "password":{string},
+         *    "new_password":{string},
+         * } 
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $qData = $this->getFrom($request);
         $currentUser = (int) $request->getAttribute('user_id');
         $editedUser = $args['userID'];
@@ -281,12 +333,23 @@ class UserController extends Controller
         $dataString = implode(',', array_keys($data));
         $this->User->update($editedUser, $data);
         $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data: $dataString"]);
-        // $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+
+        return $response->withStatus(204, "Updated");
     }
 
+    // DELETE /users/{user_id}
     public function deleteUser(Request $request, Response $response, $args): Response
     {
+        /**
+         * deleting user by user_id
+         * DELETE /users/{user_id}
+         * 
+         * @param Request $request
+         * @param Response $response
+         * @param array $array
+         * 
+         * @return Response $response
+         */
         $deletedUser = (int) $args['userID'];
         $userEmail = $request->getAttribute('email');
 
@@ -298,7 +361,6 @@ class UserController extends Controller
             "message" => "User $userEmail deleted $deletedUserEmail"
         ]);
 
-        $response->getBody()->write("User controller");
-        return $response;
+        return $response->withStatus(204, "Deleted");
     }
 }

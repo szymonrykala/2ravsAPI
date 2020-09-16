@@ -24,6 +24,7 @@ class RoomController extends Controller
     {
         /**
          * Getting all rooms in specific building 
+         * GET /buildings/{building_id}/rooms
          * 
          * @param Request $request 
          * @param Response $response
@@ -41,7 +42,7 @@ class RoomController extends Controller
         }
         $data = $this->handleExtensions($rooms, $request);
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // GET /buildings/{building_id}/rooms/{room_id}
@@ -49,6 +50,7 @@ class RoomController extends Controller
     {
         /**
          * Getting specific room in specific building from database
+         * GET /buildings/{building_id}/rooms/{room_id}
          * 
          * @param Request $request 
          * @param Response $response
@@ -70,7 +72,7 @@ class RoomController extends Controller
         unset($room['building_id']);
 
         $response->getBody()->write(json_encode($room));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // GET /buildings/rooms/{room_id}
@@ -78,6 +80,7 @@ class RoomController extends Controller
     {
         /**
          * Getting specific room form
+         * GET /buildings/rooms/{room_id}
          * 
          * @param Request $request 
          * @param Response $response
@@ -99,7 +102,7 @@ class RoomController extends Controller
 
         $data = $this->handleExtensions($room, $request);
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
     // GET /buildings/rooms
@@ -107,6 +110,7 @@ class RoomController extends Controller
     {
         /**
          * Getting all rooms in database
+         * GET /buildings/rooms
          * 
          * @param Request $request 
          * @param Response $response
@@ -124,13 +128,15 @@ class RoomController extends Controller
 
         $data = $this->handleExtensions($rooms, $request);
         $response->getBody()->write(json_encode($data));
-        return $response;
+        return $response->withStatus(200);
     }
 
+    // POST /buildings/{building_id}/rooms
     public function createRoom(Request $request, Response $response, $args): Response
     {
         /**
          * creating room in specified building
+         * returning 201
          * POST /buildings/{building_id}/rooms
          * {
          *      "name":"",
@@ -161,14 +167,16 @@ class RoomController extends Controller
             'room_id' => $lastIndex,
             'message' => "User " . $request->getAttribute('email') . " created new room in building id=$buildingID"
         ]);
-        return $response->withStatus(204, "Successfully created");
+        return $response->withStatus(201);
     }
 
+    // PATCH /buildings/{building_id}/rooms/{room_id}
     public function updateRoomByID(Request $request, Response $response, $args): Response
     {
         /**
          * creating room in specified building
-         * POST /buildings/{building_id}/rooms
+         * returning 204
+         * PATCH /buildings/{building_id}/rooms/{room_id}
          * {
          *      "name":"",
          *      "room_type_id":1,
@@ -199,13 +207,15 @@ class RoomController extends Controller
             'message' => "User " . $request->getAttribute('email') . " updated room data: $dataString"
         ]);
 
-        return $response->withStatus(204, "Successfully updated");
+        return $response->withStatus(204, "Updated");
     }
 
+    // DELETE /building/{building_id}/rooms/{room_id}
     public function deleteRoomByID(Request $request, Response $response, $args): Response
     {
         /**
          * Deleting room from building
+         * returning 204
          * DELETE /building/{building_id}/rooms/{room_id}
          * 
          */
@@ -219,6 +229,6 @@ class RoomController extends Controller
             'building_id' => $buildingID,
             'message' => "User " . $request->getAttribute('email') . " deleted room"
         ]);
-        return $response->withStatus(204, "Successfully deleted");
+        return $response->withStatus(204, "Deleted");
     }
 }
