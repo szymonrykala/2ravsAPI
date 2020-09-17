@@ -41,21 +41,14 @@ class Room extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-        //checking is it empty
-        foreach ($data as $key => $value) {
-            if (empty($value) && $key !== 'state' && $key !== "floor") {
-                throw new EmptyVariableException($key);
-            }
-        }
 
-        if ($this->exist(array(
+        $this->exist(array(
             "name" => $data["name"],
             "floor" => $data["floor"],
             "building_id" => $data["building_id"]
-        ))) {
-            throw new AlreadyExistException($data);
-        }
+        ), true);
 
         $this->DB->query(
             "INSERT INTO $this->tableName(building_id,name,state,floor,room_type_id,seats_count,equipment)

@@ -1,11 +1,18 @@
 # 2ravsAPI
 
 Room Reservation and Visualisation System API
+## To refactor
+Model::exist -> Model::assertExist()
 
 ## Changelog
 
-[13-09-2020]
+[17-09-2020]
+### Added
+- filtering unexpected variables in model layer
+- protected column property in models
+- refactor Model::exist(array $params,bool $reverse) reverse field reverse working of function if true throws when already exist
 
+[13-09-2020]
 -   added /buildings/rooms/types get,post,patch,delete and get /buildings/rooms
 -   implemented RoomController
 -   added roomTypeController

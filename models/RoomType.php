@@ -48,11 +48,10 @@ class RoomType extends Model
          * @param array $data array with params:name
          * @return int inserted item index
          */
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        if (empty($data['name'])) {
-            throw new EmptyVariableException('name');
-        }
+        $this->exist($data, true); //if already exist, throws an error
 
         $this->DB->query(
             "INSERT INTO $this->tableName(name) VALUES(:name)",

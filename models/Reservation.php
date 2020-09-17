@@ -5,6 +5,11 @@ class Reservation extends Model
 {
     protected $tableName = 'reservations';
     public $unUpdateAble = array('id', 'room_id', 'building_id', 'user_id', 'created-at');
+    protected $columns = [
+        'id', 'title', 'subtitle', 'room_id', 'building_id', 'user_id',
+        'start_time', 'end_time', 'date', 'created_at', 'updated_at',
+        'confirmed', 'confirming_user_id', 'confirmed_at', 'deleted'
+    ];
 
     public function __construct(DBInterface $db)
     {
@@ -76,13 +81,8 @@ class Reservation extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-        //checking is it empty
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-        }
 
         //checking time
         $Date = new DateTime();
@@ -94,9 +94,6 @@ class Reservation extends Model
         } elseif ($currentDate == $data['date'] && $currentTime >= $data['start_time']) {
             throw new ReservationException("Reservation time is too late");
         }
-
-
-        $oldTime = "23:35:19";
 
         //building exist?
         $buildingExist = $this->DB->query(

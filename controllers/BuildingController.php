@@ -113,7 +113,7 @@ class BuildingController extends Controller
             'building_id' => $lastIndex,
             'message' => "User $userMail created Building id=$lastIndex"
         ]);
-        return $response->withStatus(201);
+        return $response->withStatus(201,"Created");
     }
 
     // PATCH /buildings/{building_id}

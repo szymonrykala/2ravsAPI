@@ -5,7 +5,7 @@ class Address extends Model
 {
     protected $tableName = 'addresses';
     public $unUpdateAble = array('id');
-    public $columns = ['id','country','town','postal_code','street','number'];
+    public $columns = ['id', 'country', 'town', 'postal_code', 'street', 'number'];
 
     public function __construct(DBInterface $db)
     {
@@ -29,17 +29,10 @@ class Address extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-        }
-
-        if ($this->exist($data)) {
-            throw new AlreadyExistException($data);
-        }
+        $this->exist($data, true);//if already exist, throws an error
 
         $this->DB->query(
             "INSERT INTO $this->tableName(number,town,street,postal_code,country)

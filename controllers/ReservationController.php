@@ -211,7 +211,7 @@ class ReservationController extends Controller
             'message' => "User $currentUserMail created reservation"
         ]);
 
-        return $response->withStatus(201);
+        return $response->withStatus(201,"Created");
     }
 
     // PATCH /reservations/{reservation_id}

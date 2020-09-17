@@ -3,7 +3,7 @@
 abstract class Model
 {
     public $unUpdateAble = array();
-    public $columns = [];
+    protected $columns = [];
     protected $DB = null;
     protected $tableName = null;
 
@@ -19,10 +19,34 @@ abstract class Model
         return $data;
     }
 
-
-    public function exist(array $params): bool
+    protected function filterVariables(array $data): array
     {
-        $params = $this->parseData($params);
+        /**
+         * Unsetting unexpected variables from params
+         * 
+         * @param array $params
+         * @return array $params filtered
+         */
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $this->columns)) {
+                unset($data[$key]);
+            }
+        }
+        return $data;
+    }
+
+    public function exist(array $params, bool $reverse = false): void
+    {
+        /**
+         * if @param $reverse==false if item with given $params not exist, throw InvalidArgumentException
+         * if @param $reverse==true if item with given $params exist, throw InvalidArgumentException
+         * 
+         * @param array $params
+         * @param bool $reverse=false
+         * 
+         * @throws InvalidArgumentException
+         * @return void
+        */
         $sql = "SELECT id FROM $this->tableName WHERE 1=1 ";
         $queryParams = array();
 
@@ -31,15 +55,18 @@ abstract class Model
             $queryParams[":$key"] = $value;
         }
 
-        $exist = (bool) !empty($this->DB->query($sql, $queryParams));
-        return $exist;
+        $empty = empty($this->DB->query($sql, $queryParams));
+        if ($empty) {
+            $dataString = implode(',', array_keys($params));
+            throw new InvalidArgumentException("Resource with given $dataString do not exist in $this->tableName. You can not perform this action.", 400);
+        } elseif ($reverse && !$empty) {
+            $dataString = implode(',', array_keys($params));
+            throw new InvalidArgumentException("Resource with given $dataString already exist in $this->tableName. You can not perform this action.", 400);
+        }
     }
 
-    public function read(array $params = array(), string $sortKey = 'id', string $direction  = 'DESC'): array
+    public function read(array $params = array(), string $sortKey = '', string $direction  = 'DESC'): array
     {
-        /* 
-        maybe make filtering by columns in array like in search?
-         */
         $params = $this->parseData($params);
 
         $sql = "SELECT * FROM $this->tableName WHERE 1=1";
@@ -49,7 +76,10 @@ abstract class Model
             $sql .= " AND $key=:$key";
             $queryParams[":$key"] = $value;
         }
-        $sql .= " ORDER BY $sortKey $direction";
+
+        if (!empty($sortKey) & !empty($direction)) {
+            $sql .= " ORDER BY $sortKey $direction";
+        }
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
@@ -65,15 +95,13 @@ abstract class Model
     // searching with LIKE %param%
     public function search(array $params, string $sortKey = 'id', string $direction  = 'DESC')
     {
+        $params = $this->filterVariables($params);
         $params = $this->parseData($params);
 
         $sql = "SELECT * from $this->tableName WHERE 1=1";
         $queryParams = array();
 
         foreach ($params as $key => $value) {
-            if (!in_array($key, $this->columns)) {
-                continue;
-            }
             $sql .= " AND $key LIKE :$key";
             $queryParams[":$key"] = "%$value%";
         }
@@ -97,23 +125,21 @@ abstract class Model
 
     public function update(int $id, array $params): void
     {
+        $this->exist(array('id' => $id));
+
+        $params = $this->filterVariables($params);
+        $params = $this->parseData($params);
+
         $sql = "UPDATE $this->tableName SET";
         $queryParams = array();
 
-        $params = $this->parseData($params);
-
         foreach ($params as $key => $value) {
             if (in_array($key, $this->unUpdateAble)) {
-                throw new UnUpdateableParameterException($key);
-            } else {
-
-                if (empty($value) && $value !== 0 && $value !== false) {
-                    throw new EmptyVariableException($key);
-                }
-                count($queryParams) >= 1 ? $sql .= "," : null;
-                $sql .= " $key=:$key";
-                $queryParams[":$key"] = $value;
+                continue;
             }
+            count($queryParams) >= 1 ? $sql .= "," : null;
+            $sql .= " $key=:$key";
+            $queryParams[":$key"] = $value;
         }
 
         $sql .= " WHERE id=:id";
@@ -124,9 +150,8 @@ abstract class Model
 
     public function delete(int $id): void
     {
-        if (!$this->exist(array('id' => $id))) {
-            throw new NothingFoundException($this->tableName);
-        }
+        $this->exist(array('id' => $id));
+
         $this->DB->query(
             "DELETE FROM $this->tableName WHERE id=:id",
             array(':id' => $id)

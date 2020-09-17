@@ -153,7 +153,7 @@ class UserController extends Controller
         /* Mail->register($key)->sendTo($email); */
 
         // $response->getBody()->write("");
-        return $response->withStatus(201);
+        return $response->withStatus(201,"Created");
     }
 
     // GET /users/activate?key=<string key>

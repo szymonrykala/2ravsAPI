@@ -105,7 +105,7 @@ class AccesController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             "message" => "User " . $request->getAttribute('email') . " created new acces class '" . $data['name'] . "' id=$newID "
         ]);
-        return $response->withStatus(201);
+        return $response->withStatus(201,"Created");
     }
 
     public function updateAccesType(Request $request, Response $response, $args): Response
