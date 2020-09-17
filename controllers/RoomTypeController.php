@@ -56,7 +56,7 @@ class RoomTypeController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             'message' => "User " . $request->getAttribute('email') . " created new room type id=$lastIndex"
         ]);
-        return $response->withStatus(201);
+        return $response->withStatus(201,"Created");
     }
 
     // PATCH /buildings/rooms/types/{room_type_id}

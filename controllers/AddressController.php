@@ -89,7 +89,7 @@ class AddressController extends Controller
             "user_id" => $request->getAttribute('user_id'),
             "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex"
         ]);
-        return $response->withStatus(201);
+        return $response->withStatus(201,"Created");
     }
 
     // PATCH /addresses/{address_id}
