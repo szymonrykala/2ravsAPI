@@ -43,13 +43,16 @@ function myErrorHandler(Exception $e)
 {
     $data = [
         'succes' => false,
-        'status' => $e->httpCode,
         'error' => [
+            // 'type'=>gettype($e),
             'message' => $e->getMessage(),
+            'file'=>$e->getFile(),
+            'line'=>$e->getLine(),
+            // 'trace' => $e->getTrace(),
             'code' => $e->getCode()
         ]
     ];
-    http_response_code($e->httpCode);
+    http_response_code($e->getCode());
     header('content-type:application/json');
     echo json_encode($data);
     return true;
