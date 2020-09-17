@@ -5,6 +5,11 @@ class User extends Model
 {
     protected $tableName = 'users';
     public $unUpdateAble = array('id', 'created_at');
+    protected $columns = [
+        'id', 'acces_id', 'name', 'surname', 'password',
+        'last_login', 'email', 'updated_at', 'img_url',
+        'activated', 'login_fails', 'created_at', 'action_key'
+    ];
 
     public function __construct(DBInterface $db)
     {
@@ -37,21 +42,14 @@ class User extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
         $data['name'] = preg_replace('/\s/', '', $data['name']);
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 
-        //checking is it empty
-        foreach ($data as $key => $value) {
-            if (empty($value) && $key !== 'activated') {
-                throw new EmptyVariableException($key);
-            }
-        }
+        $this->exist(array('email' => $data['email'])); //if already exist, throws an error
 
-        if ($this->exist(array('email' => $data['email']))) {
-            throw new AlreadyExistException($data);
-        }
 
         $options = [
             'cost' => 12,

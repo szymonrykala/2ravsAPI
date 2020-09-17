@@ -5,10 +5,10 @@ class Building extends Model
 {
     /**
      * Responsible for operation with buildings table in database
-    */
+     */
     protected $tableName = 'buildings';
     public $unUpdateAble = array('id');
-    public $columns = ['id','name', 'rooms_count','address_id'];
+    public $columns = ['id', 'name', 'rooms_count', 'address_id'];
 
     public function __construct(DBInterface $db)
     {
@@ -22,7 +22,7 @@ class Building extends Model
          * 
          * @param array $data 
          * @return array $data
-        */
+         */
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'name':
@@ -43,17 +43,11 @@ class Building extends Model
          * 
          * @param array $data array with params:name
          * @return int inserted item index
-        */
+         */
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-        }
 
-        if ($this->exist($data)) {
-            throw new AlreadyExistException($data);
-        }
+        $this->exist($data, true);//if already exist, throws an error
 
         $this->DB->query(
             "INSERT INTO $this->tableName(address_id,name,rooms_count) VALUES(:address_id,:name,:rooms_count)",

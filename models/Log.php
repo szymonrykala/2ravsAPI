@@ -35,23 +35,8 @@ class Log extends Model
 
     public function create(array $data): int
     {
-
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-
-        //checking is it empty
-        foreach ($data as $key => &$value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-        }
-
-        // have to fill not existing fields
-        $fields = array('room_id', 'reservation_id', 'building_id');
-        foreach ($fields as $field) {
-            if (!isset($data[$field])) {
-                $data[$field] = null;
-            }
-        }
 
         $this->DB->query(
             "INSERT INTO $this->tableName(
