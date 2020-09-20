@@ -38,6 +38,12 @@ class Log extends Model
         $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
+        foreach ($this->columns as $key) {
+            if (!isset($data[$key])) {
+                $data[$key] = Null;
+            }
+        }
+
         $this->DB->query(
             "INSERT INTO $this->tableName(
                 message,

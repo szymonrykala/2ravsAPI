@@ -4,12 +4,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response;
 
-/* 
-transforming response into JSON Response
-schema{
-    
-}
-*/
 
 class JSONMiddleware
 {
@@ -28,6 +22,6 @@ class JSONMiddleware
         $response = new Response();
         $response->getBody()->write(json_encode($data));
         $response = $response->withHeader('content-type', 'application/json');
-        return $response->withStatus($code);
+        return $response->withStatus($code, $reason);
     }
 }

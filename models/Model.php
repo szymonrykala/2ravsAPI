@@ -46,7 +46,7 @@ abstract class Model
          * 
          * @throws InvalidArgumentException
          * @return void
-        */
+         */
         $sql = "SELECT id FROM $this->tableName WHERE 1=1 ";
         $queryParams = array();
 
@@ -83,7 +83,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new NothingFoundException($this->tableName);
+            throw new UnexpectedValueException("Nothing was found in $this->tableName", 404);
         }
 
         foreach ($result as &$r) {

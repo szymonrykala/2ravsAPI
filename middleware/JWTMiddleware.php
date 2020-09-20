@@ -6,6 +6,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 use Nowakowskir\JWT\TokenEncoded;
 use Nowakowskir\JWT\JWT;
+use Opis\Closure\SecurityException;
 
 class JWTMiddleware
 {
@@ -20,7 +21,7 @@ class JWTMiddleware
         ) = $this->getData($token);
 
         if ($exTime < time()) {
-            throw new AuthorizationException("token has been expired");
+            throw new SecurityException("Token has been expired");
         }
 
         $request = $request
@@ -36,14 +37,14 @@ class JWTMiddleware
 
         $response = new Response();
         $response->getBody()->write($existingContent);
-        return $response->withStatus($code,$reason);
+        return $response->withStatus($code, $reason);
     }
 
     public function recieveToken(Request $request): string
     {
         $authorization = $request->getHeader('Authorization');
         if (empty($authorization)) {
-            throw new AuthorizationException('No Authorization header');
+            throw new SecurityException("No authorization header", 401);
         }
 
         return explode(' ', $authorization[0])[1];

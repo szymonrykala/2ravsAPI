@@ -43,10 +43,11 @@ class AuthorizationMiddleware
         $response = $handler->handle($request); //handling request by API
         $existingContent = (string) $response->getBody();
         $code = $response->getStatusCode();
+        $reason = $response->getReasonPhrase();
 
         $response = new Response();
         $response->getBody()->write($existingContent);
-        return $response->withHeader('content-type', 'application/json')->withStatus($code);
+        return $response->withStatus($code, $reason);
     }
 
     public function getTarget(Request $request): string

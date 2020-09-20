@@ -114,7 +114,7 @@ abstract class Controller
          */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new IncorrectRequestBodyException();
+            throw new UnexpectedValueException("Request body is empty or is not in right format",400);
         }
 
         //checking required parameters

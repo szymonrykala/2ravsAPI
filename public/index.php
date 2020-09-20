@@ -24,7 +24,7 @@ $rootApp->addBodyParsingMiddleware();
     CLIENT  <--  (JSONMiddleware)  <--  (AuthorizationMiddleware)  <--  (AccesMiddleware)  <--  API resources  */
 // $rootApp->add(new AccesMiddleware());
 
-$rootApp->add(new JSONMiddleware());
+
 
 //Models
 //each Model have it's own connection to Database
@@ -46,8 +46,8 @@ function myErrorHandler(Exception $e)
         'error' => [
             // 'type'=>gettype($e),
             'message' => $e->getMessage(),
-            'file'=>$e->getFile(),
-            'line'=>$e->getLine(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
             // 'trace' => $e->getTrace(),
             'code' => $e->getCode()
         ]
@@ -168,12 +168,9 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 // 404 error heandler 
 $rootApp->any('{route:.*}', function (Request $request, Response $response) {
 
-    $response->getBody()->write(json_encode(array(
-        "succes" => false,
-        "errorMessage" => "Request URI does not exist",
-        "errorCode" => 404
-    )));
-    return $response->withStatus(404)->withHeader("content-type", "application/json");
+    throw new Exception('Requested URI does not exist', 404);
 });
+
+$rootApp->add(new JSONMiddleware());
 
 $rootApp->run();
