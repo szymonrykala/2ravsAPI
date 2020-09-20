@@ -6,6 +6,9 @@ use Opis\Closure\SecurityException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
+use Slim\Exception\HttpForbiddenException;
+use Slim\Exception\HttpNotImplementedException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -81,15 +84,15 @@ class UserController extends Controller
                 'activated' => $activated
             ) = $this->User->read(array('email' => $email))[0];
         } catch (LengthException $e) {
-            throw new Exception("Can not login. User with email '$email' do not exist", 400);
+            throw new HttpBadRequestException($request, "Can not login. User with email '$email' do not exist");
         }
 
         if ((bool)$activated === false) {
-            throw new LogicException("Can not authenticate because user is not activated", 409); //confilct
+            throw new HttpForbiddenException($request, "Can not authenticate because user is not activated"); //confilct
         }
 
         if ($loginFails >= 5) {
-            throw new SecurityException("Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator", 409);
+            throw new HttpForbiddenException($request, "Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator");
         }
 
         if (password_verify($password, $userPassword)) {
@@ -110,7 +113,7 @@ class UserController extends Controller
                 'user_id' => $userID,
                 'message' => "User $email veryfing failed"
             ));
-            throw new SecurityException("Authentication failed (count:$loginFails). Password is not correct.", 400);
+            throw new HttpBadRequestException($request, "Authentication failed (count:$loginFails). Password is not correct.", 400);
         }
 
         $response->getBody()->write(json_encode($data));
@@ -149,19 +152,19 @@ class UserController extends Controller
         ));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException("Given email is not in correct format.", 400);
+            throw new HttpBadRequestException($request, "Given email is not in correct format.");
         }
 
         $passLen = strlen($password);
         preg_match_all('/[0-9]/', $password, $numsCount);
         if ($passLen < 10 || $passLen > 20) {
-            throw new LengthException("Password length is not acceptable (min=10, max=20)", 400);
+            throw new HttpBadRequestException($request, "Password length is not acceptable (min=10, max=20)");
         } elseif (strpos(' ', $password)) {
-            throw new SecurityException("Password can not contain spaces", 400);
+            throw new HttpBadRequestException($request, "Password can not contain spaces");
         } elseif (strpos('<', $password) || strpos('>', $password)) {
-            throw new SecurityException("Password can not contain '<' and '>' ", 400);
+            throw new HttpBadRequestException($request, "Password can not contain '<' and '>' ");
         } elseif (count($numsCount[0]) < 4) {
-            throw new SecurityException("Password need to contain minimum 4 digits", 400);
+            throw new HttpBadRequestException($request, "Password need to contain minimum 4 digits");
         }
 
         $randomKey = $this->getRandomKey(60);
@@ -201,7 +204,7 @@ class UserController extends Controller
 
         if (empty($this->User->read(['action_key' => $key])[0])) {
             //if user with given key was not found
-            throw new Exception('Given activation key is not exist', 400);
+            throw new HttpBadRequestException($request, 'Given activation key is not exist');
         }
 
         list(
@@ -221,7 +224,7 @@ class UserController extends Controller
 
     public function resendActivationEmail(Request $request, Response $response, $args): Response
     {
-        throw new Exception("UserController::resendActivationEmail not implemented", 501);
+        throw new HttpNotImplementedException($request, "UserController::resendActivationEmail not implemented");
         return $response;
     }
 
@@ -326,7 +329,7 @@ class UserController extends Controller
 
         if (isset($qData['email']) && $qData['email'] !== $userEmail) {
             if (!filter_var($qData['email'], FILTER_VALIDATE_EMAIL)) {
-                throw new CredentialsPolicyException('email is not correct format');
+                throw new HttpBadRequestException($request, 'email is not correct format');
             }
             $data['email'] = $qData['email'];
         }
@@ -335,7 +338,7 @@ class UserController extends Controller
             (isset($qData['password']) && !isset($qData['new_password'])) ||
             (!isset($qData['password']) && isset($qData['new_password']))
         ) {
-            throw new RequiredParameterException(["password" => 0, "new_password" => 1]);
+            throw new HttpBadRequestException($request, "When updateing password, old password is needed to");
         } elseif (isset($qData['password']) && isset($qData['new_password'])) {
 
             list('password' => $passwordHash) = $this->User->read(['id' => $editedUser])[0];
@@ -346,11 +349,11 @@ class UserController extends Controller
                 $passLen = strlen($password);
                 preg_match_all('/[0-9]/', $password, $numsCount);
                 if ($passLen < 10 || $passLen > 20) {
-                    throw new CredentialsPolicyException('unwanted password length (min=10, max=20)');
+                    throw new HttpBadRequestException($request, 'unwanted password length (min=10, max=20)');
                 } elseif (strpos(' ', $password)) {
-                    throw new CredentialsPolicyException('unwanted spaces in password');
+                    throw new HttpBadRequestException($request, 'unwanted spaces in password');
                 } elseif (count($numsCount[0]) < 4) {
-                    throw new CredentialsPolicyException('password requires 4 digits');
+                    throw new HttpBadRequestException($request, 'password requires 4 digits');
                 }
                 $options = [
                     'cost' => 12,
