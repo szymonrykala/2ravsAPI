@@ -52,7 +52,7 @@ require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AddressController.php';
 require_once __DIR__ . '/../controllers/RoomTypeController.php';
 
-
+/*
 require_once __DIR__ . '/../exceptions/NothingFoundException.php';
 require_once __DIR__ . '/../exceptions/UnUpdetableParameterException.php';
 require_once __DIR__ . '/../exceptions/EmptyVariableException.php';
@@ -69,6 +69,6 @@ require_once __DIR__ . '/../exceptions/ActivationException.php';
 require_once __DIR__ . '/../exceptions/ReservationLockException.php';
 require_once __DIR__ . '/../exceptions/APIException.php';
 
-
+*/
 
 

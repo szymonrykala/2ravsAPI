@@ -54,7 +54,7 @@ class Reservation extends Model
         $explodedEndTime = explode(':', $endTime);
         $explodedStartTime = explode(':', $startTime);
         if ($explodedStartTime[0] > $explodedEndTime[0]) {
-            throw new ReservationException("Start time have to be smaller then end time");
+            throw new Exception("Reservation time is not correct. Start time have to be smaller then end time", 400);
         }
         $result = $this->DB->query(
             "SELECT COUNT(id) AS 'conflict' FROM $this->tableName WHERE 
@@ -75,7 +75,7 @@ class Reservation extends Model
         )[0];
 
         if ((int) $result['conflict'] > 0) {
-            throw new ReservationException("Given time slot is inaccessible for given room.");
+            throw new Exception("Given time slot is not accessible for given room. Room is reserved in time slot You specified.", 409);
         }
     }
 
@@ -90,9 +90,9 @@ class Reservation extends Model
         $currentDate = $Date->format('Y-m-d');
         $currentTime = $Date->format('H:i:s');
         if ($currentDate > $data['date']) {
-            throw new ReservationException("Reservation date is too late");
+            throw new Exception("Reservation date is too late", 400);
         } elseif ($currentDate == $data['date'] && $currentTime >= $data['start_time']) {
-            throw new ReservationException("Reservation time is too late");
+            throw new Exception("Reservation time is too late", 400);
         }
 
         //building exist?
@@ -101,7 +101,7 @@ class Reservation extends Model
             array(':id' => $data['building_id'])
         );
         if (empty($buildingExist)) { //if not exist
-            throw new NotExistException('building');
+            throw new Exception("Specified building is not exist. You can not make reservation because building You specified is not Exsist", 400);
         }
 
         //room exist in this building?
@@ -113,11 +113,11 @@ class Reservation extends Model
             )
         );
         if (empty($roomExist)) { //if not exist
-            throw new NotExistException('room', 'building');
+            throw new Exception("Specified room is not exist. You can not make reservation because specified room is not exist in given building", 400);
         } else {
             //room is bookable?
             if ((bool)$roomExist[0]['blockade']) {
-                throw new ReservationLockException("Specified room is not bookable");
+                throw new Exception("Specified room is not bookable. Room You want to reserve has blocked status.", 409); //conflict
             }
         }
 

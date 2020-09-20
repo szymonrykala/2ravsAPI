@@ -54,7 +54,7 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        throw new APIException("Confirming Not implemented!", 501);
+        throw new Exception("Confirming Not implemented!", 501);
         $response->getBody()->write("Middleware");
         return $response;
     }
@@ -211,7 +211,7 @@ class ReservationController extends Controller
             'message' => "User $currentUserMail created reservation"
         ]);
 
-        return $response->withStatus(201,"Created");
+        return $response->withStatus(201, "Created");
     }
 
     // PATCH /reservations/{reservation_id}
@@ -263,7 +263,7 @@ class ReservationController extends Controller
          * @param array $array
          * 
          * @return Response $response
-        */
+         */
         $currentUser = $request->getAttribute('user_id');
         $currentUserMail = $request->getAttribute('email');
         $reservationID = (int)$args['reservation_id'];

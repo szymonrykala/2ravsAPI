@@ -1,5 +1,8 @@
 <?php
 
+use Nowakowskir\JWT\JWT;
+use Nowakowskir\JWT\TokenDecoded;
+use Opis\Closure\SecurityException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -17,6 +20,29 @@ class UserController extends Controller
     {
         parent::__construct($DIcontainer);
         $this->User = $this->DIcontainer->get('User');
+    }
+
+    private function generateToken(int $userID, int $accesID, string $email): string
+    {
+        //creating new token
+        $time = time();
+        $tokenDecoded = new TokenDecoded(
+            ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS384],
+            array(
+                'user_id' => $userID,
+                'acces_id' => $accesID,
+                'email' => $email,
+                'ex' => $time + (60 * 60) * 25 //valid 250hours??
+            )
+        );
+        // encoding the token
+        $tokenEncoded = $tokenDecoded->encode(JWT_SIGNATURE, JWT::ALGORITHM_HS384);
+        return $tokenEncoded->__toString();
+    }
+
+    private function getRandomKey(int $len): string
+    {
+        return base64_encode(random_bytes($len));
     }
 
     // POST /auth
@@ -54,16 +80,16 @@ class UserController extends Controller
                 'login_fails' => $loginFails,
                 'activated' => $activated
             ) = $this->User->read(array('email' => $email))[0];
-        } catch (NothingFoundException $e) {
-            throw new AuthenticationException('(email)');
+        } catch (LengthException $e) {
+            throw new Exception("Can not login. User with email '$email' do not exist", 400);
         }
 
         if ((bool)$activated === false) {
-            throw new ActivationException("User account is not activated");
+            throw new LogicException("Can not authenticate because user is not activated", 409); //confilct
         }
 
         if ($loginFails >= 5) {
-            throw new AuthenticationFailsCountException($loginFails);
+            throw new SecurityException("Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator", 409);
         }
 
         if (password_verify($password, $userPassword)) {
@@ -84,7 +110,7 @@ class UserController extends Controller
                 'user_id' => $userID,
                 'message' => "User $email veryfing failed"
             ));
-            throw new AuthenticationException("password is not correct");
+            throw new SecurityException("Authentication failed (count:$loginFails). Password is not correct.", 400);
         }
 
         $response->getBody()->write(json_encode($data));
@@ -123,17 +149,19 @@ class UserController extends Controller
         ));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new CredentialsPolicyException('email is not correct format');
+            throw new InvalidArgumentException("Given email is not in correct format.", 400);
         }
 
         $passLen = strlen($password);
         preg_match_all('/[0-9]/', $password, $numsCount);
         if ($passLen < 10 || $passLen > 20) {
-            throw new CredentialsPolicyException('unwanted password length (min=10, max=20)');
+            throw new LengthException("Password length is not acceptable (min=10, max=20)", 400);
         } elseif (strpos(' ', $password)) {
-            throw new CredentialsPolicyException('unwanted spaces in password');
+            throw new SecurityException("Password can not contain spaces", 400);
+        } elseif (strpos('<', $password) || strpos('>', $password)) {
+            throw new SecurityException("Password can not contain '<' and '>' ", 400);
         } elseif (count($numsCount[0]) < 4) {
-            throw new CredentialsPolicyException('password requires 4 digits');
+            throw new SecurityException("Password need to contain minimum 4 digits", 400);
         }
 
         $randomKey = $this->getRandomKey(60);
@@ -153,7 +181,7 @@ class UserController extends Controller
         /* Mail->register($key)->sendTo($email); */
 
         // $response->getBody()->write("");
-        return $response->withStatus(201,"Created");
+        return $response->withStatus(201, "Created");
     }
 
     // GET /users/activate?key=<string key>
@@ -171,9 +199,9 @@ class UserController extends Controller
          */
         $key = $this->getQueryParam($request, 'key')[0];
 
-        if (!$this->User->exist(['action_key' => $key])) {
+        if (empty($this->User->read(['action_key' => $key])[0])) {
             //if user with given key was not found
-            throw new ActivationException('no such activation key, or user already activated');
+            throw new Exception('Given activation key is not exist', 400);
         }
 
         list(
@@ -187,13 +215,13 @@ class UserController extends Controller
             'message' => "Account user $email was activated"
         ]);
 
-        //redirect
+        //redirect on given address
         return $response;
     }
 
     public function resendActivationEmail(Request $request, Response $response, $args): Response
     {
-        throw new APIException("UserController::resendActivationEmail not implemented", 501);
+        throw new Exception("UserController::resendActivationEmail not implemented", 501);
         return $response;
     }
 

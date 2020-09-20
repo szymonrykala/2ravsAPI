@@ -17,10 +17,10 @@ class JSONMiddleware
         if ($body !== null) {
             $body = json_decode($body);
         }
-        $data = ['succes' => true, 'data' => $body];
+        // $data = ['data' => $body];
 
         $response = new Response();
-        $response->getBody()->write(json_encode($data));
+        $response->getBody()->write(json_encode($body));
         $response = $response->withHeader('content-type', 'application/json');
         return $response->withStatus($code, $reason);
     }

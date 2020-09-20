@@ -3,7 +3,6 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Log\InvalidArgumentException;
 
 require_once __DIR__ . "/Controller.php";
 

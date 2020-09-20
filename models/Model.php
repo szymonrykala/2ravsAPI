@@ -58,15 +58,25 @@ abstract class Model
         $empty = empty($this->DB->query($sql, $queryParams));
         if ($empty) {
             $dataString = implode(',', array_keys($params));
-            throw new InvalidArgumentException("Resource with given $dataString do not exist in $this->tableName. You can not perform this action.", 400);
+            throw new InvalidArgumentException("$this->tableName with given $dataString do not exist. You can not perform this action.", 400);
         } elseif ($reverse && !$empty) {
             $dataString = implode(',', array_keys($params));
-            throw new InvalidArgumentException("Resource with given $dataString already exist in $this->tableName. You can not perform this action.", 400);
+            throw new InvalidArgumentException("$this->tableName with given $dataString already exist. You can not perform this action.", 400);
         }
     }
 
     public function read(array $params = array(), string $sortKey = '', string $direction  = 'DESC'): array
     {
+        /**
+         * Read collection with params in param array
+         * 
+         * @param array $params=[] reading parameters
+         * @param string $sortKey=''
+         * @param string $direction='DESC'
+         * 
+         * @throws LengthException when nothing found
+         * @return array $result
+        */
         $params = $this->parseData($params);
 
         $sql = "SELECT * FROM $this->tableName WHERE 1=1";
@@ -83,7 +93,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new UnexpectedValueException("Nothing was found in $this->tableName", 404);
+            throw new LengthException("Nothing was found in $this->tableName", 404);
         }
 
         foreach ($result as &$r) {
@@ -109,7 +119,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new NothingFoundException($this->tableName);
+            throw new UnexpectedValueException($this->tableName);
         }
 
         foreach ($result as &$r) {
