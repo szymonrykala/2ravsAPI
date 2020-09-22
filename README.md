@@ -1,10 +1,13 @@
 # 2ravsAPI
 
 Room Reservation and Visualisation System API
-## To refactor
-Model::exist -> Model::assertExist()
 
 ## Changelog
+
+[22-09-2020]
+### Changed
+- displaying data in errors with json_encode()
+- Exception fix in User::verify
 
 [17-09-2020]
 ### Added

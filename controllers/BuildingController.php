@@ -3,6 +3,7 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -104,6 +105,12 @@ class BuildingController extends Controller
          * @return Response 
          */
         $data = $this->getFrom($request, ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer']);
+
+        $Address = $this->DIcontainer->get("Address");
+        if (!$Address->exist(['id' => $data['address_id']])) {
+            throw new HttpBadRequestException($request,"Address with id=".$data['address_id']." do not exist. You cannot create building with data:".json_encode($data));
+        }
+
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');
 
@@ -111,9 +118,9 @@ class BuildingController extends Controller
         $this->Log->create([
             'user_id' => $userID,
             'building_id' => $lastIndex,
-            'message' => "User $userMail created Building id=$lastIndex"
+            'message' => "User $userMail created Building id=$lastIndex; data:" . json_encode($data)
         ]);
-        return $response->withStatus(201,"Created");
+        return $response->withStatus(201, "Created");
     }
 
     // PATCH /buildings/{building_id}
@@ -142,11 +149,10 @@ class BuildingController extends Controller
 
         $this->Building->update($buildingID, $data);
 
-        $dataString = implode(',', array_keys($data));
         $this->Log->create([
             'user_id' => $userID,
             'building_id' => $buildingID,
-            'message' => "user $userMail updated Building id=$buildingID data: $dataString"
+            'message' => "user $userMail updated Building id=$buildingID data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }

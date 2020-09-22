@@ -103,7 +103,7 @@ class AccesController extends Controller
         $newID = $this->Acces->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " created new acces class '" . $data['name'] . "' id=$newID "
+            "message" => "User " . $request->getAttribute('email') . " created new acces class data:".json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -139,7 +139,7 @@ class AccesController extends Controller
         $this->Acces->update($args['acces_id'], $data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " updated"
+            "message" => "User " . $request->getAttribute('email') . " updated data:".json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }

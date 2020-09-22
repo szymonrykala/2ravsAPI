@@ -193,7 +193,7 @@ class ReservationController extends Controller
             "date" => "string"
         ]);
 
-        $reservationID = $this->Reservation->create([
+        $reservationData = [
             "title" => $title,
             "subtitle" => $subtitle,
             "start_time" => $startTime,
@@ -202,13 +202,14 @@ class ReservationController extends Controller
             "room_id" => $roomID,
             "building_id" => $buildingID,
             "user_id" => $currentUser
-        ]);
+        ];
+        $reservationID = $this->Reservation->create($reservationData);
         $this->Log->create([
             'user_id' => $currentUser,
             'reservation_id' => $reservationID,
             'room_id' => $roomID,
             'building_id' => $buildingID,
-            'message' => "User $currentUserMail created reservation"
+            'message' => "User $currentUserMail created reservation data:" . json_encode($reservationData)
         ]);
 
         return $response->withStatus(201, "Created");
@@ -241,11 +242,10 @@ class ReservationController extends Controller
 
         $this->Reservation->update($reservationID, $data);
 
-        $dataString = implode(',', array_keys($data));
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $reservationID,
-            'message' => "User $currentUserMail updated reservation data: $dataString"
+            'message' => "User $currentUserMail updated reservation data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }

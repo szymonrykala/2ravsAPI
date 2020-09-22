@@ -30,7 +30,7 @@ class LogController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->handleExtensions($this->Log->read(), $request);
+        $data = $this->handleExtensions($this->Log->read([],'id',"DESC"), $request);
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }

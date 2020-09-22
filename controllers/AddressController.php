@@ -87,7 +87,7 @@ class AddressController extends Controller
         $lastIndex = $this->Address->create($data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex"
+            "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex; data:".json_encode($data)
         ]);
         return $response->withStatus(201,"Created");
     }
@@ -109,10 +109,9 @@ class AddressController extends Controller
         $addressID = $args['address_id'];
         $this->Address->update($addressID, $data);
 
-        $dataString = implode(',', array_keys($data));
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data: $dataString"
+            'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data:".json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }

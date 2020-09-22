@@ -54,7 +54,7 @@ class RoomTypeController extends Controller
         $lastIndex = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " created new room type id=$lastIndex"
+            'message' => "User " . $request->getAttribute('email') . " created new room type id=$lastIndex; data:".json_encode($data)
         ]);
         return $response->withStatus(201,"Created");
     }
@@ -77,10 +77,9 @@ class RoomTypeController extends Controller
         $data = $this->getFrom($request);
         $this->Type->update($typeID, $data);
 
-        $dataString = implode(',', array_keys($data));
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID . " data: $dataString"
+            'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID . " data:".json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }

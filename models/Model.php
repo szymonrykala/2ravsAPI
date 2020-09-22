@@ -31,7 +31,7 @@ abstract class Model
         return $data;
     }
 
-    protected function exist(array $params): bool
+    public function exist(array $params): bool
     {
         /**
          * check is exist model with given params
@@ -154,7 +154,7 @@ abstract class Model
 
     public function delete(int $id): void
     {
-        if (!$this->exist(array('id' => $id))) {
+        if (!$this->exist(['id' => $id])) {
             throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot delete non existing collection item.", 404);
         }
 

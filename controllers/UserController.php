@@ -35,7 +35,7 @@ class UserController extends Controller
                 'user_id' => $userID,
                 'acces_id' => $accesID,
                 'email' => $email,
-                'ex' => $time + (60 * 60) * 25 //valid 250hours??
+                'ex' => $time + (60 * 60) * 48 //valid 48h
             )
         );
         // encoding the token
@@ -108,12 +108,13 @@ class UserController extends Controller
                 'message' => "User $email succesfully veryfied"
             ));
         } else {
-            $this->User->update($userID, array('login_fails' => $loginFails + 1));
+            $loginFails += 1;
+            $this->User->update($userID, array('login_fails' => $loginFails));
             $this->Log->create(array(
                 'user_id' => $userID,
-                'message' => "User $email veryfing failed"
+                'message' => "User $email veryfing failed count:$loginFails"
             ));
-            throw new HttpBadRequestException($request, "Authentication failed (count:$loginFails). Password is not correct.", 400);
+            throw new HttpBadRequestException($request, "Authentication failed (count:$loginFails). Password is not correct.");
         }
 
         $response->getBody()->write(json_encode($data));
@@ -169,16 +170,18 @@ class UserController extends Controller
 
         $randomKey = $this->getRandomKey(60);
 
-        $userID = $this->User->create(array(
+        $userData = [
             'name' => $name,
             'surname' => $surname,
             'password' => $password,
             'email' => $email,
             'action_key' => $randomKey
-        ));
+        ];
+        $userID = $this->User->create($userData);
+        unset($userData['password']);
         $this->Log->create(array(
             'user_id' => $userID,
-            'message' => "User $email has been registered"
+            'message' => "User $email has been registered data:" . json_encode($userData)
         ));
 
         /* Mail->register($key)->sendTo($email); */
@@ -274,17 +277,12 @@ class UserController extends Controller
          * @return Response $response
          */
         $userID = $args['userID'];
-        $ext = $this->getQueryParam($request, 'ext');
-        if (in_array('acces_id', $ext)) {
-            $Acces = $this->DIcontainer->get('Acces');
-        }
 
         $user = $this->User->read(['id' => $userID])[0];
 
-        if (in_array('acces_id', $ext)) {
-            $user['acces'] = $Acces->read(['id' => $user['acces_id']])[0];
-            unset($user['acces_id']);
-        }
+        $Acces = $this->DIcontainer->get('Acces');
+        $user['acces'] = $Acces->read(['id' => $user['acces_id']])[0];
+
         unset($user['password']);
         unset($user['action_key']);
 
@@ -364,7 +362,7 @@ class UserController extends Controller
 
         $this->User->update($editedUser, $data);
         unset($data['password']);
-        $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data:".json_encode($data)]);
+        $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data:" . json_encode($data)]);
 
         return $response->withStatus(204, "Updated");
     }

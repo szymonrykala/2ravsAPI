@@ -34,7 +34,7 @@ class RoomController extends Controller
         $buildingID = (int)$args['building_id'];
         $Type = $this->DIcontainer->get('RoomType');
 
-        $rooms = $this->Room->read(['building_id' => $buildingID],'id','DESC');
+        $rooms = $this->Room->read(['building_id' => $buildingID], 'id', 'DESC');
         foreach ($rooms as &$room) {
             $room['room_type'] = $Type->read(['id' => $room['room_type_id']])[0];
             unset($room['room_type_id']);
@@ -164,9 +164,9 @@ class RoomController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             'building_id' => $buildingID,
             'room_id' => $lastIndex,
-            'message' => "User " . $request->getAttribute('email') . " created new room in building id=$buildingID"
+            'message' => "User " . $request->getAttribute('email') . " created new room in building id=$buildingID; data:" . json_encode($data)
         ]);
-        return $response->withStatus(201,"Created");
+        return $response->withStatus(201, "Created");
     }
 
     // PATCH /buildings/{building_id}/rooms/{room_id}
@@ -198,12 +198,11 @@ class RoomController extends Controller
 
         $this->Room->update($roomID, $data);
 
-        $dataString = implode(',', array_keys($data));
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $roomID,
             'building_id' => $buildingID,
-            'message' => "User " . $request->getAttribute('email') . " updated room data: $dataString"
+            'message' => "User " . $request->getAttribute('email') . " updated room data:".json_encode($data)
         ]);
 
         return $response->withStatus(204, "Updated");
