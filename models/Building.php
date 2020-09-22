@@ -47,7 +47,10 @@ class Building extends Model
         $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        $this->exist($data, true);//if already exist, throws an error
+        if ($this->exist($data))
+        {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+        }
 
         $this->DB->query(
             "INSERT INTO $this->tableName(address_id,name,rooms_count) VALUES(:address_id,:name,:rooms_count)",

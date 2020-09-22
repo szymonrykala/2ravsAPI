@@ -361,9 +361,10 @@ class UserController extends Controller
                 $data['password'] = password_hash($password, PASSWORD_BCRYPT, $options);
             }
         }
-        $dataString = implode(',', array_keys($data));
+
         $this->User->update($editedUser, $data);
-        $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data: $dataString"]);
+        unset($data['password']);
+        $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data:".json_encode($data)]);
 
         return $response->withStatus(204, "Updated");
     }

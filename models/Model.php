@@ -1,5 +1,7 @@
 <?php
 
+use Slim\Exception\HttpNotImplementedException;
+
 abstract class Model
 {
     public $unUpdateAble = array();
@@ -11,12 +13,6 @@ abstract class Model
     {
         $this->DB = $DBInterface;
         $this->DB->connect();
-    }
-
-    public function parseData(array $data): array
-    {
-        throw new Exception("Mode::parseData(array \$data) need to be implemented");
-        return $data;
     }
 
     protected function filterVariables(array $data): array
@@ -35,17 +31,13 @@ abstract class Model
         return $data;
     }
 
-    public function exist(array $params, bool $reverse = false): void
+    protected function exist(array $params): bool
     {
         /**
-         * if @param $reverse==false if item with given $params not exist, throw InvalidArgumentException
-         * if @param $reverse==true if item with given $params exist, throw InvalidArgumentException
+         * check is exist model with given params
          * 
          * @param array $params
-         * @param bool $reverse=false
-         * 
-         * @throws InvalidArgumentException
-         * @return void
+         * @return bool
          */
         $sql = "SELECT id FROM $this->tableName WHERE 1=1 ";
         $queryParams = array();
@@ -55,14 +47,13 @@ abstract class Model
             $queryParams[":$key"] = $value;
         }
 
-        $empty = empty($this->DB->query($sql, $queryParams));
-        if ($empty) {
-            $dataString = implode(',', array_keys($params));
-            throw new InvalidArgumentException("$this->tableName with given $dataString do not exist. You can not perform this action.", 400);
-        } elseif ($reverse && !$empty) {
-            $dataString = implode(',', array_keys($params));
-            throw new InvalidArgumentException("$this->tableName with given $dataString already exist. You can not perform this action.", 400);
-        }
+        return !empty($this->DB->query($sql, $queryParams));
+    }
+
+    public function parseData(array $data): array
+    {
+        throw new Exception("Mode::parseData(array \$data) need to be implemented", 501);
+        return $data;
     }
 
     public function read(array $params = array(), string $sortKey = '', string $direction  = 'DESC'): array
@@ -76,7 +67,7 @@ abstract class Model
          * 
          * @throws LengthException when nothing found
          * @return array $result
-        */
+         */
         $params = $this->parseData($params);
 
         $sql = "SELECT * FROM $this->tableName WHERE 1=1";
@@ -93,7 +84,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new LengthException("Nothing was found in $this->tableName", 404);
+            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($params), 404);
         }
 
         foreach ($result as &$r) {
@@ -119,7 +110,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new UnexpectedValueException($this->tableName);
+            throw new UnexpectedValueException("Nothing Found in $this->tableName with search params:" . json_encode($params), 404);
         }
 
         foreach ($result as &$r) {
@@ -130,12 +121,15 @@ abstract class Model
 
     public function create(array $params): int
     {
+        throw new Exception("Model::create() need to be implemented", 501);
         return -1;
     }
 
     public function update(int $id, array $params): void
     {
-        $this->exist(array('id' => $id));
+        if (!$this->exist(['id' => $id])) {
+            throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.", 404);
+        }
 
         $params = $this->filterVariables($params);
         $params = $this->parseData($params);
@@ -160,7 +154,9 @@ abstract class Model
 
     public function delete(int $id): void
     {
-        $this->exist(array('id' => $id));
+        if (!$this->exist(array('id' => $id))) {
+            throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot delete non existing collection item.", 404);
+        }
 
         $this->DB->query(
             "DELETE FROM $this->tableName WHERE id=:id",
