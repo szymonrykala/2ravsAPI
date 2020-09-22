@@ -2,6 +2,9 @@
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\Exception\HttpForbiddenException;
+use Slim\Exception\HttpMethodNotAllowedException;
+use Slim\Exception\HttpUnauthorizedException;
 use Slim\Psr7\Response;
 
 /* 
@@ -31,13 +34,17 @@ class AuthorizationMiddleware
         list("acces_id" => $currentAccesID) = $this->User->read(['id' => $userID])[0];
 
         if ($userAccesID !== $currentAccesID) {
-            throw new AuthorizationException("Your acces has changed - please login again");
+            throw new HttpUnauthorizedException($request,"Your acces has changed - please login again");
         }
 
         $this->fillAccesTable($request);
 
+
+        if (!isset($this->accesTable[$this->target][$method])) {
+            throw new HttpMethodNotAllowedException($request, "Given Method is not allowed on this resource");
+        }
         if ($this->accesTable[$this->target][$method] === false) {
-            throw new AuthorizationException("You don't have acces to specified resources or method.");
+            throw new HttpForbiddenException($request, "You don't have acces to perform this action on given resource");
         }
 
         $response = $handler->handle($request); //handling request by API

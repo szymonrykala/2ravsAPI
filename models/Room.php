@@ -44,11 +44,13 @@ class Room extends Model
         $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        $this->exist(array(
+        if ($this->exist([
             "name" => $data["name"],
             "floor" => $data["floor"],
             "building_id" => $data["building_id"]
-        ), true);
+        ])) {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+        }
 
         $this->DB->query(
             "INSERT INTO $this->tableName(building_id,name,state,floor,room_type_id,seats_count,equipment)

@@ -48,7 +48,10 @@ class User extends Model
         $data['name'] = preg_replace('/\s/', '', $data['name']);
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 
-        $this->exist(array('email' => $data['email'])); //if already exist, throws an error
+        if ($this->exist(['email' => $data['email']]))
+        {
+            throw new InvalidArgumentException("$this->tableName with given email already exist.", 400);
+        }
 
 
         $options = [

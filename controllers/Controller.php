@@ -1,5 +1,6 @@
 <?php
 
+use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 use \Nowakowskir\JWT\JWT;
@@ -17,29 +18,6 @@ abstract class Controller
     {
         $this->DIcontainer = $DIcontainer;
         $this->Log = $this->DIcontainer->get("Log");
-    }
-
-    protected function generateToken(int $userID, int $accesID, string $email): string
-    {
-        //creating new token
-        $time = time();
-        $tokenDecoded = new TokenDecoded(
-            ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS384],
-            array(
-                'user_id' => $userID,
-                'acces_id' => $accesID,
-                'email' => $email,
-                'ex' => $time + (60 * 60) * 25 //valid 250hours??
-            )
-        );
-        // encoding the token
-        $tokenEncoded = $tokenDecoded->encode(JWT_SIGNATURE, JWT::ALGORITHM_HS384);
-        return $tokenEncoded->__toString();
-    }
-
-    protected function getRandomKey(int $len): string
-    {
-        return base64_encode(random_bytes($len));
     }
 
     protected function deleted(Request $request): bool
@@ -114,13 +92,13 @@ abstract class Controller
          */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new UnexpectedValueException("Request body is empty or is not in right format",400);
+            throw new InvalidArgumentException("Request body is empty or is not in right format", 400);
         }
 
         //checking required parameters
         foreach ($rquiredParameters as $param => $type) {
             if (!isset($data[$param])) {
-                throw new RequiredParameterException($rquiredParameters);
+                throw new NotEnoughParametersException("Parameter '$param' is required to perform this action", 400);
             }
 
             //clearing types

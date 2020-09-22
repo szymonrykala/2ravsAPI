@@ -56,7 +56,7 @@ class LogController extends Controller
             $data = $request->getParsedBody();
 
             if ($data == null || !isset($data['IDs'])) {
-                throw new APIException("No data has been passed - 'IDs' required while log_id<0", 400);
+                throw new Exception("No data has been passed - 'IDs' param is required when 'log_id' in query string is below 0.", 400);
             }
             foreach ($data['IDs'] as $logID) {
                 $this->Log->delete($logID);

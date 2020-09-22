@@ -97,7 +97,7 @@ class AccesController extends Controller
         ]);
         //name policy
         if (strlen($data["name"]) < 4) {
-            throw new APIException("Acces name need to have at least 4 characters", 400);
+            throw new Exception("Acces name need to have at least 4 characters", 400);
         }
 
         $newID = $this->Acces->create($data);
@@ -105,7 +105,7 @@ class AccesController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             "message" => "User " . $request->getAttribute('email') . " created new acces class '" . $data['name'] . "' id=$newID "
         ]);
-        return $response->withStatus(201,"Created");
+        return $response->withStatus(201, "Created");
     }
 
     public function updateAccesType(Request $request, Response $response, $args): Response
@@ -159,7 +159,7 @@ class AccesController extends Controller
         // each user with current acces have to 
         $User = $this->DIcontainer->get('User');
         if ($User->exist(['acces_id' => $args['acces_id']])) {
-            throw new APIException("Some Users stil have this acces class. You can't delete it", 400);
+            throw new Exception("Some Users stil have this acces class. You can't delete it", 409); //conflict
         } else {
             $this->Acces->delete($args['acces_id']);
             $this->Log->create([

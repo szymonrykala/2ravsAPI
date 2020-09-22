@@ -3,6 +3,7 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use DI\Container;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Psr7\Response;
 
 
@@ -42,9 +43,7 @@ $DIcontainer->set('View', new View());
 function myErrorHandler(Exception $e)
 {
     $data = [
-        'succes' => false,
         'error' => [
-            // 'type'=>gettype($e),
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
@@ -57,15 +56,8 @@ function myErrorHandler(Exception $e)
     echo json_encode($data);
     return true;
 }
-
 set_exception_handler("myErrorHandler");
 
-
-// $rootApp->any('/', function (Request $request, Response $response, $args) {
-//     // $name = $args['name'];
-//     $response->getBody()->write('Start');
-//     return $response->withHeader('content-type', 'application/json');
-// });
 
 
 $rootApp->post('/auth', \UserController::class . ':verifyUser'); //open endpoint
@@ -164,11 +156,10 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 })->add(new AuthorizationMiddleware($DIcontainer))
     ->add(new JWTMiddleware());
 
-
 // 404 error heandler 
 $rootApp->any('{route:.*}', function (Request $request, Response $response) {
 
-    throw new Exception('Requested URI does not exist', 404);
+    throw new HttpNotFoundException($request, "Requested URL does not exist");
 });
 
 $rootApp->add(new JSONMiddleware());
