@@ -2,4 +2,5 @@
 /controllers.old
 /models.old
 /vendor
-/tests
+*__pycache__
+.pytest_cache

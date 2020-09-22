@@ -1,6 +1,6 @@
 <?php
 //DB
-define('DSN', "mysql:host=localhost;dbname=base_sriws;charset=utf8mb4");
+define('DSN', "mysql:host=localhost;dbname=base;charset=utf8mb4");
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
@@ -18,6 +18,8 @@ define('ADDRESS_BASE', 'address');
 define('ROOM_TYPE_BASE', 'room_type');
 
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
+
+date_default_timezone_set("Europe/Warsaw");
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -48,8 +50,9 @@ require_once __DIR__ . '/../controllers/LogController.php';
 require_once __DIR__ . '/../controllers/RoomController.php';
 require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AddressController.php';
+require_once __DIR__ . '/../controllers/RoomTypeController.php';
 
-
+/*
 require_once __DIR__ . '/../exceptions/NothingFoundException.php';
 require_once __DIR__ . '/../exceptions/UnUpdetableParameterException.php';
 require_once __DIR__ . '/../exceptions/EmptyVariableException.php';
@@ -62,7 +65,10 @@ require_once __DIR__ . '/../exceptions/AuthenticationException.php';
 require_once __DIR__ . '/../exceptions/AuthenticationFailsCountException.php';
 require_once __DIR__ . '/../exceptions/CredentialsPolicyException.php';
 require_once __DIR__ . '/../exceptions/AuthorizationException.php';
+require_once __DIR__ . '/../exceptions/ActivationException.php';
+require_once __DIR__ . '/../exceptions/ReservationLockException.php';
+require_once __DIR__ . '/../exceptions/APIException.php';
 
-
+*/
 
 

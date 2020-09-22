@@ -5,6 +5,11 @@ class Reservation extends Model
 {
     protected $tableName = 'reservations';
     public $unUpdateAble = array('id', 'room_id', 'building_id', 'user_id', 'created-at');
+    protected $columns = [
+        'id', 'title', 'subtitle', 'room_id', 'building_id', 'user_id',
+        'start_time', 'end_time', 'date', 'created_at', 'updated_at',
+        'confirmed', 'confirming_user_id', 'confirmed_at', 'deleted'
+    ];
 
     public function __construct(DBInterface $db)
     {
@@ -16,25 +21,28 @@ class Reservation extends Model
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'room_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'building_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'user_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'confirming_user_id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 case 'confirmed':
                     $value = (bool) $value;
                     break;
+                case 'deleted':
+                    $value = (bool) $value;
+                    break;
                 default:
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    $value = (string) filter_var($value, FILTER_SANITIZE_STRING);
                     break;
             }
         }
@@ -46,11 +54,11 @@ class Reservation extends Model
         $explodedEndTime = explode(':', $endTime);
         $explodedStartTime = explode(':', $startTime);
         if ($explodedStartTime[0] > $explodedEndTime[0]) {
-            throw new ReservationException("Start time have to be smaller then end time");
+            throw new Exception("Reservation time is not correct. Start time have to be smaller then end time", 400);
         }
         $result = $this->DB->query(
             "SELECT COUNT(id) AS 'conflict' FROM $this->tableName WHERE 
-               room_id=:room_id AND 
+               room_id=:room_id AND deleted=:deleted AND
                     (
                          start_time BETWEEN :start_time AND :end_time
                          OR
@@ -61,23 +69,30 @@ class Reservation extends Model
                 ':start_time' => $startTime,
                 ':end_time' => $endTime,
                 ':room_id' => $roomID,
-                ':date' => $date
+                ':date' => $date,
+                ':deleted' => false
             )
         )[0];
 
         if ((int) $result['conflict'] > 0) {
-            throw new ReservationException("Given time slot is inaccessible for given room.");
+            throw new Exception("Given time slot is not accessible for given room. Room is reserved in time slot You specified.", 409);
         }
     }
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-        //checking is it empty
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
+
+        //checking time
+        $Date = new DateTime();
+
+        $currentDate = $Date->format('Y-m-d');
+        $currentTime = $Date->format('H:i:s');
+        if ($currentDate > $data['date']) {
+            throw new Exception("Reservation date is too late", 400);
+        } elseif ($currentDate == $data['date'] && $currentTime >= $data['start_time']) {
+            throw new Exception("Reservation time is too late", 400);
         }
 
         //building exist?
@@ -86,7 +101,7 @@ class Reservation extends Model
             array(':id' => $data['building_id'])
         );
         if (empty($buildingExist)) { //if not exist
-            throw new NotExistException('building');
+            throw new Exception("Specified building is not exist. You can not make reservation because building You specified is not Exsist", 400);
         }
 
         //room exist in this building?
@@ -98,11 +113,11 @@ class Reservation extends Model
             )
         );
         if (empty($roomExist)) { //if not exist
-            throw new NotExistException('room', 'building');
+            throw new Exception("Specified room is not exist. You can not make reservation because specified room is not exist in given building", 400);
         } else {
             //room is bookable?
             if ((bool)$roomExist[0]['blockade']) {
-                throw new ReservationException("Specified room is not bookable");
+                throw new Exception("Specified room is not bookable. Room You want to reserve has blocked status.", 409); //conflict
             }
         }
 

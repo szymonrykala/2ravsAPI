@@ -4,7 +4,13 @@ require_once __DIR__ . '/Model.php';
 class Acces extends Model
 {
     protected $tableName = 'acceses';
-    public $unUpdateAble=array('id');
+    public $unUpdateAble = array('id');
+    protected $columns = [
+        'id', 'name', 'acces_edit', 'buildings_view',
+        'buildings_edit', 'logs_view', 'logs_edit', 'rooms_view', 'rooms_edit',
+        'reservations_acces', 'reservations_confirm', 'reservations_edit',
+        'users_edit', 'statistics_view'
+    ];
 
     public function __construct(DBInterface $db)
     {
@@ -31,21 +37,13 @@ class Acces extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        foreach ($data as $key => &$value) {
-            switch ($key) {
-                case 'name':
-                    if (empty($value)) {
-                        throw new EmptyVariableException($key);
-                    }
-                    break;
-                default:
-                    $value = empty($value) ? 0 : 1;
-                    break;
-            }
+        if ($this->exist($data))
+        {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
         }
-
         $this->DB->query(
             "INSERT INTO $this->tableName(
                   name,

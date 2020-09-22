@@ -3,8 +3,12 @@ require_once __DIR__ . '/Model.php';
 
 class RoomType extends Model
 {
+    /**
+     * Responsible for operation with room_types table in database
+     */
     protected $tableName = 'room_types';
     public $unUpdateAble = array('id');
+    public $columns = ['id', 'name'];
 
     public function __construct(DBInterface $db)
     {
@@ -13,7 +17,17 @@ class RoomType extends Model
 
     public function parseData(array $data): array
     {
+        /**
+         * Used for parsing data to right data type
+         * 
+         * @param array $data 
+         * @return array $data
+         */
         foreach ($data as $key => &$value) {
+            if (!in_array($key, $this->columns)) {
+                unset($data[$key]);
+                continue;
+            }
             switch ($key) {
                 case 'id':
                     $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
@@ -28,13 +42,21 @@ class RoomType extends Model
 
     public function create(array $data): int
     {
+        /**
+         * Creating new room type in database 
+         * 
+         * @param array $data array with params:name
+         * @return int inserted item index
+         */
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        if (empty($data['name'])) {
-            throw new EmptyVariableException('name');
+        if ($this->exist($data))
+        {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
         }
 
-        $this->Database->query(
+        $this->DB->query(
             "INSERT INTO $this->tableName(name) VALUES(:name)",
             array(':name' => $data['name'])
         );

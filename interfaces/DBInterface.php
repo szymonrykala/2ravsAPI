@@ -9,9 +9,6 @@ interface DBInterface
 class Database implements DBInterface
 {
     private $conn = null;
-    function __construct()
-    {
-    }
 
     public function connect(): void
     {
@@ -26,14 +23,20 @@ class Database implements DBInterface
     public function query(string $sql, array $params = []): array
     {
         $results = array();
-        // print_r($sql);print_r($params);
         try {
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);
         } catch (PDOException $e) {
-            // throw new Exception("DBInterface query error: " . $e->getMessage(), 500, $e);
-            echo $e->getMessage();
+            switch ($e->getCode()) {
+                case 23000:
+                    throw new Exception("Database Integrity: " . substr($e->getMessage(), 17), 400);
+                    break;
+                case 42000:
+                    throw new Exception("SQL Syntax error:" . substr($e->getMessage(), 17), 500);
+                    break;
+            }
             echo $e->getCode();
+            echo $e->getMessage();
             exit();
         }
 

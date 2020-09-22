@@ -3,6 +3,7 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use DI\Container;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Psr7\Response;
 
 
@@ -24,7 +25,7 @@ $rootApp->addBodyParsingMiddleware();
     CLIENT  <--  (JSONMiddleware)  <--  (AuthorizationMiddleware)  <--  (AccesMiddleware)  <--  API resources  */
 // $rootApp->add(new AccesMiddleware());
 
-$rootApp->add(new JSONMiddleware());
+
 
 //Models
 //each Model have it's own connection to Database
@@ -42,32 +43,26 @@ $DIcontainer->set('View', new View());
 function myErrorHandler(Exception $e)
 {
     $data = [
-        'succes' => false,
         'error' => [
             'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            // 'trace' => $e->getTrace(),
             'code' => $e->getCode()
         ]
     ];
-    http_response_code($e->httpCode);
+    http_response_code($e->getCode());
     header('content-type:application/json');
     echo json_encode($data);
-
     return true;
 }
-
 set_exception_handler("myErrorHandler");
 
 
-// $rootApp->any('/', function (Request $request, Response $response, $args) {
-//     // $name = $args['name'];
-//     $response->getBody()->write('Start');
-//     return $response->withHeader('content-type', 'application/json');
-// });
-
 
 $rootApp->post('/auth', \UserController::class . ':verifyUser'); //open endpoint
-$rootApp->get('/activate', \UserController::class . ':activateUser'); // open endpoint
 $rootApp->post('/users', \UserController::class . ':registerNewUser'); // open endpoint
+$rootApp->get('/users/activate', \UserController::class . ':activateUser'); // open endpoint
 
 $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
@@ -88,17 +83,20 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/acces', function (\Slim\Routing\RouteCollectorProxy $acces) {
-        $acces->get('', \AccesController::class . ':getAllAccesTypes');
-        $acces->post('', \AccesController::class . ':createNewAccesType');
-        $acces->get('/{acces_id:[0-9]+}', \AccesController::class . ':getAccesTypeByID');
-        $acces->patch('/{acces_id:[0-9]+}', \AccesController::class . ':updateAccesType');
-        $acces->delete('/{acces_id:[0-9]+}', \AccesController::class . ':deleteAccesType');
+    $app->group('/acces', function (\Slim\Routing\RouteCollectorProxy $acceses) {
+        $acceses->get('', \AccesController::class . ':getAllAccesTypes');
+        $acceses->post('', \AccesController::class . ':createNewAccesType');
+
+        $acceses->group('/{acces_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $acces) {
+            $acces->get('', \AccesController::class . ':getAccesTypeByID');
+            $acces->patch('', \AccesController::class . ':updateAccesType');
+            $acces->delete('', \AccesController::class . ':deleteAccesType');
+        });
     });
 
     $app->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
         $reservations->get('', \ReservationController::class . ':getAllReservations');
-        $reservations->post('', \ReservationController::class . ':createReservation');
+        // $reservations->post('', \ReservationController::class . ':createReservation');
         $reservations->delete('/{reservation_id:.*[0-9]+}', \ReservationController::class . ':deleteReservationsByID');
 
         $reservations->group('/{reservation_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $reservation) {
@@ -112,7 +110,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
         $user->get('', \UserController::class . ':getAllUsers');
 
-        $user->group('/{user_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
+        $user->group('/{userID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
             $specUser->get('', \UserController::class . ':getSpecificUser');
             $specUser->patch('', \UserController::class . ':updateUserInformations');
             $specUser->delete('', \UserController::class . ':deleteUser');
@@ -123,10 +121,20 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
     $app->group('/buildings', function (\Slim\Routing\RouteCollectorProxy $buildings) {
         $buildings->get('', \BuildingController::class . ':getAllBuildings');
         $buildings->get('/search', \BuildingController::class . ':searchBuildings');
-        $buildings->post('', \BuildingController::class . ':createNewBuilding');
+        $buildings->post('', \BuildingController::class . ':createBuilding');
 
-        $buildings->group('/{buildingID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
-            $specBuilding->get('', \BuildingController::class . ':getBuildingByID');
+        $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
+            $rooms->get('/types', \RoomTypeController::class . ':getAllTypes');
+            $rooms->post('/types', \RoomTypeController::class . ':createType');
+            $rooms->patch('/types/{room_type_id:[0-9]+}', \RoomTypeController::class . ':updateType');
+            $rooms->delete('/types/{room_type_id:[0-9]+}', \RoomTypeController::class . ':deleteType');
+
+            $rooms->get('', \RoomController::class . ':getAllRooms');
+            $rooms->get('/{room_id}', \RoomController::class . ':getRoom');
+        });
+
+        $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
+            $specBuilding->get('', \BuildingController::class . ':getBuilding');
             $specBuilding->patch('', \BuildingController::class . ':updateBuilding');
             $specBuilding->delete('', \BuildingController::class . ':deleteBuilding');
             $specBuilding->get('/reservations', \ReservationController::class . ':getReservationsInBuilding');
@@ -139,8 +147,8 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
                     $room->get('', \RoomController::class . ':getRoomByID');
                     $room->patch('', \RoomController::class . ':updateRoomByID');
                     $room->delete('', \RoomController::class . ':deleteRoomByID'); //serveral ID's
-                    // $room->get('/reservations', \ReservationController::class . ':getRoomReservations');
-                    // $room->post('/reservations', \ReservationController::class . ':createReservation');
+                    $room->get('/reservations', \ReservationController::class . ':getRoomReservations');
+                    $room->post('/reservations', \ReservationController::class . ':createReservation');
                 });
             });
         });
@@ -148,16 +156,12 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 })->add(new AuthorizationMiddleware($DIcontainer))
     ->add(new JWTMiddleware());
 
-
 // 404 error heandler 
 $rootApp->any('{route:.*}', function (Request $request, Response $response) {
 
-    $response->getBody()->write(json_encode(array(
-        "succes" => false,
-        "errorMessage" => "Request URI does not exist",
-        "errorCode" => 404
-    )));
-    return $response->withStatus(404)->withHeader("content-type", "application/json");
+    throw new HttpNotFoundException($request, "Requested URL does not exist");
 });
+
+$rootApp->add(new JSONMiddleware());
 
 $rootApp->run();

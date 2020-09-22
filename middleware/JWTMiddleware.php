@@ -1,17 +1,22 @@
 <?php
 
+use Nowakowskir\JWT\Exceptions\TokenExpiredException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Response;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 use Nowakowskir\JWT\TokenEncoded;
 use Nowakowskir\JWT\JWT;
+use Slim\Exception\HttpUnauthorizedException;
 
 class JWTMiddleware
 {
+    private $request = null;
+
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
-        $token = $this->recieveToken($request);
+        $this->request = $request;
+        $token = $this->recieveToken();
         list(
             "user_id" => $userID,
             "acces_id" => $accesID,
@@ -20,27 +25,30 @@ class JWTMiddleware
         ) = $this->getData($token);
 
         if ($exTime < time()) {
-            throw new AuthorizationException("token has been expired");
+            throw new TokenExpiredException("Token has been expired", 401);
         }
 
-        $request = $request
+        $request = $this->request
             ->withAttribute('user_id', $userID)
             ->withAttribute('acces_id', $accesID)
             ->withAttribute('email', $email);
 
         $response = $handler->handle($request); //handling request by API
 
+        $code = $response->getStatusCode();
+        $reason = $response->getReasonPhrase();
         $existingContent = (string) $response->getBody();
+
         $response = new Response();
         $response->getBody()->write($existingContent);
-        return $response;
+        return $response->withStatus($code, $reason);
     }
 
-    public function recieveToken(Request $request): string
+    public function recieveToken(): string
     {
-        $authorization = $request->getHeader('Authorization');
+        $authorization = $this->request->getHeader('Authorization');
         if (empty($authorization)) {
-            throw new AuthorizationException('No Authorization header');
+            throw new HttpUnauthorizedException($this->request, "No authorization header found");
         }
 
         return explode(' ', $authorization[0])[1];
@@ -53,7 +61,7 @@ class JWTMiddleware
             $tokenEncoded->validate(JWT_SIGNATURE, JWT::ALGORITHM_HS384);
             $tokenData = (array) $tokenEncoded->decode()->getPayload();
         } catch (Exception $e) {
-            throw new AuthorizationException("JWT: " . $e->getMessage(), 401);
+            throw new HttpUnauthorizedException($this->request, "JWT: " . $e->getMessage());
         }
         return $tokenData;
     }

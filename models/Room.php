@@ -5,6 +5,10 @@ class Room extends Model
 {
     protected $tableName = 'rooms';
     public $unUpdateAble = array('id');
+    public $columns = [
+        'id', 'name', 'building_id', 'room_type_id', 'seats_count', 'floor',
+        'equipment', 'blockade', 'state'
+    ];
 
     public function __construct(DBInterface $db)
     {
@@ -28,7 +32,7 @@ class Room extends Model
                     $value = (bool) $value;
                     break;
                 default:
-                    $value = (string) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
             }
         }
@@ -37,20 +41,15 @@ class Room extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-        //checking is it empty
-        foreach ($data as $key => $value) {
-            if (empty($value) && $key !== 'state' && $key !== "floor") {
-                throw new EmptyVariableException($key);
-            }
-        }
 
-        if ($this->exist(array(
+        if ($this->exist([
             "name" => $data["name"],
             "floor" => $data["floor"],
             "building_id" => $data["building_id"]
-        ))) {
-            throw new AlreadyExistException($data);
+        ])) {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
         }
 
         $this->DB->query(

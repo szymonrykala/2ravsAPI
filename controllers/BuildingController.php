@@ -3,55 +3,184 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
-class BuildingController
+require_once __DIR__ . "/Controller.php";
+
+class BuildingController extends Controller
 {
-    private $Building;
+    /**
+     * Implement endpoints related with buildings paths
+     * 
+     */
     private $Address; // relation; building addres
-    private $View;
     protected $DIcontainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
-        $this->DIcontainer = $DIcontainer;
+        parent::__construct($DIcontainer);
         $this->Building = $this->DIcontainer->get('Building');
-        $this->Address = $this->DIcontainer->get('Address');
-        $this->View = $this->DIcontainer->get('View');
     }
 
+    // GET /buildings
     public function getAllBuildings(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Building controller");
-        return $response->withHeader('Content-Type', 'application/json');
+        /**
+         * Getting all buildings from database
+         * returning array of buildings
+         * GET /buildings
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        $data = $this->handleExtensions($this->Building->read(), $request);
+        $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
     }
 
+    // GET /buildings/search
     public function searchBuildings(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Building controller");
-        return $response->withHeader('Content-Type', 'application/json');
+        /**
+         * Searching for Building with parameters given in Request(query string or body['search'])
+         * Founded results are written into the response body
+         * GET /buildings/search?<queryString>
+         * { "search":{"key":"value","key2":"value2"}}
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param array $args
+         * 
+         * @return Response 
+         */
+        $params = $this->getSearchParams($request);
+
+        $data = $this->Building->search($params);;
+
+        $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
     }
 
-    public function getBuildingByID(Request $request, Response $response, $args): Response
+    // GET /buildings/{building_id}
+    public function getBuilding(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Building controller");
-        return $response->withHeader('Content-Type', 'application/json');
+        /**
+         * Getting building by building_id with all extensions
+         * GET /buildings/{building_id}
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        $Address = $this->DIcontainer->get('Address');
+
+        $data = $this->Building->read(['id' => (int)$args['building_id']])[0];
+        $data['address'] = $Address->read(['id' => $data['address_id']])[0];
+        unset($data['address_id']);
+        $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
     }
 
-    public function createNewBuilding(Request $request, Response $response, $args): Response
+    // POST /buildings
+    public function createBuilding(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Building controller");
-        return $response->withHeader('Content-Type', 'application/json');
+        /**
+         * Creating new Building with data from request body
+         * POST /buildings
+         * {
+         *      "name":"",
+         *      "rooms_count":20,
+         *      "address_id":2
+         * }
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param array $args
+         * 
+         * @return Response 
+         */
+        $data = $this->getFrom($request, ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer']);
+
+        $Address = $this->DIcontainer->get("Address");
+        if (!$Address->exist(['id' => $data['address_id']])) {
+            throw new HttpBadRequestException($request,"Address with id=".$data['address_id']." do not exist. You cannot create building with data:".json_encode($data));
+        }
+
+        $userMail = $request->getAttribute('email');
+        $userID = $request->getAttribute('user_id');
+
+        $lastIndex = $this->Building->create($data);
+        $this->Log->create([
+            'user_id' => $userID,
+            'building_id' => $lastIndex,
+            'message' => "User $userMail created Building id=$lastIndex; data:" . json_encode($data)
+        ]);
+        return $response->withStatus(201, "Created");
     }
 
+    // PATCH /buildings/{building_id}
     public function updateBuilding(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Building controller");
-        return $response->withHeader('Content-Type', 'application/json');
+        /**
+         * Updating sepcific BUilding with data from request body
+         * PATCH /building/{building_id}
+         * {
+         *      "name":"",
+         *      "rooms_count":20,
+         *      "address_id":2
+         * }
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param array $args
+         * 
+         * @return Response 
+         */
+        $data = $this->getFrom($request);
+        $userMail = $request->getAttribute('email');
+        $userID = $request->getAttribute('user_id');
+        $buildingID = (int)$args['building_id'];
+
+
+        $this->Building->update($buildingID, $data);
+
+        $this->Log->create([
+            'user_id' => $userID,
+            'building_id' => $buildingID,
+            'message' => "user $userMail updated Building id=$buildingID data:" . json_encode($data)
+        ]);
+        return $response->withStatus(204, "Updated");
     }
 
+    // DELETE /buildings/{building_id}
     public function deleteBuilding(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write("Building controller");
-        return $response->withHeader('Content-Type', 'application/json');
+        /**
+         * Deleting specific building by building_id
+         * DELETE /buildings/{building_id}
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param array $args
+         * 
+         * @return Response 
+         */
+        $userMail = $request->getAttribute('email');
+        $userID = $request->getAttribute('user_id');
+        $buildingID = (int)$args['building_id'];
+
+        $this->Building->delete((int)$args['building_id']);
+        $this->Log->create([
+            'user_id' => $userID,
+            'building_id' => $buildingID,
+            'message' => "User $userMail deleted Building id=$buildingID"
+        ]);
+
+        return $response->withStatus(204, "Deleted");
     }
 }

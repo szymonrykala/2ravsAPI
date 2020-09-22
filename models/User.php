@@ -5,6 +5,11 @@ class User extends Model
 {
     protected $tableName = 'users';
     public $unUpdateAble = array('id', 'created_at');
+    protected $columns = [
+        'id', 'acces_id', 'name', 'surname', 'password',
+        'last_login', 'email', 'updated_at', 'img_url',
+        'activated', 'login_fails', 'created_at', 'action_key'
+    ];
 
     public function __construct(DBInterface $db)
     {
@@ -15,30 +20,6 @@ class User extends Model
     {
         foreach ($data as $key => &$value) {
             switch ($key) {
-                case 'name':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'surname':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'password':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'last_login':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'email':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'updated_at':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'created_at':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'action_key':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
                 case 'id':
                     $value = (int) $value;
                     break;
@@ -52,7 +33,7 @@ class User extends Model
                     $value = (bool) $value;
                     break;
                 default:
-                    unset($data[$key]);
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
                     break;
             }
         }
@@ -61,21 +42,17 @@ class User extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
         $data['name'] = preg_replace('/\s/', '', $data['name']);
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 
-        //checking is it empty
-        foreach ($data as $key => $value) {
-            if (empty($value) && $key !== 'activated') {
-                throw new EmptyVariableException($key);
-            }
+        if ($this->exist(['email' => $data['email']]))
+        {
+            throw new InvalidArgumentException("$this->tableName with given email already exist.", 400);
         }
 
-        if ($this->exist(array('email' => $data['email']))) {
-            throw new AlreadyExistException($data);
-        }
 
         $options = [
             'cost' => 12,

@@ -3,8 +3,12 @@ require_once __DIR__ . '/Model.php';
 
 class Building extends Model
 {
+    /**
+     * Responsible for operation with buildings table in database
+     */
     protected $tableName = 'buildings';
-    public $unUpdateAble = array('id', 'user_id', 'created_at', 'confirmed_at');
+    public $unUpdateAble = array('id');
+    public $columns = ['id', 'name', 'rooms_count', 'address_id'];
 
     public function __construct(DBInterface $db)
     {
@@ -13,13 +17,19 @@ class Building extends Model
 
     public function parseData(array $data): array
     {
+        /**
+         * Used for parsing data to right data type
+         * 
+         * @param array $data 
+         * @return array $data
+         */
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'name':
                     $value = filter_var($value, FILTER_SANITIZE_STRING);
                     break;
                 default:
-                    $value = (string) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
             }
         }
@@ -28,16 +38,18 @@ class Building extends Model
 
     public function create(array $data): int
     {
-
+        /**
+         * Creating new Building in database 
+         * 
+         * @param array $data array with params:name
+         * @return int inserted item index
+         */
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-        }
 
-        if ($this->exist(array($data))) {
-            throw new AlreadyExistException($data);
+        if ($this->exist($data))
+        {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
         }
 
         $this->DB->query(

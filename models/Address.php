@@ -5,6 +5,7 @@ class Address extends Model
 {
     protected $tableName = 'addresses';
     public $unUpdateAble = array('id');
+    public $columns = ['id', 'country', 'town', 'postal_code', 'street', 'number'];
 
     public function __construct(DBInterface $db)
     {
@@ -28,16 +29,12 @@ class Address extends Model
 
     public function create(array $data): int
     {
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-        }
-
-        if ($this->exist(array($data))) {
-            throw new AlreadyExistException($data);
+        if ($this->exist($data))
+        {
+            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
         }
 
         $this->DB->query(

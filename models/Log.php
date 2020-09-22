@@ -4,7 +4,8 @@ require_once __DIR__ . '/Model.php';
 class Log extends Model
 {
     protected $tableName = 'logs';
-    public $unUpdateAble = array('id', 'created_at', 'building_id', 'room_id', 'reservation_id');
+    public $unUpdateAble = array('id', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id');
+    public $columns = ['id', 'message', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id'];
 
     public function __construct(DBInterface $db)
     {
@@ -14,6 +15,9 @@ class Log extends Model
     public function parseData(array $data): array
     {
         foreach ($data as $key => &$value) {
+            if ($value === null) {
+                continue;
+            }
             switch ($key) {
                 case "message":
                     $value = filter_var($value, FILTER_SANITIZE_STRING);
@@ -31,24 +35,12 @@ class Log extends Model
 
     public function create(array $data): int
     {
-
+        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
-        //checking is it empty
-        foreach ($data as $key => &$value) {
-            if (empty($value)) {
-                throw new EmptyVariableException($key);
-            }
-            if (in_array($key, $this->unUpdateAble)) {
-                throw new UnUpdateableParameterException($key);
-            }
-        }
-
-        // have to fill not existing fields
-        $fields = array('room_id', 'reservation_id', 'building_id');
-        foreach ($fields as $field) {
-            if (!isset($data[$field])) {
-                $data[$field] = null;
+        foreach ($this->columns as $key) {
+            if (!isset($data[$key])) {
+                $data[$key] = Null;
             }
         }
 
