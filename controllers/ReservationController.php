@@ -33,7 +33,7 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->Reservation->read(['deleted' => $this->deleted($request)]);
+        $data = $this->Reservation->read(['deleted' => (bool)$this->parsedQueryString($request, 'deleted')]);
         $data = $this->handleExtensions($data, $request);
 
         $response->getBody()->write(json_encode($data));
@@ -96,7 +96,7 @@ class ReservationController extends Controller
          */
         $data = $this->Reservation->read([
             'user_id' => $args['userID'],
-            'deleted' => $this->deleted($request)
+            'deleted' => (bool)$this->parsedQueryString($request, 'deleted')
         ]);
         $data = $this->handleExtensions($data, $request);
 
@@ -120,7 +120,7 @@ class ReservationController extends Controller
          */
         $data = $this->Reservation->read([
             'building_id' => $args['building_id'],
-            'deleted' => $this->deleted($request)
+            'deleted' => (bool)$this->parsedQueryString($request,'deleted')
         ]);
         $data = $this->handleExtensions($data, $request);
 
@@ -145,7 +145,7 @@ class ReservationController extends Controller
         $data = $this->Reservation->read([
             'building_id' => $args['building_id'],
             'room_id' => $args['room_id'],
-            'deleted' => $this->deleted($request)
+            'deleted' => (bool)$this->parsedQueryString($request,'deleted')
         ]);
         $data = $this->handleExtensions($data, $request);
 
@@ -171,10 +171,10 @@ class ReservationController extends Controller
          * @return Response 
          */
         $params = $this->getSearchParams($request);
-        if(isset($args['building_id'])){
+        if (isset($args['building_id'])) {
             $params['building_id'] = $args['building_id'];
         }
-        if(isset($args['room_id'])){
+        if (isset($args['room_id'])) {
             $params['room_id'] = $args['room_id'];
         }
         $data = $this->Reservation->search($params);
@@ -310,13 +310,13 @@ class ReservationController extends Controller
                 'message' => "User $currentUserMail moved reservation to trash"
             ]);
         } else {
+            $this->Reservation->delete((int) $args['reservation_id']);
             $this->Log->create([
                 'user_id' => (int)$currentUser,
                 'reservation_id' => $reservationID,
                 'message' => "User $currentUserMail hard deleted reservation"
             ]);
 
-            $this->Reservation->delete((int) $args['reservation_id']);
         }
 
         return $response->withStatus(204, "Deleted");

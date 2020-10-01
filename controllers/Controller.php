@@ -20,24 +20,6 @@ abstract class Controller
         $this->Log = $this->DIcontainer->get("Log");
     }
 
-    protected function deleted(Request $request): bool
-    {
-        /**
-         * checking if deleted flag param is ste to '1' or 'true' in query string
-         * 
-         * @param Request $request
-         * 
-         * @return bool $deleted
-         */
-        if (isset($this->getQueryParam($request, 'deleted')[0])) {
-            $var = $this->getQueryParam($request, 'deleted')[0];
-            if ($var === 'true' || $var === '1') {
-                return true;
-            }
-        }
-        return false;
-    }
-
     protected function parsedQueryString(Request $request, string $key = ''): array
     {
         $url = $request->getUri()->getQuery();
@@ -54,52 +36,13 @@ abstract class Controller
             }
         }
 
-        if ($key !== '' && isset($result[$key])) {
+        if ($key !== '') {
+            if (!isset($result[$key])) {
+                return [];
+            }
             return is_array($result[$key]) ? $result[$key] : [$result[$key]];
         }
         return $result;
-    }
-
-
-    protected function getQueryParam(Request $request, string $key = null): array
-    {
-        /**
-         * Getting query param from query string
-         * getting params if $key is not defined 
-         * 
-         * @param Request $request
-         * @param string $key 
-         * 
-         * @return array $param
-         */
-        $result = array();
-        $queryString = $request->getUri()->getQuery();
-
-        $params = explode('&', $queryString);
-
-        foreach ($params as $params) {
-
-            $paramArr = explode('=', $params);
-            preg_match('/=/', $params, $array);
-            if (!empty($array)) {
-
-                $key = $paramArr[0];
-                $value = $paramArr[1];
-
-                $valueArr = explode(',', $value);
-                preg_match('/,/', $value, $array);
-
-                if (!empty($array)) {
-                    $value = $valueArr;
-                }
-                $result[$key] = $value;
-            }
-        }
-        if (isset($result[$key])) {
-            return is_array($result[$key]) ? $result[$key] : array($result[$key]);
-        } else {
-            return array();
-        }
     }
 
     protected function getFrom(Request $request, array $rquiredParameters = array()): array
