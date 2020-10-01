@@ -38,7 +38,7 @@ abstract class Controller
         return false;
     }
 
-    protected function parseQueryString(Request $request, string $key = ''): array
+    protected function parsedQueryString(Request $request, string $key = ''): array
     {
         function checkIfArray(string $string)
         {
@@ -155,7 +155,7 @@ abstract class Controller
          * @return array $queryParams
          */
         $are_not_search_params = ['limit', 'page', 'on_page', 'ext','sort'];
-        $queryParams = $this->parseQueryString($request);
+        $queryParams = $this->parsedQueryString($request);
 
         foreach ($queryParams as $key => $value) {
             if (in_array($key, $are_not_search_params)) {
@@ -185,7 +185,7 @@ abstract class Controller
          * 
          * @return array $dataArray 
          */
-        $extensions = $this->getQueryParam($request, 'ext');
+        $extensions = $this->parsedQueryString($request, 'ext');
 
         $roomMark = in_array('room_id', $extensions);
         $buildingMark = in_array('building_id', $extensions);
