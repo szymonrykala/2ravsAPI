@@ -16,8 +16,6 @@ require_once __DIR__ . "/Controller.php";
 class UserController extends Controller
 {
     private $User;
-    private $Acces;
-    protected $DIcontainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -287,6 +285,34 @@ class UserController extends Controller
         unset($user['action_key']);
 
         $response->getBody()->write(json_encode($user));
+        return $response->withStatus(200);
+    }
+
+    // GET users/search
+    public function searchUsers(Request $request, Response $response, $args): Response
+    {
+        /**
+         * Searching for users with parameters given in Request(query string or body['search'])
+         * Founded results are written into the response body
+         * GET /logs/search?<queryString>
+         * { "search":{"key":"value","key2":"value2"}}
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        $params = $this->getSearchParams($request);
+
+        $data = $this->User->search($params);
+
+        $data = $this->handleExtensions($data, $request);
+        foreach($data as &$user){
+            unset($user['password']);
+            unset($user['action_key']);
+        }
+        $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
 

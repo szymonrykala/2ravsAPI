@@ -153,6 +153,38 @@ class ReservationController extends Controller
         return $response->withStatus(200);
     }
 
+    // GET buildings/{building_id}/rooms/{room_id}/reservations/search
+    // GET buildings/{building_id}/reservations/search
+    // GET reservations/search
+    public function searchReservations(Request $request, Response $response, $args): Response
+    {
+        /**
+         * Searching for reservtions with parameters given in Request(query string or body['search'])
+         * Founded results are written into the response body
+         * GET /logs/search?<queryString>
+         * { "search":{"key":"value","key2":"value2"}}
+         * 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        $params = $this->getSearchParams($request);
+        if(isset($args['building_id'])){
+            $params['building_id'] = $args['building_id'];
+        }
+        if(isset($args['room_id'])){
+            $params['room_id'] = $args['room_id'];
+        }
+        $data = $this->Reservation->search($params);
+
+        $data = $this->handleExtensions($data, $request);
+
+        $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
+    }
+
     // POST /buildings/{building_id}/rooms/{room_id}/reservations
     public function createReservation(Request $request, Response $response, $args): Response
     {

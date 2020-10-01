@@ -96,6 +96,8 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
     $app->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
         $reservations->get('', \ReservationController::class . ':getAllReservations');
+        $reservations->get('/search', \ReservationController::class . ':searchReservations');
+
         // $reservations->post('', \ReservationController::class . ':createReservation');
         $reservations->delete('/{reservation_id:.*[0-9]+}', \ReservationController::class . ':deleteReservationsByID');
 
@@ -109,6 +111,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
     $app->group('/users', function (\Slim\Routing\RouteCollectorProxy $user) {
 
         $user->get('', \UserController::class . ':getAllUsers');
+        $user->get('/search', \UserController::class . ':searchUsers');
 
         $user->group('/{userID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
             $specUser->get('', \UserController::class . ':getSpecificUser');
@@ -138,6 +141,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
             $specBuilding->patch('', \BuildingController::class . ':updateBuilding');
             $specBuilding->delete('', \BuildingController::class . ':deleteBuilding');
             $specBuilding->get('/reservations', \ReservationController::class . ':getReservationsInBuilding');
+            $specBuilding->get('/reservations/search', \ReservationController::class . ':searchReservations');
 
             $specBuilding->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
                 $rooms->get('', \RoomController::class . ':getAllRoomsInBuilding');
