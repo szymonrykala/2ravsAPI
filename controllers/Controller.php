@@ -40,24 +40,24 @@ abstract class Controller
 
     protected function parsedQueryString(Request $request, string $key = ''): array
     {
-        function checkIfArray(string $string)
-        {
-            if (strpos($string, ',')) {
-                $result = preg_split('/,/', $string);
-                return $result;
-            }
-            return $string;
-        }
         $url = $request->getUri()->getQuery();
         $regexOut = [];
         preg_match_all('/&?([\w]*)=([:,\w-]*)/', $url, $regexOut);
 
         $result = [];
         foreach ($regexOut[1] as $num => $value) {
-            $result[$value] = checkIfArray($regexOut[2][$num]);
+            if (strpos($value, ',')) {
+                $result = preg_split('/,/', $value);
+                return $result;
+            } else {
+                $result[$value] = $regexOut[2][$num];
+            }
         }
 
-        return $key !== '' ? $result[$key] : $result;
+        if ($key !== '' && isset($result[$key])) {
+            return is_array($result[$key]) ? $result[$key] : [$result[$key]];
+        }
+        return $result;
     }
 
 
@@ -154,7 +154,7 @@ abstract class Controller
          * 
          * @return array $queryParams
          */
-        $are_not_search_params = ['limit', 'page', 'on_page', 'ext','sort'];
+        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort'];
         $queryParams = $this->parsedQueryString($request);
 
         foreach ($queryParams as $key => $value) {
@@ -193,6 +193,7 @@ abstract class Controller
         $reservationMark = in_array('reservation_id', $extensions);
         $addressMark = in_array('address_id', $extensions);
         $confirmedMark = in_array('confirming_user_id', $extensions);
+        $accessMark = in_array('access_id', $extensions);
 
         if ($roomMark) {
             $Room = $this->DIcontainer->get('Room');
@@ -208,6 +209,9 @@ abstract class Controller
         }
         if ($userMark || $confirmedMark) {
             $User = $this->DIcontainer->get('User');
+        }
+        if ($accessMark) {
+            $Access = $this->DIcontainer->get('Access');
         }
 
         foreach ($dataArray as &$dataEntry) {
@@ -233,6 +237,10 @@ abstract class Controller
                 unset($dataEntry['user']['password']);
                 unset($dataEntry['user']['action_key']);
                 unset($dataEntry['user']['login_fails']);
+            }
+            if ($accessMark && $dataEntry['access_id'] !== null) {
+                $dataEntry['access'] = $Access->read(['id' => $dataEntry['access_id']])[0];
+                unset($dataEntry['access_id']);
             }
             if ($confirmedMark && $dataEntry['confirming_user_id'] !== null) {
                 $dataEntry['confirming_user'] = $User->read(['id' => $dataEntry['confirming_user_id']])[0];

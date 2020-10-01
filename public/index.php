@@ -21,16 +21,16 @@ $rootApp->addBodyParsingMiddleware();
 // $rootApp->addErrorMiddleware(true, true, true);
 // $rootApp->add(new JSONMiddleware());
 
-/*  CLIENT  -->  (JSONMiddleware)  -->  (AuthorizationMiddleware)  -->  (AccesMiddleware)  -->  API resources
-    CLIENT  <--  (JSONMiddleware)  <--  (AuthorizationMiddleware)  <--  (AccesMiddleware)  <--  API resources  */
-// $rootApp->add(new AccesMiddleware());
+/*  CLIENT  -->  (JSONMiddleware)  -->  (AuthorizationMiddleware)  -->  (AccessMiddleware)  -->  API resources
+    CLIENT  <--  (JSONMiddleware)  <--  (AuthorizationMiddleware)  <--  (AccessMiddleware)  <--  API resources  */
+// $rootApp->add(new AccessMiddleware());
 
 
 
 //Models
 //each Model have it's own connection to Database
 $DIcontainer->set('Building', new Building(new Database()));
-$DIcontainer->set('Acces', new Acces(new Database()));
+$DIcontainer->set('Access', new Access(new Database()));
 $DIcontainer->set('Log', new Log(new Database()));
 $DIcontainer->set('Reservation', new Reservation(new Database()));
 $DIcontainer->set('Room', new Room(new Database()));
@@ -83,14 +83,14 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/acces', function (\Slim\Routing\RouteCollectorProxy $acceses) {
-        $acceses->get('', \AccesController::class . ':getAllAccesTypes');
-        $acceses->post('', \AccesController::class . ':createNewAccesType');
+    $app->group('/access', function (\Slim\Routing\RouteCollectorProxy $accesses) {
+        $accesses->get('', \AccessController::class . ':getAllAccessTypes');
+        $accesses->post('', \AccessController::class . ':createNewAccessType');
 
-        $acceses->group('/{acces_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $acces) {
-            $acces->get('', \AccesController::class . ':getAccesTypeByID');
-            $acces->patch('', \AccesController::class . ':updateAccesType');
-            $acces->delete('', \AccesController::class . ':deleteAccesType');
+        $accesses->group('/{access_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $access) {
+            $access->get('', \AccessController::class . ':getAccessTypeByID');
+            $access->patch('', \AccessController::class . ':updateAccessType');
+            $access->delete('', \AccessController::class . ':deleteAccessType');
         });
     });
 

@@ -23,7 +23,7 @@ class UserController extends Controller
         $this->User = $this->DIcontainer->get('User');
     }
 
-    private function generateToken(int $userID, int $accesID, string $email): string
+    private function generateToken(int $userID, int $accessID, string $email): string
     {
         //creating new token
         $time = time();
@@ -31,7 +31,7 @@ class UserController extends Controller
             ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS384],
             array(
                 'user_id' => $userID,
-                'acces_id' => $accesID,
+                'access_id' => $accessID,
                 'email' => $email,
                 'ex' => $time + (60 * 60) * 48 //valid 48h
             )
@@ -77,7 +77,7 @@ class UserController extends Controller
             list(
                 'password' => $userPassword,
                 'id' => $userID,
-                'acces_id' => $accesID,
+                'access_id' => $accessID,
                 'login_fails' => $loginFails,
                 'activated' => $activated
             ) = $this->User->read(array('email' => $email))[0];
@@ -94,11 +94,11 @@ class UserController extends Controller
         }
 
         if (password_verify($password, $userPassword)) {
-            $Acces = $this->DIcontainer->get('Acces');
+            $Access = $this->DIcontainer->get('Access');
             $data = array(
-                "jwt" => $this->generateToken($userID, $accesID, $email),
+                "jwt" => $this->generateToken($userID, $accessID, $email),
                 'userID' => $userID,
-                "acces" => $Acces->read(['id' => $accesID])
+                "access" => $Access->read(['id' => $accessID])
             );
             $this->User->update($userID, array('login_fails' => 0));
             $this->Log->create(array(
@@ -201,7 +201,7 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $key = $this->getQueryParam($request, 'key')[0];
+        $key = $this->parsedQueryString($request, 'key');
 
         if (empty($this->User->read(['action_key' => $key])[0])) {
             //if user with given key was not found
@@ -243,17 +243,10 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $ext = $this->getQueryParam($request, 'ext');
-        if (in_array('acces_id', $ext)) {
-            $Acces = $this->DIcontainer->get('Acces');
-        }
 
         $users = $this->User->read();
+        $users = $this->handleExtensions($users,$request);
         foreach ($users as &$user) {
-            if (in_array('acces_id', $ext)) {
-                $user['acces'] = $Acces->read(['id' => $user['acces_id']])[0];
-                unset($user['acces_id']);
-            }
             unset($user['password']);
             unset($user['action_key']);
         }
@@ -261,12 +254,12 @@ class UserController extends Controller
         return $response->withStatus(200);
     }
 
-    // GET /users/{user_id}?ext=<acces_id>
+    // GET /users/{user_id}?ext=<access_id>
     public function getSpecificUser(Request $request, Response $response, $args): Response
     {
         /**
          * Getting specific User by user_id
-         * GET /users/{user_id}?ext=<acces_id>
+         * GET /users/{user_id}?ext=<access_id>
          * 
          * @param Request $request
          * @param Response $response
@@ -278,8 +271,8 @@ class UserController extends Controller
 
         $user = $this->User->read(['id' => $userID])[0];
 
-        $Acces = $this->DIcontainer->get('Acces');
-        $user['acces'] = $Acces->read(['id' => $user['acces_id']])[0];
+        $Access = $this->DIcontainer->get('Access');
+        $user['access'] = $Access->read(['id' => $user['access_id']])[0];
 
         unset($user['password']);
         unset($user['action_key']);
@@ -308,10 +301,6 @@ class UserController extends Controller
         $data = $this->User->search($params);
 
         $data = $this->handleExtensions($data, $request);
-        foreach($data as &$user){
-            unset($user['password']);
-            unset($user['action_key']);
-        }
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -339,7 +328,7 @@ class UserController extends Controller
         $qData = $this->getFrom($request);
         $currentUser = (int) $request->getAttribute('user_id');
         $editedUser = $args['userID'];
-        $accesID = $request->getAttribute('acces_id');
+        $accessID = $request->getAttribute('access_id');
         $userEmail = $request->getAttribute('email');
 
         $data = [];

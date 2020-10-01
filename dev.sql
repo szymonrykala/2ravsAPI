@@ -25,20 +25,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Struktura tabeli dla tabeli `acceses`
+-- Struktura tabeli dla tabeli `accesses`
 --
 
-CREATE TABLE `acceses` (
+CREATE TABLE `accesses` (
   `id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
-  `acces_edit` tinyint(1) NOT NULL DEFAULT 0,
+  `access_edit` tinyint(1) NOT NULL DEFAULT 0,
   `buildings_view` tinyint(1) NOT NULL DEFAULT 1,
   `buildings_edit` tinyint(1) NOT NULL DEFAULT 0,
   `logs_view` tinyint(1) NOT NULL DEFAULT 0,
   `logs_edit` tinyint(1) NOT NULL DEFAULT 0,
   `rooms_view` tinyint(1) NOT NULL DEFAULT 1,
   `rooms_edit` tinyint(1) NOT NULL DEFAULT 0,
-  `reservations_acces` tinyint(1) NOT NULL DEFAULT 0,
+  `reservations_access` tinyint(1) NOT NULL DEFAULT 0,
   `reservations_confirm` tinyint(1) NOT NULL DEFAULT 0,
   `reservations_edit` tinyint(1) NOT NULL DEFAULT 0,
   `users_edit` tinyint(1) NOT NULL DEFAULT 0,
@@ -46,10 +46,10 @@ CREATE TABLE `acceses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Zrzut danych tabeli `acceses`
+-- Zrzut danych tabeli `accesses`
 --
 
-INSERT INTO `acceses` (`id`, `name`, `acces_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_acces`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
+INSERT INTO `accesses` (`id`, `name`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
 (1, 'admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 (3, 'demo', 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0),
 (4, 'test', 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -169,8 +169,8 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 (245, 'User weronika1212@gmail.com veryfing failed', 8, NULL, NULL, NULL, '2020-09-09 16:48:14'),
 (246, 'User weronika1212@gmail.com (id=8) updated user (id=8) data: surname', 8, NULL, NULL, NULL, '2020-09-09 16:48:17'),
 (247, 'User weronika1212@gmail.com succesfully veryfied', 8, NULL, NULL, NULL, '2020-09-09 17:08:15'),
-(248, 'User weronika1212@gmail.com deleted acces id=3', 8, NULL, NULL, NULL, '2020-09-09 19:18:33'),
-(249, 'User weronika1212@gmail.com created new acces class &#39;test&#39; ', 8, NULL, NULL, NULL, '2020-09-09 19:30:13'),
+(248, 'User weronika1212@gmail.com deleted access id=3', 8, NULL, NULL, NULL, '2020-09-09 19:18:33'),
+(249, 'User weronika1212@gmail.com created new access class &#39;test&#39; ', 8, NULL, NULL, NULL, '2020-09-09 19:30:13'),
 (250, 'User weronika1212@gmail.com updated', 8, NULL, NULL, NULL, '2020-09-09 20:15:39'),
 (256, 'teseting building C', 8, NULL, 4, NULL, '2020-09-09 20:16:46');
 
@@ -281,7 +281,7 @@ INSERT INTO `room_types` (`id`, `name`) VALUES
 
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
-  `acces_id` int(11) NOT NULL DEFAULT 1,
+  `access_id` int(11) NOT NULL DEFAULT 1,
   `name` tinytext NOT NULL,
   `surname` tinytext NOT NULL,
   `password` text NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE `users` (
 -- Zrzut danych tabeli `users`
 --
 
-INSERT INTO `users` (`id`, `acces_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `img_url`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
+INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `img_url`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
 (4, 1, 'Szymon', 'Rykała', '$2y$12$53Gv4712tmvJTTuyPniUeuSipJarTnb5Ck9tTQ4uVo/j2Jn5FeNqK', '2020-08-24 21:33:57', 'szymonrykalaAdmin@gmail.com', '2020-08-24 21:33:57', 'http://localhost:8080/img/users/default.jpg', 0, 0, '2020-08-24 21:33:57', 'xxxyyy111222'),
 (6, 1, 'Szymon', 'Rykała', '$2y$12$4mBLGUlJa6qqtUZZR6wpwu6sMXW1aPBuVPXQvNBf8zjACrd3MQlyq', '2020-08-22 19:01:42', 'szymonrykalaDemo@gmail.com', '2020-08-22 19:01:42', 'http://localhost:8080/img/users/default.jpg', 1, 0, '2020-08-22 19:01:42', '1'),
 (8, 3, 'Weronika', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-09-09 17:08:15', 'weronika1212@gmail.com', '2020-09-09 17:08:15', 'http://localhost:8080/img/users/default.jpg', 1, 0, '2020-09-09 17:08:15', '1'),
@@ -310,9 +310,9 @@ INSERT INTO `users` (`id`, `acces_id`, `name`, `surname`, `password`, `last_logi
 --
 
 --
--- Indeksy dla tabeli `acceses`
+-- Indeksy dla tabeli `accesses`
 --
-ALTER TABLE `acceses`
+ALTER TABLE `accesses`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_name` (`name`) USING HASH;
 
@@ -366,16 +366,16 @@ ALTER TABLE `room_types`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_email` (`email`) USING HASH,
-  ADD KEY `users_to_acceses` (`acces_id`);
+  ADD KEY `users_to_accesses` (`access_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT dla tabeli `acceses`
+-- AUTO_INCREMENT dla tabeli `accesses`
 --
-ALTER TABLE `acceses`
+ALTER TABLE `accesses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
@@ -450,7 +450,7 @@ ALTER TABLE `rooms`
 -- Ograniczenia dla tabeli `users`
 --
 ALTER TABLE `users`
-  ADD CONSTRAINT `users_to_acceses` FOREIGN KEY (`acces_id`) REFERENCES `acceses` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `users_to_accesses` FOREIGN KEY (`access_id`) REFERENCES `accesses` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

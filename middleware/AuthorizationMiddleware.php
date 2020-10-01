@@ -8,19 +8,19 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Psr7\Response;
 
 /* 
-checking if authenticated user have acces to resources he want to perform
+checking if authenticated user have access to resources he want to perform
 */
 
 class AuthorizationMiddleware
 {
-    private $accesTable = array();
+    private $accessTable = array();
     private $target = '';
     private $resourceNumber = null;
-    private $Acces = null;
+    private $Access = null;
 
     public function __construct(DI\Container $container)
     {
-        $this->Acces = $container->get("Acces");
+        $this->Access = $container->get("Access");
         $this->User = $container->get("User");
     }
 
@@ -29,22 +29,22 @@ class AuthorizationMiddleware
         $method = $request->getMethod();
         $this->target = $this->getTarget($request);
 
-        $userAccesID = $request->getAttribute("acces_id");
+        $userAccessID = $request->getAttribute("access_id");
         $userID = $request->getAttribute("user_id");
-        list("acces_id" => $currentAccesID) = $this->User->read(['id' => $userID])[0];
+        list("access_id" => $currentAccessID) = $this->User->read(['id' => $userID])[0];
 
-        if ($userAccesID !== $currentAccesID) {
-            throw new HttpUnauthorizedException($request,"Your acces has changed - please login again");
+        if ($userAccessID !== $currentAccessID) {
+            throw new HttpUnauthorizedException($request,"Your access has changed - please login again");
         }
 
-        $this->fillAccesTable($request);
+        $this->fillAccessTable($request);
 
 
-        if (!isset($this->accesTable[$this->target][$method])) {
+        if (!isset($this->accessTable[$this->target][$method])) {
             throw new HttpMethodNotAllowedException($request, "Given Method is not allowed on this resource");
         }
-        if ($this->accesTable[$this->target][$method] === false) {
-            throw new HttpForbiddenException($request, "You don't have acces to perform this action on given resource");
+        if ($this->accessTable[$this->target][$method] === false) {
+            throw new HttpForbiddenException($request, "You don't have access to perform this action on given resource");
         }
 
         $response = $handler->handle($request); //handling request by API
@@ -71,17 +71,17 @@ class AuthorizationMiddleware
         return $resource;
     }
 
-    public function fillAccesTable(Request $request): void
+    public function fillAccessTable(Request $request): void
     {
-        list("acces_id" => $accesID, "user_id" => $userID) = $request->getAttributes();
-        $result = $this->Acces->read(["id" => $accesID])[0];
+        list("access_id" => $accessID, "user_id" => $userID) = $request->getAttributes();
+        $result = $this->Access->read(["id" => $accessID])[0];
 
         $sameUser = false;
         if ($this->target === 'users') {
             $sameUser = ((int) $this->resourceNumber === (int) $userID);
         }
 
-        $this->accesTable = array(
+        $this->accessTable = array(
             'statistics' => array(
                 'GET' => $result['statistics_view']
                 // 'POST'=>1,
@@ -89,8 +89,8 @@ class AuthorizationMiddleware
                 // 'DELETE'=>1
             ),
             'reservations' => array(
-                'GET' => $result['reservations_acces'],
-                'POST' => $result['reservations_acces'],
+                'GET' => $result['reservations_access'],
+                'POST' => $result['reservations_access'],
                 'PATCH' => $result['reservations_edit'],
                 'DELETE' => $result['reservations_edit']
             ),
@@ -133,11 +133,11 @@ class AuthorizationMiddleware
                 // 'PATCH' => 1,
                 'DELETE' => $result['logs_edit']
             ),
-            'acces' => array(
+            'access' => array(
                 'GET' => 1,
-                'POST' => $result['acces_edit'],
-                'PATCH' => $result['acces_edit'],
-                'DELETE' => $result['acces_edit']
+                'POST' => $result['access_edit'],
+                'PATCH' => $result['access_edit'],
+                'DELETE' => $result['access_edit']
             )
         );
     }
