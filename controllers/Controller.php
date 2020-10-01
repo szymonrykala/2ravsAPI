@@ -38,6 +38,27 @@ abstract class Controller
         return false;
     }
 
+    protected function parseQueryString(Request $request, string $key):array{
+        function checkIfArray(string $string){
+            if( strpos($string, ',') ){
+                $result = preg_split('/,/', $string);
+                return $result;
+            }
+            return $string;
+        }
+        $url = $request->getUri()->getQuery();
+        $regexOut=[];
+        preg_match_all('/&?([\w]*)=([:,\w-]*)/', $url, $regexOut);
+        
+        $result=[];
+        foreach($regexOut[1] as $num => $value){
+            $result[$value] = checkIfArray($regexOut[2][$num]);
+        }
+    
+        return $key !== ''?$result[$key]: $result;
+    }
+
+
     protected function getQueryParam(Request $request, string $key = null): array
     {
         /**
