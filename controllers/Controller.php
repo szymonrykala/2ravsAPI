@@ -38,24 +38,26 @@ abstract class Controller
         return false;
     }
 
-    protected function parseQueryString(Request $request, string $key):array{
-        function checkIfArray(string $string){
-            if( strpos($string, ',') ){
+    protected function parseQueryString(Request $request, string $key = ''): array
+    {
+        function checkIfArray(string $string)
+        {
+            if (strpos($string, ',')) {
                 $result = preg_split('/,/', $string);
                 return $result;
             }
             return $string;
         }
         $url = $request->getUri()->getQuery();
-        $regexOut=[];
+        $regexOut = [];
         preg_match_all('/&?([\w]*)=([:,\w-]*)/', $url, $regexOut);
-        
-        $result=[];
-        foreach($regexOut[1] as $num => $value){
+
+        $result = [];
+        foreach ($regexOut[1] as $num => $value) {
             $result[$value] = checkIfArray($regexOut[2][$num]);
         }
-    
-        return $key !== ''?$result[$key]: $result;
+
+        return $key !== '' ? $result[$key] : $result;
     }
 
 
@@ -152,12 +154,13 @@ abstract class Controller
          * 
          * @return array $queryParams
          */
-        $queryString = $request->getUri()->getQuery();
+        $are_not_search_params = ['limit', 'page', 'on_page', 'ext','sort'];
+        $queryParams = $this->parseQueryString($request);
 
-        preg_match_all('/(\w+)=([A-z0-9]+)/', $queryString, $regexOut);
-        $queryParams = [];
-        foreach ($regexOut[1] as $number => $key) {
-            $queryParams[$key] = $regexOut[2][$number];
+        foreach ($queryParams as $key => $value) {
+            if (in_array($key, $are_not_search_params)) {
+                unset($queryParams[$key]);
+            }
         }
 
         $dataParams = $request->getParsedBody();
