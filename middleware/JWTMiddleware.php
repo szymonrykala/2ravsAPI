@@ -24,9 +24,9 @@ class JWTMiddleware
             "ex" => $exTime
         ) = $this->getData($token);
 
-        if ($exTime < time()) {
-            throw new TokenExpiredException("Token has been expired", 401);
-        }
+        // if ($exTime < time()) {
+        //     throw new TokenExpiredException("Token has been expired", 401);
+        // }
 
         $request = $this->request
             ->withAttribute('user_id', $userID)
