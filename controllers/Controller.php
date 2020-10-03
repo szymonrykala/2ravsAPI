@@ -3,11 +3,6 @@
 use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-use \Nowakowskir\JWT\JWT;
-use \Nowakowskir\JWT\Base64Url;
-use Nowakowskir\JWT\TokenDecoded;
-use Nowakowskir\JWT\TokenEncoded;
-use Nowakowskir\JWT\Exceptions\UnsecureTokenException;
 use Psr\Container\ContainerInterface;
 
 abstract class Controller
