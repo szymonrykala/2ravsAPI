@@ -97,7 +97,7 @@ abstract class Controller
          * 
          * @return array $queryParams
          */
-        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort'];
+        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort','key'];
         $queryParams = $this->parsedQueryString($request);
 
         foreach ($queryParams as $key => $value) {
