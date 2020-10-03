@@ -17,15 +17,24 @@ abstract class Controller
 
     protected function parsedQueryString(Request $request, string $key = ''): array
     {
+        /**
+         * parsing query string to get parameters into assoc array
+         * 
+         * @param Request $request
+         * @param string $key=''
+         * @return array
+        */
         $url = $request->getUri()->getQuery();
         $regexOut = [];
         preg_match_all('/&?([\w]*)=([:,\w-]*)/', $url, $regexOut);
 
         $result = [];
         foreach ($regexOut[1] as $num => $value) {
-            if (strpos($value, ',')) {
-                $result = preg_split('/,/', $value);
-                return $result;
+            // $regexOut[2][$num] <- feature value - variable value
+            // $value <- feature key - variable name
+            if (strpos($regexOut[2][$num], ',')) {
+                $result = preg_split('/,/', $regexOut[2][$num]);
+                $result[$value] = $result;
             } else {
                 $result[$value] = $regexOut[2][$num];
             }
@@ -92,7 +101,7 @@ abstract class Controller
          * 
          * @return array $queryParams
          */
-        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort','key'];
+        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort','sort_key'];
         $queryParams = $this->parsedQueryString($request);
 
         foreach ($queryParams as $key => $value) {
@@ -124,7 +133,6 @@ abstract class Controller
          * @return array $dataArray 
          */
         $extensions = $this->parsedQueryString($request, 'ext');
-
         $roomMark = in_array('room_id', $extensions);
         $buildingMark = in_array('building_id', $extensions);
         $userMark = in_array('user_id', $extensions);
