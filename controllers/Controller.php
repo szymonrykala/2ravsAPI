@@ -140,9 +140,13 @@ abstract class Controller
         $addressMark = in_array('address_id', $extensions);
         $confirmedMark = in_array('confirming_user_id', $extensions);
         $accessMark = in_array('access_id', $extensions);
+        $roomTypeMark = in_array('room_type_id', $extensions);
 
         if ($roomMark) {
             $Room = $this->DIcontainer->get('Room');
+        }
+        if ($roomTypeMark) {
+            $RoomType = $this->DIcontainer->get('RoomType');
         }
         if ($buildingMark) {
             $Building = $this->DIcontainer->get('Building');
@@ -165,18 +169,27 @@ abstract class Controller
                 $dataEntry['room'] = $Room->read(['id' => $dataEntry['room_id']])[0];
                 unset($dataEntry['room_id']);
             }
+            
+            if ($roomTypeMark && $dataEntry['room_type_id'] !== null) {
+                $dataEntry['room_type'] = $RoomType->read(['id' => $dataEntry['room_type_id']])[0];
+                unset($dataEntry['room_type_id']);
+            }
+
             if ($buildingMark && $dataEntry['building_id'] !== null) {
                 $dataEntry['building'] = $Building->read(['id' => $dataEntry['building_id']])[0];
                 unset($dataEntry['building_id']);
             }
+
             if ($addressMark && $dataEntry['address_id'] !== null) {
                 $dataEntry['address'] = $Address->read(['id' => $dataEntry['address_id']])[0];
                 unset($dataEntry['address_id']);
             }
+
             if ($reservationMark && $dataEntry['reservation_id'] !== null) {
                 $dataEntry['reservation'] = $Reservation->read(['id' => $dataEntry['reservation_id']])[0];
                 unset($dataEntry['reservation_id']);
             }
+
             if ($userMark && $dataEntry['user_id'] !== null) {
                 $dataEntry['user'] = $User->read(['id' => $dataEntry['user_id']])[0];
                 unset($dataEntry['user_id']);
@@ -184,10 +197,12 @@ abstract class Controller
                 unset($dataEntry['user']['action_key']);
                 unset($dataEntry['user']['login_fails']);
             }
+
             if ($accessMark && $dataEntry['access_id'] !== null) {
                 $dataEntry['access'] = $Access->read(['id' => $dataEntry['access_id']])[0];
                 unset($dataEntry['access_id']);
             }
+
             if ($confirmedMark && $dataEntry['confirming_user_id'] !== null) {
                 $dataEntry['confirming_user'] = $User->read(['id' => $dataEntry['confirming_user_id']])[0];
                 unset($dataEntry['confirming_user_id']);
