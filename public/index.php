@@ -40,7 +40,7 @@ $DIcontainer->set('RoomType', new RoomType(new Database()));
 $DIcontainer->set('View', new View());
 // $DIcontainer->set('Mail', \Mail::class);
 
-function myErrorHandler(Exception $e)
+function myErrorHandler(Throwable $e)
 {
     $data = [
         'error' => [
@@ -84,11 +84,11 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
     });
 
     $app->group('/access', function (\Slim\Routing\RouteCollectorProxy $accesses) {
-        $accesses->get('', \AccessController::class . ':getAllAccessTypes');
+        $accesses->get('', \AccessController::class . ':getAccessTypes');
         $accesses->post('', \AccessController::class . ':createNewAccessType');
 
         $accesses->group('/{access_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $access) {
-            $access->get('', \AccessController::class . ':getAccessTypeByID');
+            $access->get('', \AccessController::class . ':getAccessTypes');
             $access->patch('', \AccessController::class . ':updateAccessType');
             $access->delete('', \AccessController::class . ':deleteAccessType');
         });
