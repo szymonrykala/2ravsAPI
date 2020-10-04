@@ -15,7 +15,7 @@ abstract class Controller
         $this->Log = $this->DIcontainer->get("Log");
     }
 
-    protected function parsedQueryString(Request $request, string $key = ''): array
+    protected function parsedQueryString(Request $request, string $queryKey = null): array
     {
         /**
          * parsing query string to get parameters into assoc array
@@ -23,28 +23,23 @@ abstract class Controller
          * @param Request $request
          * @param string $key=''
          * @return array
-        */
+         */
         $url = $request->getUri()->getQuery();
         $regexOut = [];
         preg_match_all('/&?([\w]*)=([:,\w-]*)/', $url, $regexOut);
 
         $result = [];
-        foreach ($regexOut[1] as $num => $value) {
-            // $regexOut[2][$num] <- feature value - variable value
-            // $value <- feature key - variable name
-            if (strpos($regexOut[2][$num], ',')) {
-                $result = preg_split('/,/', $regexOut[2][$num]);
-                $result[$value] = $result;
-            } else {
-                $result[$value] = $regexOut[2][$num];
+        foreach ($regexOut[1] as $num => $key) {
+            if ($key === 'ext') {
+                $result[$key] = explode(',', $regexOut[2][$num]);
+                continue;
             }
+            $result[$key] = $regexOut[2][$num];
         }
 
-        if ($key !== '') {
-            if (!isset($result[$key])) {
-                return [];
-            }
-            return is_array($result[$key]) ? $result[$key] : [$result[$key]];
+        if (isset($queryKey)) {
+            if (!isset($result[$queryKey])) return [];
+            return $result[$queryKey];
         }
         return $result;
     }
@@ -101,7 +96,7 @@ abstract class Controller
          * 
          * @return array $queryParams
          */
-        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort','sort_key'];
+        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort', 'sort_key'];
         $queryParams = $this->parsedQueryString($request);
 
         foreach ($queryParams as $key => $value) {
@@ -169,7 +164,7 @@ abstract class Controller
                 $dataEntry['room'] = $Room->read(['id' => $dataEntry['room_id']])[0];
                 unset($dataEntry['room_id']);
             }
-            
+
             if ($roomTypeMark && $dataEntry['room_type_id'] !== null) {
                 $dataEntry['room_type'] = $RoomType->read(['id' => $dataEntry['room_type_id']])[0];
                 unset($dataEntry['room_type_id']);

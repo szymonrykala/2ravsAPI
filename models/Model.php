@@ -8,7 +8,7 @@ abstract class Model
     protected $columns = [];
     protected $DB = null;
     protected $tableName = null;
-    protected $queryStringParams = [];
+    public $queryStringParams = [];
 
     public function __construct(DBInterface $DBInterface)
     {
@@ -25,23 +25,21 @@ abstract class Model
          * @param array $params
          * @return void
          */
-        
         foreach ($params as $key => &$value) {
             if ($key === 'ext') continue;
+
             preg_match('/[a-z0-9_,]*/', $value, $output_array);
             $value = $output_array[0];
 
-            if (!in_array($key, ['limit', 'page', 'on_page', 'sort', 'sort_key'])) {
-                unset($params[$key]);
-            }
+            if (!in_array($key, ['limit', 'page', 'on_page', 'sort', 'sort_key']))  unset($params[$key]);
         }
-        
-        if (isset($params['sort_key']) && !in_array($params['sort_key'], $this->columns)) {
-            unset($params['sort_key']);
-        }
-        if (isset($params['page']) && $params['page'] < 0) {
-            unset($params['page']);
-        }
+
+        if (isset($params['limit'])     && !is_numeric($params['limit']))                           unset($params['limit']);
+        if (isset($params['on_page'])   && !is_numeric($params['on_page']))                         unset($params['on_page']);
+        if (isset($params['page'])      && ($params['page'] < 0 || !is_numeric($params['page'])))   unset($params['page']);
+        if (isset($params['sort_key'])  && !in_array($params['sort_key'], $this->columns))          unset($params['sort_key']);
+        if (isset($params['sort'])      && !in_array(strtoupper($params['sort']), ['DESC', 'ASC'])) unset($params['sort']);
+
         $this->queryStringParams = $params;
     }
 
@@ -111,22 +109,14 @@ abstract class Model
 
         extract($this->queryStringParams); //extracting variables
 
-        if (isset($sort_key) && isset($sort)) {
-            $sql .= " ORDER BY $sort_key $sort";
-        } elseif (isset($sort_key)) {
-            $sql .= " ORDER BY $sort_key";
-        } elseif (isset($sort)) {
-            $sql .= " ORDER BY id $sort";
-        }
+        if (isset($sort_key) && isset($sort))   $sql .= " ORDER BY $sort_key $sort";
+        elseif (isset($sort_key))               $sql .= ' ORDER BY ' . $sort_key;
+        elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
 
-        if (isset($limit)) {
-            $limit = intval($limit);
-            $sql .= " LIMIT $limit";
-        } elseif (isset($page) && isset($on_page)) {
-            $page = intval($page);
-            $on_page = intval($on_page);
-            $sql .= " LIMIT " . ($page) . ", " . ($on_page);
-        }
+
+        if (isset($limit))                       $sql .= ' LIMIT ' . (int)$limit;
+        elseif (isset($page) && isset($on_page)) $sql .= ' LIMIT ' . (int)$page . ', ' . (int)$on_page;
+
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {

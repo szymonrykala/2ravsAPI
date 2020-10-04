@@ -43,7 +43,6 @@ class ReservationController extends Controller
          */
         $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
 
-        $args['deleted'] = (bool)$this->parsedQueryString($request, 'deleted');
         if (isset($args['reservation_id'])) {
             $args['id'] = $args['reservation_id'];
             unset($args['reservation_id']);

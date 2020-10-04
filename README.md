@@ -11,7 +11,7 @@ Room Reservation and Visualisation System API
 -   Operations on results Sorting (sort, sort_key):
     -   limiting (limit)
     -   paging (page, on_page)
--   Controller: parsedQueryString(Request $request, string $key=''):array
+-   Controller: parsedQueryString(Request $request, string $key=null):array
 
 ### Changed
 
