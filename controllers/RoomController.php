@@ -18,11 +18,17 @@ class RoomController extends Controller
         parent::__construct($DIcontainer);
         $this->Room = $this->DIcontainer->get('Room');
     }
+
+
+    // GET /buildings/rooms
+    // GET /buildings/rooms/{room_id}
     // GET /buildings/{building_id}/rooms
-    public function getAllRoomsInBuilding(Request $request, Response $response, $args): Response
+    // GET /buildings/{building_id}/rooms/{room_id}
+    public function getRooms(Request $request, Response $response, $args): Response
     {
         /**
-         * Getting all rooms in specific building 
+         * Getting all rooms or all rooms in building
+         * GET /buildings/rooms
          * GET /buildings/{building_id}/rooms
          * 
          * @param Request $request 
@@ -31,101 +37,14 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
-        $buildingID = (int)$args['building_id'];
-        $Type = $this->DIcontainer->get('RoomType');
-
-        $rooms = $this->Room->read(['building_id' => $buildingID], 'id', 'DESC');
-        foreach ($rooms as &$room) {
-            $room['room_type'] = $Type->read(['id' => $room['room_type_id']])[0];
-            unset($room['room_type_id']);
-        }
-        $data = $this->handleExtensions($rooms, $request);
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET /buildings/{building_id}/rooms/{room_id}
-    public function getRoomByID(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting specific room in specific building from database
-         * GET /buildings/{building_id}/rooms/{room_id}
-         * 
-         * @param Request $request 
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response 
-         */
-        $buildingID = (int)$args['building_id'];
-        $roomID = (int)$args['room_id'];
-        $Type = $this->DIcontainer->get('RoomType');
-        $Building = $this->DIcontainer->get('Building');
-
-        $room = $this->Room->read(['building_id' => $buildingID, 'id' => $roomID])[0];
-
-        $room['room_type'] = $Type->read(['id' => $room['room_type_id']])[0];
-        unset($room['room_type_id']);
-
-        $room['building'] = $Building->read(['id' => $room['building_id']])[0];
-        unset($room['building_id']);
-
-        $response->getBody()->write(json_encode($room));
-        return $response->withStatus(200);
-    }
-
-    // GET /buildings/rooms/{room_id}
-    public function getRoom(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting specific room form
-         * GET /buildings/rooms/{room_id}
-         * 
-         * @param Request $request 
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response 
-         */
-        $roomID = (int)$args['room_id'];
-        $Type = $this->DIcontainer->get('RoomType');
-        $Building = $this->DIcontainer->get('Building');
-
-        $room = $this->Room->read(['id' => $roomID])[0];
-
-        $room['room_type'] = $Type->read(['id' => $room['room_type_id']])[0];
-        unset($room['room_type_id']);
-
-        $room['building'] = $Building->read(['id' => $room['building_id']])[0];
-        unset($room['building_id']);
-
-        $data = $this->handleExtensions($room, $request);
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET /buildings/rooms
-    public function getAllRooms(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting all rooms in database
-         * GET /buildings/rooms
-         * 
-         * @param Request $request 
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response 
-         */
-        $rooms = $this->Room->read();
-        $Type = $this->DIcontainer->get('RoomType');
-
-        foreach ($rooms as &$room) {
-            $room['room_type'] = $Type->read(['id' => $room['room_type_id']])[0];
-            unset($room['room_type_id']);
+        $this->Room->setQueryStringParams($this->parsedQueryString($request));
+        if (isset($args['room_id'])) {
+            $args['id'] = $args['room_id'];
+            unset($args['room_id']);
         }
 
-        $data = $this->handleExtensions($rooms, $request);
+        $data = $this->handleExtensions($this->Room->read($args), $request);
+
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -202,7 +121,7 @@ class RoomController extends Controller
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $roomID,
             'building_id' => $buildingID,
-            'message' => "User " . $request->getAttribute('email') . " updated room data:".json_encode($data)
+            'message' => "User " . $request->getAttribute('email') . " updated room data:" . json_encode($data)
         ]);
 
         return $response->withStatus(204, "Updated");

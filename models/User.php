@@ -6,7 +6,7 @@ class User extends Model
     protected $tableName = 'users';
     public $unUpdateAble = array('id', 'created_at');
     protected $columns = [
-        'id', 'acces_id', 'name', 'surname', 'password',
+        'id', 'access_id', 'name', 'surname', 'password',
         'last_login', 'email', 'updated_at', 'img_url',
         'activated', 'login_fails', 'created_at', 'action_key'
     ];
@@ -23,7 +23,7 @@ class User extends Model
                 case 'id':
                     $value = (int) $value;
                     break;
-                case 'acces_id':
+                case 'access_id':
                     $value = (int) $value;
                     break;
                 case 'login_fails':

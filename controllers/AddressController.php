@@ -20,30 +20,13 @@ class AddressController extends Controller
         $this->Address = $this->DIcontainer->get('Address');
     }
 
-    // GET /addresses/{address_id}
-    public function getAddress(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting specific address by address_id from database
-         * GET /addresses/{address_id}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $data = $this->Address->read(['id' => (int)$args['address_id']])[0];
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
     // GET /addresses
-    public function getAllAddresses(Request $request, Response $response, $args): Response
+    // GET /addresses/{id}
+    public function getAddresses(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all addresses in database
-         * GET /addresses
+         * GET /addresses  OR  GET /addresses/{address_id}
          * 
          * @param Request $request 
          * @param Response $response 
@@ -51,7 +34,13 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->Address->read();
+        $this->Address->setQueryStringParams($this->parsedQueryString($request));
+        if (isset($args['address_id'])) {
+            $args['id'] = $args['address_id'];
+            unset($args['address_id']);
+        }
+        $data = $this->Address->read($args);
+
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -87,9 +76,9 @@ class AddressController extends Controller
         $lastIndex = $this->Address->create($data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex; data:".json_encode($data)
+            "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex; data:" . json_encode($data)
         ]);
-        return $response->withStatus(201,"Created");
+        return $response->withStatus(201, "Created");
     }
 
     // PATCH /addresses/{address_id}
@@ -111,7 +100,7 @@ class AddressController extends Controller
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data:".json_encode($data)
+            'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -136,5 +125,4 @@ class AddressController extends Controller
         ]);
         return $response->withStatus(204, "Deleted");
     }
-
 }

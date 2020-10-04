@@ -8,11 +8,35 @@ abstract class Model
     protected $columns = [];
     protected $DB = null;
     protected $tableName = null;
+    protected $queryStringParams = [];
 
     public function __construct(DBInterface $DBInterface)
     {
         $this->DB = $DBInterface;
         $this->DB->connect();
+    }
+
+    public function setQueryStringParams(array $params): void
+    {
+        /**
+         * Set $queryStringParams to make avaliabe 
+         * sorting, limits and paging of read results from database
+         * 
+         * @param array $params
+         * @return void
+         */
+        foreach ($params as $key => $value) {
+            if (!in_array($key, ['limit', 'page', 'on_page', 'sort', 'sort_key'])) {
+                unset($params[$key]);
+            }
+        }
+        if (isset($params['sort_key']) && !in_array($params['sort_key'], $this->columns)) {
+            unset($params['sort_key']);
+        }
+        if (isset($params['page']) && $params['page'] < 0) {
+            unset($params['page']);
+        }
+        $this->queryStringParams = $params;
     }
 
     protected function filterVariables(array $data): array
@@ -56,7 +80,7 @@ abstract class Model
         return $data;
     }
 
-    public function read(array $params = array(), string $sortKey = '', string $direction  = 'DESC'): array
+    public function read(array $params = []): array
     {
         /**
          * Read collection with params in param array
@@ -68,6 +92,7 @@ abstract class Model
          * @throws LengthException when nothing found
          * @return array $result
          */
+
         $params = $this->parseData($params);
 
         $sql = "SELECT * FROM $this->tableName WHERE 1=1";
@@ -78,15 +103,29 @@ abstract class Model
             $queryParams[":$key"] = $value;
         }
 
-        if (!empty($sortKey) & !empty($direction)) {
-            $sql .= " ORDER BY $sortKey $direction";
+        extract($this->queryStringParams); //extracting variables
+
+        if (isset($sort_key) && isset($sort)) {
+            $sql .= " ORDER BY $sort_key $sort";
+        } elseif (isset($sort_key)) {
+            $sql .= " ORDER BY $sort_key";
+        } elseif (isset($sort)) {
+            $sql .= " ORDER BY id $sort";
+        }
+
+        if (isset($limit)) {
+            $limit = intval($limit);
+            $sql .= " LIMIT $limit";
+        } elseif (isset($page) && isset($on_page)) {
+            $page = intval($page);
+            $on_page = intval($on_page);
+            $sql .= " LIMIT " . ($page) . ", " . ($on_page);
         }
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
             throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($params), 404);
         }
-
         foreach ($result as &$r) {
             $r = $this->parseData($r);
         }

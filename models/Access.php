@@ -1,14 +1,14 @@
 <?php
 require_once __DIR__ . '/Model.php';
 
-class Acces extends Model
+class Access extends Model
 {
-    protected $tableName = 'acceses';
+    protected $tableName = 'accesses';
     public $unUpdateAble = array('id');
     protected $columns = [
-        'id', 'name', 'acces_edit', 'buildings_view',
+        'id', 'name', 'access_edit', 'buildings_view',
         'buildings_edit', 'logs_view', 'logs_edit', 'rooms_view', 'rooms_edit',
-        'reservations_acces', 'reservations_confirm', 'reservations_edit',
+        'reservations_access', 'reservations_confirm', 'reservations_edit',
         'users_edit', 'statistics_view'
     ];
 

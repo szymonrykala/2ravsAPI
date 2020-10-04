@@ -1,21 +1,21 @@
 <?php
 //DB
-define('DSN', "mysql:host=localhost;dbname=base;charset=utf8mb4");
+define('DSN', "mysql:host=localhost;dbname=ravs;charset=utf8mb4");
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
 // URL path
 define('ROOT', 'http://localhost:8080');
 
-//tables in DB
-define('USER_BASE', 'user');
-define('RESERVATION_BASE', 'reservation');
-define('BUILDING_BASE', 'building');
-define('ROOM_BASE', 'room');
-define('ACCES_BASE', 'acces');
-define('LOG_BASE', 'log');
-define('ADDRESS_BASE', 'address');
-define('ROOM_TYPE_BASE', 'room_type');
+// //tables in DB
+// define('USER_BASE', 'user');
+// define('RESERVATION_BASE', 'reservation');
+// define('BUILDING_BASE', 'building');
+// define('ROOM_BASE', 'room');
+// define('ACCES_BASE', 'access');
+// define('LOG_BASE', 'log');
+// define('ADDRESS_BASE', 'address');
+// define('ROOM_TYPE_BASE', 'room_type');
 
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
 
@@ -32,7 +32,7 @@ require_once __DIR__ . '/../middleware/JSONMiddleware.php';
 
 
 require_once __DIR__ . '/../models/Building.php';
-require_once __DIR__ . '/../models/Acces.php';
+require_once __DIR__ . '/../models/Access.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../models/Reservation.php';
 require_once __DIR__ . '/../models/Room.php';
@@ -45,7 +45,7 @@ require_once __DIR__ . '/../models/RoomType.php';
 
 require_once __DIR__ . '/../controllers/BuildingController.php';
 require_once __DIR__ . '/../controllers/ReservationController.php';
-require_once __DIR__ . '/../controllers/AccesController.php';
+require_once __DIR__ . '/../controllers/AccessController.php';
 require_once __DIR__ . '/../controllers/LogController.php';
 require_once __DIR__ . '/../controllers/RoomController.php';
 require_once __DIR__ . '/../controllers/UserController.php';

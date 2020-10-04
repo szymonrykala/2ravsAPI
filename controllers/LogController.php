@@ -12,13 +12,17 @@ class LogController extends Controller
      * Implement endpoints related with logs routs
      * 
      */
+    public $Log = null;
+
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
+        $this->Log = $this->DIcontainer->get('Log');
     }
 
     // GET /logs
-    public function getAllLogs(Request $request, Response $response, $args): Response
+    // GET /logs/{id}
+    public function getLogs(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all logs from database
@@ -30,7 +34,9 @@ class LogController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->handleExtensions($this->Log->read([],'id',"DESC"), $request);
+        $this->Log->setQueryStringParams($this->parsedQueryString($request));
+        $data = $this->handleExtensions($this->Log->read($args), $request);
+
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }

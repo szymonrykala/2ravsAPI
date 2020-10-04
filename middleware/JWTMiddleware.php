@@ -19,18 +19,18 @@ class JWTMiddleware
         $token = $this->recieveToken();
         list(
             "user_id" => $userID,
-            "acces_id" => $accesID,
+            "access_id" => $accessID,
             "email" => $email,
             "ex" => $exTime
         ) = $this->getData($token);
 
-        if ($exTime < time()) {
-            throw new TokenExpiredException("Token has been expired", 401);
-        }
+        // if ($exTime < time()) {
+        //     throw new TokenExpiredException("Token has been expired", 401);
+        // }
 
         $request = $this->request
             ->withAttribute('user_id', $userID)
-            ->withAttribute('acces_id', $accesID)
+            ->withAttribute('access_id', $accessID)
             ->withAttribute('email', $email);
 
         $response = $handler->handle($request); //handling request by API

@@ -6,23 +6,24 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 require_once __DIR__ . "/Controller.php";
 
-class AccesController extends Controller
+class AccessController extends Controller
 {
-    private $Acces;
+    private $Access;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Acces = $DIcontainer->get('Acces');
+        $this->Access = $DIcontainer->get('Access');
     }
 
-
-    public function getAllAccesTypes(Request $request, Response $response, $args): Response
+    // GET /access
+    // GET /access/{id}
+    public function getAccessTypes(Request $request, Response $response, $args): Response
     {
         /**
-         * Getting acces types from database
-         * wirites array of items to json body
-         * // GET /acces
+         * Getting access types from database
+         * GET /access
+         * GET /access/{access_id}
          * 
          * @param Request $request
          * @param Response $response
@@ -30,44 +31,32 @@ class AccesController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->Acces->read();
+        $this->Access->setQueryStringParams($this->parsedQueryString($request));
+        if (isset($args['access_id'])) {
+            $args['id'] = $args['access_id'];
+            unset($args['access_id']);
+        }
+        $data = $this->Access->read($args);
+        
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
 
-    public function getAccesTypeByID(Request $request, Response $response, $args): Response
+    public function createNewAccessType(Request $request, Response $response, $args): Response
     {
         /**
-         * Getting acces type from database
-         * wirites one item to json body
-         * // GET /acces/{acces_id}
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response $response
-         */
-        $data = $this->Acces->read(['id' => $args['acces_id']])[0];
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    public function createNewAccesType(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Creating acces type in database
-         * POST /acces/{acces_id}
+         * Creating access type in database
+         * POST /access/{access_id}
          * {
          *     "name":"",
-         *     "acces_edit":"",
+         *     "access_edit":"",
          *     "buildings_view":"",
          *     "buildings_edit":"",
          *     "logs_view":"",
          *     "logs_edit":"",
          *     "rooms_view":"",
          *     "rooms_edit":"",
-         *     "reservations_acces":"",
+         *     "reservations_access":"",
          *     "reservations_confirm":"",
          *     "reservations_edit":"",
          *     "users_edit":"",
@@ -82,14 +71,14 @@ class AccesController extends Controller
          */
         $data = $this->getFrom($request, [
             "name" => 'string',
-            "acces_edit" => 'boolean',
+            "access_edit" => 'boolean',
             "buildings_view" => 'boolean',
             "buildings_edit" => 'boolean',
             "logs_view" => 'boolean',
             "logs_edit" => 'boolean',
             "rooms_view" => 'boolean',
             "rooms_edit" => 'boolean',
-            "reservations_acces" => 'boolean',
+            "reservations_access" => 'boolean',
             "reservations_confirm" => 'boolean',
             "reservations_edit" => 'boolean',
             "users_edit" => 'boolean',
@@ -97,32 +86,32 @@ class AccesController extends Controller
         ]);
         //name policy
         if (strlen($data["name"]) < 4) {
-            throw new Exception("Acces name need to have at least 4 characters", 400);
+            throw new Exception("Access name need to have at least 4 characters", 400);
         }
 
-        $newID = $this->Acces->create($data);
+        $newID = $this->Access->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " created new acces class data:".json_encode($data)
+            "message" => "User " . $request->getAttribute('email') . " created new access class data:" . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
 
-    public function updateAccesType(Request $request, Response $response, $args): Response
+    public function updateAccessType(Request $request, Response $response, $args): Response
     {
         /**
-         * Updating acces type by given acces_id
-         * PATCH /acces/{acces_id}
+         * Updating access type by given access_id
+         * PATCH /access/{access_id}
          * {
          *     "name":"",
-         *     "acces_edit":"",
+         *     "access_edit":"",
          *     "buildings_view":"",
          *     "buildings_edit":"",
          *     "logs_view":"",
          *     "logs_edit":"",
          *     "rooms_view":"",
          *     "rooms_edit":"",
-         *     "reservations_acces":"",
+         *     "reservations_access":"",
          *     "reservations_confirm":"",
          *     "reservations_edit":"",
          *     "users_edit":"",
@@ -136,19 +125,19 @@ class AccesController extends Controller
          * @return Response $response
          */
         $data = $this->getFrom($request);
-        $this->Acces->update($args['acces_id'], $data);
+        $this->Access->update($args['access_id'], $data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " updated data:".json_encode($data)
+            "message" => "User " . $request->getAttribute('email') . " updated data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
 
-    public function deleteAccesType(Request $request, Response $response, $args): Response
+    public function deleteAccessType(Request $request, Response $response, $args): Response
     {
         /**
-         * Deleting acces type by acces_id
-         * DELETE /acces/{acces_id}
+         * Deleting access type by access_id
+         * DELETE /access/{access_id}
          * 
          * @param Request $request
          * @param Response $response
@@ -156,15 +145,15 @@ class AccesController extends Controller
          * 
          * @return Response $response
          */
-        // each user with current acces have to 
+        // each user with current access have to 
         $User = $this->DIcontainer->get('User');
-        if ($User->exist(['acces_id' => $args['acces_id']])) {
-            throw new Exception("Some Users stil have this acces class. You can't delete it", 409); //conflict
+        if ($User->exist(['access_id' => $args['access_id']])) {
+            throw new Exception("Some Users stil have this access class. You can't delete it", 409); //conflict
         } else {
-            $this->Acces->delete($args['acces_id']);
+            $this->Access->delete($args['access_id']);
             $this->Log->create([
                 "user_id" => $request->getAttribute('user_id'),
-                "message" => "User " . $request->getAttribute('email') . " deleted acces id=" . $args['acces_id']
+                "message" => "User " . $request->getAttribute('email') . " deleted access id=" . $args['access_id']
             ]);
         }
         return $response->withStatus(204, "Deleted");

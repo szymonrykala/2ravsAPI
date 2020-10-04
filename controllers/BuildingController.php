@@ -13,8 +13,7 @@ class BuildingController extends Controller
      * Implement endpoints related with buildings paths
      * 
      */
-    private $Address; // relation; building addres
-    protected $DIcontainer;
+    protected $Building;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -23,7 +22,7 @@ class BuildingController extends Controller
     }
 
     // GET /buildings
-    public function getAllBuildings(Request $request, Response $response, $args): Response
+    public function getBuildings(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all buildings from database
@@ -36,7 +35,13 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->handleExtensions($this->Building->read(), $request);
+        $this->Building->setQueryStringParams($this->parsedQueryString($request));
+        if (isset($args['building_id'])) {
+            $args['id'] = $args['building_id'];
+            unset($args['building_id']);
+        }
+        $data = $this->handleExtensions($this->Building->read($args), $request);
+
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -64,28 +69,6 @@ class BuildingController extends Controller
         return $response->withStatus(200);
     }
 
-    // GET /buildings/{building_id}
-    public function getBuilding(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting building by building_id with all extensions
-         * GET /buildings/{building_id}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $Address = $this->DIcontainer->get('Address');
-
-        $data = $this->Building->read(['id' => (int)$args['building_id']])[0];
-        $data['address'] = $Address->read(['id' => $data['address_id']])[0];
-        unset($data['address_id']);
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
     // POST /buildings
     public function createBuilding(Request $request, Response $response, $args): Response
     {
@@ -108,7 +91,7 @@ class BuildingController extends Controller
 
         $Address = $this->DIcontainer->get("Address");
         if (!$Address->exist(['id' => $data['address_id']])) {
-            throw new HttpBadRequestException($request,"Address with id=".$data['address_id']." do not exist. You cannot create building with data:".json_encode($data));
+            throw new HttpBadRequestException($request, "Address with id=" . $data['address_id'] . " do not exist. You cannot create building with data:" . json_encode($data));
         }
 
         $userMail = $request->getAttribute('email');

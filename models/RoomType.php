@@ -30,7 +30,7 @@ class RoomType extends Model
             }
             switch ($key) {
                 case 'id':
-                    $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    $value =(int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
                     break;
                 default:
                     $value = (string) filter_var($value, FILTER_SANITIZE_STRING);

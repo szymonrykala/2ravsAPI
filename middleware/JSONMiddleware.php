@@ -14,13 +14,14 @@ class JSONMiddleware
         $code = $response->getStatusCode();
         $reason = $response->getReasonPhrase();
         $body = $response->getBody();
+        $responseData = null;
         if ($body !== null) {
             $body = json_decode($body);
+            $responseData['items'] = $body;
         }
-        // $data = ['data' => $body];
 
         $response = new Response();
-        $response->getBody()->write(json_encode($body));
+        $response->getBody()->write(json_encode($responseData));
         $response = $response->withHeader('content-type', 'application/json');
         return $response->withStatus($code, $reason);
     }
