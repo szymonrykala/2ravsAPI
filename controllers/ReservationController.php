@@ -20,12 +20,20 @@ class ReservationController extends Controller
     }
 
     // GET /reservations
-    public function getAllReservations(Request $request, Response $response, $args): Response
+    // GET /reservations/{reservation_id}
+    // GET /users/{userID}/reservations
+    // GET building/{building_id}/reservations
+    // GET building/{building_id}/rooms/{room_id}/reservations
+    public function getReservations(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all reservations in database,
          * returning array of items
          * GET /reservations
+         * GET /reservations/{reservation_id}
+         * GET /users/{userID}/reservations
+         * GET building/{building_id}/reservations
+         * GET building/{building_id}/rooms/{room_id}/reservations
          * 
          * @param Request $request
          * @param Response $response
@@ -33,8 +41,14 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->Reservation->read(['deleted' => (bool)$this->parsedQueryString($request, 'deleted')]);
-        $data = $this->handleExtensions($data, $request);
+        $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
+
+        $args['deleted'] = (bool)$this->parsedQueryString($request, 'deleted');
+        if (isset($args['reservation_id'])) {
+            $args['id'] = $args['reservation_id'];
+            unset($args['reservation_id']);
+        }
+        $data = $this->handleExtensions($this->Reservation->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
@@ -57,100 +71,6 @@ class ReservationController extends Controller
         throw new Exception("Confirming Not implemented!", 501);
         $response->getBody()->write("Middleware");
         return $response;
-    }
-
-    // GET /reservations/{reservation_id}
-    public function getReservationByID(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting one reservations by reservation_id,
-         * returning one items
-         * GET /reservations/{reservation_id}
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $array
-         * 
-         * @return Response $response
-         */
-        $data = $this->Reservation->read(['id' => $args['reservation_id']]);
-        $data = $this->handleExtensions($data, $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET /users/{userID}/reservations
-    public function getUserReservations(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Get all reservations of sepcific user,
-         * returning array of items
-         * GET /users/{userID}/reservations
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $array
-         * 
-         * @return Response $response
-         */
-        $data = $this->Reservation->read([
-            'user_id' => $args['userID'],
-            'deleted' => (bool)$this->parsedQueryString($request, 'deleted')
-        ]);
-        $data = $this->handleExtensions($data, $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET building/{building_id}/reservations
-    public function getReservationsInBuilding(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting all reservations in building by building_id,
-         * returning array of items
-         * GET building/{building_id}/reservations
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $array
-         * 
-         * @return Response $response
-         */
-        $data = $this->Reservation->read([
-            'building_id' => $args['building_id'],
-            'deleted' => (bool)$this->parsedQueryString($request,'deleted')
-        ]);
-        $data = $this->handleExtensions($data, $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET building/{building_id}/rooms/{room_id}/reservations
-    public function getRoomReservations(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting all reservations in room which is in given building ,
-         * returning array of items
-         * GET building/{building_id}/rooms/{room_id}/reservations
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $array
-         * 
-         * @return Response $response
-         */
-        $data = $this->Reservation->read([
-            'building_id' => $args['building_id'],
-            'room_id' => $args['room_id'],
-            'deleted' => (bool)$this->parsedQueryString($request,'deleted')
-        ]);
-        $data = $this->handleExtensions($data, $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
     }
 
     // GET buildings/{building_id}/rooms/{room_id}/reservations/search
@@ -316,7 +236,6 @@ class ReservationController extends Controller
                 'reservation_id' => $reservationID,
                 'message' => "User $currentUserMail hard deleted reservation"
             ]);
-
         }
 
         return $response->withStatus(204, "Deleted");

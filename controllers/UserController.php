@@ -230,35 +230,13 @@ class UserController extends Controller
     }
 
     // GET /users?ext=<acces_id>
-    public function getAllUsers(Request $request, Response $response, $args): Response
+    // GET /users/{user_id}?ext=<access_id>
+    public function getUsers(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all users
          * returning array of items
          * GET /users?ext=<acces_id>
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $array
-         * 
-         * @return Response $response
-         */
-
-        $users = $this->User->read();
-        $users = $this->handleExtensions($users,$request);
-        foreach ($users as &$user) {
-            unset($user['password']);
-            unset($user['action_key']);
-        }
-        $response->getBody()->write(json_encode($users));
-        return $response->withStatus(200);
-    }
-
-    // GET /users/{user_id}?ext=<access_id>
-    public function getSpecificUser(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting specific User by user_id
          * GET /users/{user_id}?ext=<access_id>
          * 
          * @param Request $request
@@ -267,17 +245,15 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $userID = $args['userID'];
+        $this->User->setQueryStringParams($this->parsedQueryString($request));
 
-        $user = $this->User->read(['id' => $userID])[0];
+        if (isset($args['userID'])) {
+            $args['id'] = $args['userID'];
+            unset($args['userID']);
+        }
+        $data = $this->handleExtensions($this->User->read($args), $request);
 
-        $Access = $this->DIcontainer->get('Access');
-        $user['access'] = $Access->read(['id' => $user['access_id']])[0];
-
-        unset($user['password']);
-        unset($user['action_key']);
-
-        $response->getBody()->write(json_encode($user));
+        $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
 

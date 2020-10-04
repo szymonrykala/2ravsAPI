@@ -16,13 +16,14 @@ class AccessController extends Controller
         $this->Access = $DIcontainer->get('Access');
     }
 
-
-    public function getAllAccessTypes(Request $request, Response $response, $args): Response
+    // GET /access
+    // GET /access/{id}
+    public function getAccessTypes(Request $request, Response $response, $args): Response
     {
         /**
          * Getting access types from database
-         * wirites array of items to json body
-         * // GET /access
+         * GET /access
+         * GET /access/{access_id}
          * 
          * @param Request $request
          * @param Response $response
@@ -30,25 +31,13 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->Access->read();
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    public function getAccessTypeByID(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Getting access type from database
-         * wirites one item to json body
-         * // GET /access/{access_id}
-         * 
-         * @param Request $request
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response $response
-         */
-        $data = $this->Access->read(['id' => $args['access_id']])[0];
+        $this->Access->setQueryStringParams($this->parsedQueryString($request));
+        if (isset($args['access_id'])) {
+            $args['id'] = $args['access_id'];
+            unset($args['access_id']);
+        }
+        $data = $this->Access->read($args);
+        
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -103,7 +92,7 @@ class AccessController extends Controller
         $newID = $this->Access->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " created new access class data:".json_encode($data)
+            "message" => "User " . $request->getAttribute('email') . " created new access class data:" . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -139,7 +128,7 @@ class AccessController extends Controller
         $this->Access->update($args['access_id'], $data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " updated data:".json_encode($data)
+            "message" => "User " . $request->getAttribute('email') . " updated data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
