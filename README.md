@@ -4,18 +4,42 @@ Room Reservation and Visualisation System API
 
 ## Changelog
 
-[22-09-2020]
+[04-10-2020]
+
+### Added
+
+-   Operations on results Sorting (sort, sort_key):
+    -   limiting (limit)
+    -   paging (page, on_page)
+-   Controller: parsedQueryString(Request $request, string $key=''):array
+
 ### Changed
-- displaying data in errors with json_encode()
-- Exception fix in User::verify
+
+-   way to get resources parameters from URI
+-   now one method menage diffrent read paths in controllers
+
+### Removed
+
+-   methods from controllers - one method to menage diffrent read paths
+-   Controller:deleted(Request \$request):bool
+
+[22-09-2020]
+
+### Changed
+
+-   displaying data in errors with json_encode()
+-   Exception fix in User::verify
 
 [17-09-2020]
+
 ### Added
-- filtering unexpected variables in model layer
-- protected column property in models
-- refactor Model::exist(array $params,bool $reverse) reverse field reverse working of function if true throws when already exist
+
+-   filtering unexpected variables in model layer
+-   protected column property in models
+-   refactor Model::exist(array $params,bool $reverse) reverse field reverse working of function if true throws when already exist
 
 [13-09-2020]
+
 -   added /buildings/rooms/types get,post,patch,delete and get /buildings/rooms
 -   implemented RoomController
 -   added roomTypeController
