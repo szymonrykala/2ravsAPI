@@ -25,11 +25,17 @@ abstract class Model
          * @param array $params
          * @return void
          */
-        foreach ($params as $key => $value) {
+        
+        foreach ($params as $key => &$value) {
+            if ($key === 'ext') continue;
+            preg_match('/[a-z0-9_,]*/', $value, $output_array);
+            $value = $output_array[0];
+
             if (!in_array($key, ['limit', 'page', 'on_page', 'sort', 'sort_key'])) {
                 unset($params[$key]);
             }
         }
+        
         if (isset($params['sort_key']) && !in_array($params['sort_key'], $this->columns)) {
             unset($params['sort_key']);
         }
