@@ -54,7 +54,13 @@ abstract class Model
 
     private function buildDataString(array $params, string $connector = null): array
     {
-        if (!isset($connector)) $connector = $this->searchMode;
+        /**
+         * Building data array and SQL string to PDO
+         * 
+         * @param array $params - array data
+         * @param string $connector=null - LIKE, =, <, >, REGEXP 
+        */
+        if (!isset($connector)) $connector = $this->searchMode;// by default: '='
         $queryParams = [];
         $sql = "";
         foreach ($params as $key => $value) {
@@ -64,7 +70,7 @@ abstract class Model
         return ['sql' => $sql, 'params' => $queryParams];
     }
 
-    protected function filterVariables(array $data): array
+    protected function filterVariables(array &$data): void
     {
         /**
          * Unsetting unexpected variables from params
@@ -77,7 +83,6 @@ abstract class Model
                 unset($data[$key]);
             }
         }
-        return $data;
     }
 
     public function exist(array $params): bool
@@ -113,8 +118,10 @@ abstract class Model
          * @throws LengthException when nothing found
          * @return array $result
          */
-        // =========MENAGE SEARCHING=========
+        $this->filterVariables($params);
         $params = $this->parseData($params);
+
+        // =========MENAGE SEARCHING=========
         $searchSQL = '';
         $searchParams = [];
         if (!empty($this->searchParams)) {
@@ -150,32 +157,6 @@ abstract class Model
         return $result;
     }
 
-    // searching with LIKE %param%
-    public function search(array $params, string $sortKey = 'id', string $direction  = 'DESC')
-    {
-        $params = $this->filterVariables($params);
-        $params = $this->parseData($params);
-
-        $sql = "SELECT * from $this->tableName WHERE 1=1";
-        $queryParams = array();
-
-        foreach ($params as $key => $value) {
-            $sql .= " AND $key LIKE :$key";
-            $queryParams[":$key"] = "%$value%";
-        }
-        $sql .= " ORDER BY $sortKey $direction";
-
-        $result = $this->DB->query($sql, $queryParams);
-        if (empty($result)) {
-            throw new UnexpectedValueException("Nothing Found in $this->tableName with search params:" . json_encode($params), 404);
-        }
-
-        foreach ($result as &$r) {
-            $r = $this->parseData($r);
-        }
-        return $result;
-    }
-
     public function create(array $params): int
     {
         throw new Exception("Model::create() need to be implemented", 501);
@@ -188,16 +169,15 @@ abstract class Model
             throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.", 404);
         }
 
-        $params = $this->filterVariables($params);
+        $this->filterVariables($params);
         $params = $this->parseData($params);
 
         $sql = "UPDATE $this->tableName SET";
         $queryParams = array();
 
         foreach ($params as $key => $value) {
-            if (in_array($key, $this->unUpdateAble)) {
-                continue;
-            }
+            if (in_array($key, $this->unUpdateAble)) continue;
+
             count($queryParams) >= 1 ? $sql .= "," : null;
             $sql .= " $key=:$key";
             $queryParams[":$key"] = $value;

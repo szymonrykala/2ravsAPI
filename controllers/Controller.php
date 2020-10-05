@@ -50,46 +50,46 @@ abstract class Controller
         return $result;
     }
 
-    protected function getFrom(Request $request, array $rquiredParameters = array()): array
+    protected function getFrom(Request $request, array $parameters, bool $required = false): array
     {
         /**
-         * Getting data defined in $rquiredParameters with given type
-         * if $rquiredParameters is not defined, getting all params given by user
+         * Getting data defined in $parameters with given type
          * 
          * @param Request $request
-         * @param array $rquiredParameters param => type, ...
+         * @param array $parameters param => type, ...
          * 
-         * @return array $data
+         * @return array $data - requested parameters with requested type
          */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
             throw new InvalidArgumentException("Request body is empty or is not in right format", 400);
         }
 
-        //checking required parameters
-        foreach ($rquiredParameters as $param => $type) {
-            if (!isset($data[$param])) {
-                throw new NotEnoughParametersException("Parameter '$param' is required to perform this action", 400);
+        //skipping unnessesry values
+        $outputData = [];
+        foreach ($data as $key => $value) {
+            if (!in_array($key, array_keys($parameters))) continue;
+            if (gettype($value) !== $parameters[$key]) {
+                throw new HttpBadRequestException($request, "Bad variable type passed. Variable '$key' need to be a type of " . $parameters[$key]);
+            }
+            if (
+                $parameters[$key] === 'string' &&
+                !filter_var($value, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[\w\s@\.,:-]+$/u']])
+            ) {
+                throw new HttpBadRequestException($request, "Incorrect variable value. Variable '$key' has incorrect value; pattern:/^[\w\s@\.,:-]+$/u");
             }
 
-            //clearing types
-            $value = $data[$param];
-            switch ($type) {
-                case 'boolean':
-                    $data[$param] = (bool) $value;
-                    break;
-                case 'string':
-                    $data[$param] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-                    break;
-                case 'integer':
-                    $data[$param] = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-                case 'double':
-                    $data[$param] = filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT);
-                    break;
+            $outputData[$key] = $value;
+        }
+        if ($required) {
+            //checking required parameters
+            foreach ($parameters as $param => $type) {
+                if (!isset($outputData[$param])) {
+                    throw new NotEnoughParametersException("Parameter '$param' with typeof '$type' is required to perform this action", 400);
+                }
             }
         }
-        return $data;
+        return $outputData;
     }
 
     protected function getSearchParams(Request $request): array
