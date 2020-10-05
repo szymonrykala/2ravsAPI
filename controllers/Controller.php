@@ -22,7 +22,7 @@ abstract class Controller
          * parsing query string to get parameters into assoc array
          * 
          * @param Request $request
-         * @param string $key=''
+         * @param string $key=null
          * @return array
          */
         $url = $request->getUri()->getQuery();
@@ -35,7 +35,12 @@ abstract class Controller
                 $result[$key] = explode(',', $regexOut[2][$num]);
                 continue;
             }
-            $result[$key] = $regexOut[2][$num];
+            // filtering variables keys
+            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key', 'action_key']))  continue;
+
+            //filtering variables values
+            preg_match('/[a-z0-9_,]*/', $regexOut[2][$num], $output_array);
+            $result[$key] = $output_array[0];
         }
 
         if (isset($queryKey)) {
@@ -90,37 +95,30 @@ abstract class Controller
     protected function getSearchParams(Request $request): array
     {
         /**
-         * Getting Search params from query string and from request body['search'] array if it exist
-         * body['search'] have priority in values
+         * Getting Search params from request body['search']['mode'] and body['search']['params'] array if it exist
          * 
          * @param Request $request
          * 
          * @return array $queryParams
          */
-        $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort', 'sort_key'];
-        // $queryParams = $this->parsedQueryString($request);
-        $queryParams=[];
-
-        foreach ($queryParams as $key => $value) {
-            if (in_array($key, $are_not_search_params)) {
-                unset($queryParams[$key]);
-            }
-        }
-
-        $dataParams = $request->getParsedBody();
-        if(isset($dataParams['search'])){
-            extract($dataParams['search']);
+        $searchParams = $request->getParsedBody();
+        if (isset($searchParams['search']) && $searchParams['search'] !== null) {
+            extract($searchParams['search']);
             if (!isset($mode) || !isset($params)) {
-                throw new HttpBadRequestException($request,"When search is enabled fields 'mode' and 'params' in search are required. Pattern:search:{mode:'REGEXP', params:{field:val,field2:val2}}");
+                throw new HttpBadRequestException($request, "When search is enabled fields 'mode' and 'params' in search are required. Pattern:search:{mode:'REGEXP', params:{field:val, field2:val2}}");
             }
-            $queryParams = array_merge($queryParams, $params);
-        }else $mode = 'LIKE';
 
-        return ['params' => $queryParams, 'mode' => $mode];
+            if (!in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
+                throw new HttpBadRequestException($request, 'In search, avaliable options are: REGEXP, LIKE, =, <, >');
+            }
+            return ['params' => $params, 'mode' => $mode];
+        }
+        return ['params' => null, 'mode' => null];
     }
 
-    protected function switchKey(array &$array, string $oldKey, string $newKey):void{
-        if(isset($array[$oldKey])){
+    protected function switchKey(array &$array, string $oldKey, string $newKey): void
+    {
+        if (isset($array[$oldKey])) {
             $array[$newKey] = $array[$oldKey];
             unset($array[$oldKey]);
         }

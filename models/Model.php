@@ -28,15 +28,7 @@ abstract class Model
          * @param array $params
          * @return void
          */
-        foreach ($params as $key => &$value) {
-            if ($key === 'ext') continue;
-
-            preg_match('/[a-z0-9_,]*/', $value, $output_array);
-            $value = $output_array[0];
-
-            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key']))  unset($params[$key]);
-        }
-
+        // checking right format of variables
         if (isset($params['limit'])     && !is_numeric($params['limit']))                           unset($params['limit']);
         if (isset($params['on_page'])   && !is_numeric($params['on_page']))                         unset($params['on_page']);
         if (isset($params['page'])      && ($params['page'] < 0 || !is_numeric($params['page'])))   unset($params['page']);
@@ -48,9 +40,6 @@ abstract class Model
 
     public function setSearch(string $mode = "=", array $params = []): void
     {
-        if (!in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
-            throw new UnexpectedValueException('In search, avaliable options are: REGEXP, LIKE, =, <, >', 400);
-        }
         $regex = strtoupper($mode) === 'REGEXP' ? '/[\w\s%-:\.\*\|\{\}\[\]\(\)\?\+\\\,]*/' : '/[\w\s:%-]*/';
 
         foreach ($params as $key => &$value) {
@@ -131,7 +120,7 @@ abstract class Model
         if (!empty($this->searchParams)) {
             ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
-        
+
         // ======== NORMAL READING ===========
         $sql = "SELECT * FROM `$this->tableName` WHERE 1=1";
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
