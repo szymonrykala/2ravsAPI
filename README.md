@@ -4,6 +4,12 @@ Room Reservation and Visualisation System API
 
 ## Changelog
 
+[05-10-2020]
+### Added
+ - searching utilities in Model and Controller abstract classes
+### Removed 
+ - searching paths in router 
+
 [04-10-2020]
 
 ### Added

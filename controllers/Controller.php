@@ -4,6 +4,7 @@ use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 use Psr\Container\ContainerInterface;
+use Slim\Exception\HttpBadRequestException;
 
 abstract class Controller
 {
@@ -97,7 +98,8 @@ abstract class Controller
          * @return array $queryParams
          */
         $are_not_search_params = ['limit', 'page', 'on_page', 'ext', 'sort', 'sort_key'];
-        $queryParams = $this->parsedQueryString($request);
+        // $queryParams = $this->parsedQueryString($request);
+        $queryParams=[];
 
         foreach ($queryParams as $key => $value) {
             if (in_array($key, $are_not_search_params)) {
@@ -106,13 +108,15 @@ abstract class Controller
         }
 
         $dataParams = $request->getParsedBody();
-        if (isset($dataParams['search']) & is_array($dataParams['search'])) {
-            foreach ($dataParams['search'] as $key => $value) {
-                $queryParams[$key] = $value;
+        if(isset($dataParams['search'])){
+            extract($dataParams['search']);
+            if (!isset($mode) || !isset($params)) {
+                throw new HttpBadRequestException($request,"When search is enabled fields 'mode' and 'params' in search are required. Pattern:search:{mode:'REGEXP', params:{field:val,field2:val2}}");
             }
-        }
+            $queryParams = array_merge($queryParams, $params);
+        }else $mode = 'LIKE';
 
-        return $queryParams;
+        return ['params' => $queryParams, 'mode' => $mode];
     }
 
     // ?ext=user_id,building_id,room_id...

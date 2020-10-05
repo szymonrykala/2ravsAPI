@@ -1,5 +1,6 @@
 <?php
 
+use Slim\Exception\HttpException;
 use Slim\Exception\HttpNotImplementedException;
 
 abstract class Model
@@ -8,7 +9,9 @@ abstract class Model
     protected $columns = [];
     protected $DB = null;
     protected $tableName = null;
-    public $queryStringParams = [];
+    protected $queryStringParams = [];
+    protected $searchParams = [];
+    protected $searchMode = "=";
 
     public function __construct(DBInterface $DBInterface)
     {
@@ -31,7 +34,7 @@ abstract class Model
             preg_match('/[a-z0-9_,]*/', $value, $output_array);
             $value = $output_array[0];
 
-            if (!in_array($key, ['limit', 'page', 'on_page', 'sort', 'sort_key']))  unset($params[$key]);
+            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key']))  unset($params[$key]);
         }
 
         if (isset($params['limit'])     && !is_numeric($params['limit']))                           unset($params['limit']);
@@ -41,6 +44,35 @@ abstract class Model
         if (isset($params['sort'])      && !in_array(strtoupper($params['sort']), ['DESC', 'ASC'])) unset($params['sort']);
 
         $this->queryStringParams = $params;
+    }
+
+    public function setSearch(string $mode = "=", array $params = []): void
+    {
+        if (!in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
+            throw new UnexpectedValueException('In search, avaliable options are: REGEXP, LIKE, =, <, >', 400);
+        }
+        $regex = strtoupper($mode) === 'REGEXP' ? '/[\w\s%-:\.\*\|\{\}\[\]\(\)\?\+\\\,]*/' : '/[\w\s:%-]*/';
+
+        foreach ($params as $key => &$value) {
+            if (!in_array($key, $this->columns)) unset($params[$key]);
+
+            preg_match($regex, $value, $output_array);
+            $value = $output_array[0];
+        }
+        $this->searchMode = $mode;
+        $this->searchParams = $params;
+    }
+
+    private function buildDataString(array $params, string $connector = null): array
+    {
+        if (!isset($connector)) $connector = $this->searchMode;
+        $queryParams = [];
+        $sql = "";
+        foreach ($params as $key => $value) {
+            $sql .= " AND `$this->tableName`.`$key` $connector :$key";
+            $queryParams[":$key"] = $value;
+        }
+        return ['sql' => $sql, 'params' => $queryParams];
     }
 
     protected function filterVariables(array $data): array
@@ -68,12 +100,8 @@ abstract class Model
          * @return bool
          */
         $sql = "SELECT id FROM $this->tableName WHERE 1=1 ";
-        $queryParams = array();
-
-        foreach ($params as $key => $value) {
-            $sql .= " AND $key=:$key";
-            $queryParams[":$key"] = $value;
-        }
+        ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, "=");
+        $sql .= $sqlData;
 
         return !empty($this->DB->query($sql, $queryParams));
     }
@@ -96,17 +124,22 @@ abstract class Model
          * @throws LengthException when nothing found
          * @return array $result
          */
-
+        // =========MENAGE SEARCHING=========
         $params = $this->parseData($params);
-
-        $sql = "SELECT * FROM $this->tableName WHERE 1=1";
-        $queryParams = array();
-
-        foreach ($params as $key => $value) {
-            $sql .= " AND $key=:$key";
-            $queryParams[":$key"] = $value;
+        $searchSQL = '';
+        $searchParams = [];
+        if (!empty($this->searchParams)) {
+            ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
+        
+        // ======== NORMAL READING ===========
+        $sql = "SELECT * FROM `$this->tableName` WHERE 1=1";
+        ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
 
+        $sql .= $sqlData .= $searchSQL;
+        $queryParams = array_merge($searchParams, $queryParams);
+
+        // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
         if (isset($sort_key) && isset($sort))   $sql .= " ORDER BY $sort_key $sort";
@@ -116,11 +149,11 @@ abstract class Model
 
         if (isset($limit))                       $sql .= ' LIMIT ' . (int)$limit;
         elseif (isset($page) && isset($on_page)) $sql .= ' LIMIT ' . (int)$page . ', ' . (int)$on_page;
-
+        // =======================================================
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($params), 404);
+            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams), 404);
         }
         foreach ($result as &$r) {
             $r = $this->parseData($r);
