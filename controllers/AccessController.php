@@ -32,13 +32,11 @@ class AccessController extends Controller
          * @return Response $response
          */
         ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Acces->setSearch($mode, $params);
+        if (isset($params) && isset($mode))  $this->Access->setSearch($mode, $params);
 
         $this->Access->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['access_id'])) {
-            $args['id'] = $args['access_id'];
-            unset($args['access_id']);
-        }
+        
+        $this->switchKey($args,'access_id','id');
         $data = $this->Access->read($args);
         
         $response->getBody()->write(json_encode($data));

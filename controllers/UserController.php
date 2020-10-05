@@ -250,10 +250,7 @@ class UserController extends Controller
 
         $this->User->setQueryStringParams($this->parsedQueryString($request));
 
-        if (isset($args['userID'])) {
-            $args['id'] = $args['userID'];
-            unset($args['userID']);
-        }
+        $this->switchKey($args, 'userID', 'id');
         $data = $this->handleExtensions($this->User->read($args), $request);
 
         $response->getBody()->write(json_encode($data));

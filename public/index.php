@@ -68,7 +68,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
     $app->group('/logs', function (\Slim\Routing\RouteCollectorProxy $logs) {
         $logs->get('', \LogController::class . ':getLogs');
-        $logs->get('/{id:[0-9]+}', \LogController::class . ':getLogs');
+        $logs->get('/{log_id:[0-9]+}', \LogController::class . ':getLogs');
         $logs->delete('/{log_id:.*[0-9]+}', \LogController::class . ':deleteLogByID');
     });
 

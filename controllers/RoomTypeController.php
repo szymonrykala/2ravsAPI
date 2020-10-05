@@ -36,11 +36,8 @@ class RoomTypeController extends Controller
         if (isset($params) && isset($mode))  $this->Type->setSearch($mode, $params);
 
         $this->Type->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['room_type_id'])) {
-            $args['id'] = $args['room_type_id'];
-            unset($args['room_type_id']);
-        }
-        
+
+        $this->switchKey($args,'room_type_id','id');
         $data = $this->Type->read($args);
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);

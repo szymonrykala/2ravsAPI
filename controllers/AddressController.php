@@ -38,10 +38,8 @@ class AddressController extends Controller
         if (isset($params) && isset($mode))  $this->Address->setSearch($mode, $params);
 
         $this->Address->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['address_id'])) {
-            $args['id'] = $args['address_id'];
-            unset($args['address_id']);
-        }
+
+        $this->switchKey($args,'address_id','id');
         $data = $this->Address->read($args);
 
         $response->getBody()->write(json_encode($data));

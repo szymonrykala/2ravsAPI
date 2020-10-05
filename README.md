@@ -7,8 +7,12 @@ Room Reservation and Visualisation System API
 [05-10-2020]
 ### Added
  - searching utilities in Model and Controller abstract classes
+ - Controller:switchKey(array &$array,string $oldKeym, string $newKey)
+### Changed
+ - switching keys ex. 'log_id' -> 'id' with Controller:switchKey() func.
 ### Removed 
  - searching paths in router 
+
 
 [04-10-2020]
 

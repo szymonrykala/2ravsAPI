@@ -119,6 +119,13 @@ abstract class Controller
         return ['params' => $queryParams, 'mode' => $mode];
     }
 
+    protected function switchKey(array &$array, string $oldKey, string $newKey):void{
+        if(isset($array[$oldKey])){
+            $array[$newKey] = $array[$oldKey];
+            unset($array[$oldKey]);
+        }
+    }
+
     // ?ext=user_id,building_id,room_id...
     protected function handleExtensions(array $dataArray, Request $request): array
     {

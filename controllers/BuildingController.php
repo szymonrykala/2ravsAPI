@@ -39,10 +39,8 @@ class BuildingController extends Controller
         if (isset($params) && isset($mode))  $this->Building->setSearch($mode, $params);
 
         $this->Building->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['building_id'])) {
-            $args['id'] = $args['building_id'];
-            unset($args['building_id']);
-        }
+
+        $this->switchKey($args, 'building_id', 'id');
         $data = $this->handleExtensions($this->Building->read($args), $request);
 
         $response->getBody()->write(json_encode($data));

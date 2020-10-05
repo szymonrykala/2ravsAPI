@@ -41,11 +41,8 @@ class RoomController extends Controller
         if (isset($params) && isset($mode))  $this->Room->setSearch($mode, $params);
 
         $this->Room->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['room_id'])) {
-            $args['id'] = $args['room_id'];
-            unset($args['room_id']);
-        }
 
+        $this->switchKey($args,'room_id','id');
         $data = $this->handleExtensions($this->Room->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
