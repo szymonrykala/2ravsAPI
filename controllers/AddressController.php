@@ -34,6 +34,9 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Address->setSearch($mode, $params);
+
         $this->Address->setQueryStringParams($this->parsedQueryString($request));
         if (isset($args['address_id'])) {
             $args['id'] = $args['address_id'];

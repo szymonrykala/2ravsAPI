@@ -31,6 +31,9 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Acces->setSearch($mode, $params);
+
         $this->Access->setQueryStringParams($this->parsedQueryString($request));
         if (isset($args['access_id'])) {
             $args['id'] = $args['access_id'];

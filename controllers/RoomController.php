@@ -37,6 +37,9 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Room->setSearch($mode, $params);
+
         $this->Room->setQueryStringParams($this->parsedQueryString($request));
         if (isset($args['room_id'])) {
             $args['id'] = $args['room_id'];

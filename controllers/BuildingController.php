@@ -35,6 +35,9 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Building->setSearch($mode, $params);
+
         $this->Building->setQueryStringParams($this->parsedQueryString($request));
         if (isset($args['building_id'])) {
             $args['id'] = $args['building_id'];

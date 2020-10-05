@@ -245,6 +245,9 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->User->setSearch($mode, $params);
+
         $this->User->setQueryStringParams($this->parsedQueryString($request));
 
         if (isset($args['userID'])) {

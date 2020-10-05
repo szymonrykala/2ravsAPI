@@ -34,7 +34,11 @@ class LogController extends Controller
          * 
          * @return Response 
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Log->setSearch($mode, $params);
+
         $this->Log->setQueryStringParams($this->parsedQueryString($request));
+        
         $data = $this->handleExtensions($this->Log->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
