@@ -35,10 +35,10 @@ class AccessController extends Controller
         if (isset($params) && isset($mode))  $this->Access->setSearch($mode, $params);
 
         $this->Access->setQueryStringParams($this->parsedQueryString($request));
-        
-        $this->switchKey($args,'access_id','id');
+
+        $this->switchKey($args, 'access_id', 'id');
         $data = $this->Access->read($args);
-        
+
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -84,16 +84,17 @@ class AccessController extends Controller
             "reservations_edit" => 'boolean',
             "users_edit" => 'boolean',
             "statistics_view" => 'boolean',
-        ]);
+        ], true);
+
         //name policy
-        if (strlen($data["name"]) < 4) {
+        if (isset($data["name"][3])) {
             throw new Exception("Access name need to have at least 4 characters", 400);
         }
 
         $newID = $this->Access->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " created new access class data:" . json_encode($data)
+            'message' => 'User ' . $request->getAttribute('email') . ' created new access class id=' . $newID . ' data:' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -125,7 +126,22 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getFrom($request);
+        $data = $this->getFrom($request, [
+            "name" => 'string',
+            "access_edit" => 'boolean',
+            "buildings_view" => 'boolean',
+            "buildings_edit" => 'boolean',
+            "logs_view" => 'boolean',
+            "logs_edit" => 'boolean',
+            "rooms_view" => 'boolean',
+            "rooms_edit" => 'boolean',
+            "reservations_access" => 'boolean',
+            "reservations_confirm" => 'boolean',
+            "reservations_edit" => 'boolean',
+            "users_edit" => 'boolean',
+            "statistics_view" => 'boolean',
+        ], false);
+
         $this->Access->update($args['access_id'], $data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),

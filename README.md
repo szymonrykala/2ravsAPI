@@ -10,8 +10,10 @@ Room Reservation and Visualisation System API
  - Controller:switchKey(array &$array,string $oldKeym, string $newKey)
 ### Changed
  - switching keys ex. 'log_id' -> 'id' with Controller:switchKey() func.
+ - controlling types and variables geted form body in Controller:getFrom
 ### Removed 
  - searching paths in router 
+ - Model.*:search()
 
 
 [04-10-2020]

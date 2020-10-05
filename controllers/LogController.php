@@ -78,27 +78,4 @@ class LogController extends Controller
 
         return $response->withStatus(204, "Deleted");
     }
-
-    // GET /logs
-    public function searchLogs(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Searching for Logs with parameters given in Request(query string or body['search'])
-         * Founded results are written into the response body
-         * GET /logs/search?<queryString>
-         * { "search":{"key":"value","key2":"value2"}}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $params = $this->getSearchParams($request);
-
-        $data = $this->Log->search($params);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
 }

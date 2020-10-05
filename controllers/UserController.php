@@ -148,7 +148,7 @@ class UserController extends Controller
             'password' => 'string',
             'name' => 'string',
             'surname' => 'string'
-        ));
+        ), true);
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new HttpBadRequestException($request, "Given email is not in correct format.");
@@ -252,31 +252,9 @@ class UserController extends Controller
 
         $this->switchKey($args, 'userID', 'id');
         $data = $this->handleExtensions($this->User->read($args), $request);
+        
+        foreach($data as &$user) unset($user['password'],$user['action_key']);
 
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET users/search
-    public function searchUsers(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Searching for users with parameters given in Request(query string or body['search'])
-         * Founded results are written into the response body
-         * GET /logs/search?<queryString>
-         * { "search":{"key":"value","key2":"value2"}}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $params = $this->getSearchParams($request);
-
-        $data = $this->User->search($params);
-
-        $data = $this->handleExtensions($data, $request);
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -293,6 +271,7 @@ class UserController extends Controller
          *    "email":{string}
          *    "password":{string},
          *    "new_password":{string},
+         *    "access_id":{integer}
          * } 
          * 
          * @param Request $request
@@ -301,7 +280,14 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $qData = $this->getFrom($request);
+        $qData = $this->getFrom($request, [
+            'email' => 'string',
+            'password' => 'string',
+            'new_password' => 'string',
+            'name' => 'string',
+            'surname' => 'string',
+            'access_id'=>'integer'
+        ], false);
         $currentUser = (int) $request->getAttribute('user_id');
         $editedUser = $args['userID'];
         $accessID = $request->getAttribute('access_id');

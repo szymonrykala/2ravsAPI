@@ -37,7 +37,7 @@ class RoomTypeController extends Controller
 
         $this->Type->setQueryStringParams($this->parsedQueryString($request));
 
-        $this->switchKey($args,'room_type_id','id');
+        $this->switchKey($args, 'room_type_id', 'id');
         $data = $this->Type->read($args);
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
@@ -56,7 +56,7 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getFrom($request, ["name" => "string"]);
+        $data = $this->getFrom($request, ["name" => "string"], true);
         $lastIndex = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -80,7 +80,7 @@ class RoomTypeController extends Controller
          */
         $typeID = (int)$args['room_type_id'];
 
-        $data = $this->getFrom($request);
+        $data = $this->getFrom($request, ["name" => "string"], false);
         $this->Type->update($typeID, $data);
 
         $this->Log->create([

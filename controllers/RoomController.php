@@ -42,7 +42,7 @@ class RoomController extends Controller
 
         $this->Room->setQueryStringParams($this->parsedQueryString($request));
 
-        $this->switchKey($args,'room_id','id');
+        $this->switchKey($args, 'room_id', 'id');
         $data = $this->handleExtensions($this->Room->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
@@ -76,7 +76,7 @@ class RoomController extends Controller
             'seats_count' => 'integer',
             'floor' => 'integer',
             'equipment' => 'string'
-        ]);
+        ], true);
         $data['building_id'] = $buildingID;
         $lastIndex = $this->Room->create($data);
         $this->Log->create([
@@ -113,7 +113,13 @@ class RoomController extends Controller
         $roomID = (int) $args['room_id'];
         $buildingID = (int) $args['building_id'];
 
-        $data = $this->getFrom($request);
+        $data = $this->getFrom($request, [
+            'name' => "string",
+            'room_type_id' => 'integer',
+            'seats_count' => 'integer',
+            'floor' => 'integer',
+            'equipment' => 'string'
+        ], false);
 
         $this->Room->update($roomID, $data);
 

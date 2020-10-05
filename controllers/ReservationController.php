@@ -3,6 +3,8 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Exception\HttpBadRequestException;
+use Slim\Exception\HttpForbiddenException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -46,7 +48,7 @@ class ReservationController extends Controller
 
         $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
 
-        $this->switchKey($args,'reservation_id','id');
+        $this->switchKey($args, 'reservation_id', 'id');
         $data = $this->handleExtensions($this->Reservation->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
@@ -110,7 +112,13 @@ class ReservationController extends Controller
             "start_time" => "string",
             "end_time" => "string",
             "date" => "string"
-        ]);
+        ], true);
+
+        if (
+            !filter_var($startTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
+            !filter_var($endTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
+            !filter_var($date, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/']])
+        ) throw new HttpBadRequestException($request, 'Incorrect variables values format. Formats: time hh:mm:ss; date yyyy-mm-dd');
 
         $reservationData = [
             "title" => $title,
@@ -155,15 +163,35 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $data = $request->getParsedBody();
-        $reservationID = $args['reservation_id'];
+        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can ot update confirmed Reservation');
+
+        $data = $this->getFrom($request, [
+            "title" => 'string',
+            "subtitle" => "string",
+            "start_time" => "string",
+            "end_time" => "string",
+            "date" => "string"
+        ], false);
+
+        foreach ([
+            'start_time' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/',
+            'end_time' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/',
+            'date' => '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/'
+        ] as $variable => $regex) {
+            if (
+                isset($data[$variable]) &&
+                !filter_var($data[$variable], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => $regex]])
+            ) throw new HttpBadRequestException($request, 'Incorrect `' . $variable . '` value format. Formats: time hh:mm:ss; date yyyy-mm-dd');
+        }
+
         $currentUserMail = $request->getAttribute('email');
 
-        $this->Reservation->update($reservationID, $data);
+        $this->Reservation->update($args['reservation_id'], $data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'reservation_id' => $reservationID,
+            'reservation_id' => $args['reservation_id'],
             'message' => "User $currentUserMail updated reservation data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");

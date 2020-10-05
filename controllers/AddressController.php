@@ -72,7 +72,7 @@ class AddressController extends Controller
             'postal_code' => 'string',
             'street' => 'string',
             'number' => 'string'
-        ]);
+        ],true);
 
         $lastIndex = $this->Address->create($data);
         $this->Log->create([
@@ -95,7 +95,13 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->getFrom($request);
+        $data = $this->getFrom($request, [
+            'country' => 'string',
+            'town' => 'string',
+            'postal_code' => 'string',
+            'street' => 'string',
+            'number' => 'string'
+        ],false);
         $addressID = $args['address_id'];
         $this->Address->update($addressID, $data);
 

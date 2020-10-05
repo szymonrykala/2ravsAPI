@@ -88,7 +88,11 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->getFrom($request, ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer']);
+        $data = $this->getFrom(
+            $request,
+            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
+            true
+        );
 
         $Address = $this->DIcontainer->get("Address");
         if (!$Address->exist(['id' => $data['address_id']])) {
@@ -125,7 +129,11 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->getFrom($request);
+        $data = $this->getFrom(
+            $request,
+            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
+            false
+        );
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');
         $buildingID = (int)$args['building_id'];

@@ -44,9 +44,6 @@ class Building extends Model
          * @param array $data array with params:name
          * @return int inserted item index
          */
-        $data = $this->filterVariables($data);
-        $data = $this->parseData($data);
-
         if ($this->exist($data))
         {
             throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);

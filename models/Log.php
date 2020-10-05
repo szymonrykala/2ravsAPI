@@ -35,7 +35,6 @@ class Log extends Model
 
     public function create(array $data): int
     {
-        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
         foreach ($this->columns as $key) {
