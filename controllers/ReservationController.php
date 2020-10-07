@@ -5,6 +5,7 @@ use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
+use Slim\Exception\HttpNotImplementedException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -14,11 +15,43 @@ class ReservationController extends Controller
      * Implement endpoints related with reservations
      */
     private $Reservation;
+    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Reservation = $this->DIcontainer->get('Reservation');
+    }
+
+    public function validateReservation(array &$data): void
+    {
+        /**
+         * Validate Reservation
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        foreach (['title', 'subtitle'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateString($data[$item], 3)) {
+                    throw new HttpBadRequestException($this->request, 'Incorrect reservation ' . $item . ' value (min 3 char. length).');
+                }
+                $data[$item] = $Validator->sanitizeString($data[$item]);
+            }
+        }
+        foreach (['end_time', 'start_time'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateTime($data[$item], 3)) {
+                    throw new HttpBadRequestException($this->request, 'Incorrect ' . $item . ' format; pattern: hh-mm-ss.');
+                }
+            }
+        }
+        if (isset($data['date'])) {
+            if (!$Validator->validateTime($data['date'], 3)) {
+                throw new HttpBadRequestException($this->request, 'Incorrect date format; pattern: yyyy-mm-dd.');
+            }
+        }
     }
 
     // GET /reservations
@@ -69,7 +102,8 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        throw new Exception("Confirming Not implemented!", 501);
+        throw new HttpNotImplementedException($request, "Confirming Not implemented!");
+
         $response->getBody()->write("Middleware");
         return $response;
     }
@@ -95,6 +129,7 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
+        $this->request = $request;
         $currentUser = $request->getAttribute('user_id');
         $currentUserMail = $request->getAttribute('email');
         $buildingID = (int)$args['building_id'];
@@ -114,11 +149,13 @@ class ReservationController extends Controller
             "date" => "string"
         ], true);
 
-        if (
-            !filter_var($startTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
-            !filter_var($endTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
-            !filter_var($date, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/']])
-        ) throw new HttpBadRequestException($request, 'Incorrect variables values format. Formats: time hh:mm:ss; date yyyy-mm-dd');
+        $this->validateReservation([
+            "title" => $title,
+            "subtitle" => $subtitle,
+            "start_time" => $startTime,
+            "end_time" => $endTime,
+            "date" => $date
+        ]);
 
         $reservationData = [
             "title" => $title,
@@ -163,6 +200,7 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
+        $this->request = $request;
         $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
         if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can ot update confirmed Reservation');
 
@@ -174,16 +212,7 @@ class ReservationController extends Controller
             "date" => "string"
         ], false);
 
-        foreach ([
-            'start_time' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/',
-            'end_time' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/',
-            'date' => '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/'
-        ] as $variable => $regex) {
-            if (
-                isset($data[$variable]) &&
-                !filter_var($data[$variable], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => $regex]])
-            ) throw new HttpBadRequestException($request, 'Incorrect `' . $variable . '` value format. Formats: time hh:mm:ss; date yyyy-mm-dd');
-        }
+        $this->validateReservation($data);
 
         $currentUserMail = $request->getAttribute('email');
 
