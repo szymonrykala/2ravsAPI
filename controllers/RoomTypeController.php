@@ -3,6 +3,7 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -12,10 +13,31 @@ class RoomTypeController extends Controller
      * Implement endpoints related with buildings/rooms/types paths
      * 
      */
+    private $Type = null;
+    private $request = null;
+
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Type = $this->DIcontainer->get('RoomType');
+    }
+
+    public function validateRoomType(array &$data): void
+    {
+        /**
+         * Validate Room type
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        foreach (['name'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateClearString($data[$item])) {
+                    throw new HttpBadRequestException($this->request, 'Incorrect room type' . $item . ' value; pattern: ' . $Validator->clearString);
+                }
+            }
+        }
     }
 
     // GET /buildings/rooms/types
@@ -56,7 +78,11 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
+        $this->$request = $request;
         $data = $this->getFrom($request, ["name" => "string"], true);
+
+        $this->validateRoomType($data);
+
         $lastIndex = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -78,9 +104,13 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
+        $this->$request = $request;
         $typeID = (int)$args['room_type_id'];
 
         $data = $this->getFrom($request, ["name" => "string"], false);
+
+        $this->validateRoomType($data);
+
         $this->Type->update($typeID, $data);
 
         $this->Log->create([
