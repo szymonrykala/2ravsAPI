@@ -3,6 +3,7 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -12,12 +13,35 @@ class AddressController extends Controller
      * Implement endpoints related with saddresses paths
      * 
      */
-    private $Address;
+    private $Address = null;
+    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Address = $this->DIcontainer->get('Address');
+    }
+
+    public function validateAddress(array &$data): void
+    {
+        /**
+         * Validate Address
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        foreach (['country', 'town', 'street'] as $item) {
+            if (isset($data[$item])) {
+                if (
+                    !$Validator->validateClearString($data[$item])
+                ) throw new HttpBadRequestException($this->request, 'Incorrect ' . $item . ' value; patern: '.$Validator->clearString);
+                $data[$item] = $Validator->sanitizeString($data[$item]);
+            }
+        }
+        if (isset($data['postal_code']) && !$Validator->validatePostalCode($data['postal_code'])) {
+            throw new HttpBadRequestException($this->request, 'Incorrect postal code value- example format; pattern: '.$Validator->postalCode);
+        }
     }
 
     // GET /addresses
@@ -39,7 +63,7 @@ class AddressController extends Controller
 
         $this->Address->setQueryStringParams($this->parsedQueryString($request));
 
-        $this->switchKey($args,'address_id','id');
+        $this->switchKey($args, 'address_id', 'id');
         $data = $this->Address->read($args);
 
         $response->getBody()->write(json_encode($data));
@@ -66,13 +90,16 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
+        $this->request = $request;
         $data = $this->getFrom($request, [
             'country' => 'string',
             'town' => 'string',
             'postal_code' => 'string',
             'street' => 'string',
             'number' => 'string'
-        ],true);
+        ], true);
+
+        $this->validateAddress($data);
 
         $lastIndex = $this->Address->create($data);
         $this->Log->create([
@@ -95,13 +122,17 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
+        $this->request = $request;
         $data = $this->getFrom($request, [
             'country' => 'string',
             'town' => 'string',
             'postal_code' => 'string',
             'street' => 'string',
             'number' => 'string'
-        ],false);
+        ], false);
+
+        $this->validateAddress($data);
+
         $addressID = $args['address_id'];
         $this->Address->update($addressID, $data);
 
