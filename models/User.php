@@ -42,22 +42,16 @@ class User extends Model
 
     public function create(array $data): int
     {
-        $data = $this->filterVariables($data);
         $data = $this->parseData($data);
 
         $data['name'] = preg_replace('/\s/', '', $data['name']);
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 
-        if ($this->exist(['email' => $data['email']]))
-        {
+        if ($this->exist(['email' => $data['email']])) {
             throw new InvalidArgumentException("$this->tableName with given email already exist.", 400);
         }
 
-
-        $options = [
-            'cost' => 12,
-        ];
-        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, $options);
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
 
         $this->DB->query(
             "INSERT INTO 
