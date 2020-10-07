@@ -14,11 +14,29 @@ class BuildingController extends Controller
      * 
      */
     protected $Building;
+    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Building = $this->DIcontainer->get('Building');
+    }
+
+    public function validateBuilding(array &$data): void
+    {
+        /**
+         * Validate Building
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+            if (isset($data['name'])) {
+                if (!$Validator->validateClearString($data['name'])) {
+                    throw new HttpBadRequestException($this->request, 'Incorrect building name value; pattern: '.$Validator->clearString);
+                }
+            }
+        
     }
 
     // GET /buildings
@@ -47,29 +65,6 @@ class BuildingController extends Controller
         return $response->withStatus(200);
     }
 
-    // GET /buildings/search
-    public function searchBuildings(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Searching for Building with parameters given in Request(query string or body['search'])
-         * Founded results are written into the response body
-         * GET /buildings/search?<queryString>
-         * { "search":{"key":"value","key2":"value2"}}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param array $args
-         * 
-         * @return Response 
-         */
-        $params = $this->getSearchParams($request);
-
-        $data = $this->Building->search($params);;
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
     // POST /buildings
     public function createBuilding(Request $request, Response $response, $args): Response
     {
@@ -88,11 +83,14 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
+        $this->request = $request;
         $data = $this->getFrom(
             $request,
             ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
             true
         );
+
+        $this->validateBuilding($data);
 
         $Address = $this->DIcontainer->get("Address");
         if (!$Address->exist(['id' => $data['address_id']])) {
@@ -129,11 +127,15 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
+        $this->request = $request;
         $data = $this->getFrom(
             $request,
             ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
             false
         );
+
+        $this->validateBuilding($data);
+
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');
         $buildingID = (int)$args['building_id'];
