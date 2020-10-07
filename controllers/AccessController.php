@@ -3,17 +3,36 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
 class AccessController extends Controller
 {
     private $Access;
+    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Access = $DIcontainer->get('Access');
+    }
+
+    public function validateAccess(array &$data): void
+    {
+        /**
+         * Validate Access
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        if (isset($data['name'])) {
+            if (!$Validator->validateString($data['name'], 4)) {
+                throw new HttpBadRequestException($this->request, 'Incorrect access name value. Minimum name length = 4.');
+            }
+            $data['name'] = $Validator->sanitizeString($data['name']);
+        }
     }
 
     // GET /access
@@ -70,6 +89,7 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+        $this->request = $request;
         $data = $this->getFrom($request, [
             "name" => 'string',
             "access_edit" => 'boolean',
@@ -86,10 +106,7 @@ class AccessController extends Controller
             "statistics_view" => 'boolean',
         ], true);
 
-        //name policy
-        if (isset($data["name"][3])) {
-            throw new Exception("Access name need to have at least 4 characters", 400);
-        }
+        $this->validateAccess($data);
 
         $newID = $this->Access->create($data);
         $this->Log->create([
@@ -126,6 +143,7 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+        $this->request = $request;
         $data = $this->getFrom($request, [
             "name" => 'string',
             "access_edit" => 'boolean',
@@ -141,6 +159,8 @@ class AccessController extends Controller
             "users_edit" => 'boolean',
             "statistics_view" => 'boolean',
         ], false);
+
+        $this->validateAccess($data);
 
         $this->Access->update($args['access_id'], $data);
         $this->Log->create([
