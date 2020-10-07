@@ -6,6 +6,7 @@ Room Reservation and Visualisation System API
 [06-10-2020]
 ### Added
  - Validator::class utility
+ - Validation in Controllers
 
 [05-10-2020]
 ### Added
