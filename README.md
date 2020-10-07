@@ -3,6 +3,9 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[06-10-2020]
+### Added
+ - Validator::class utility
 
 [05-10-2020]
 ### Added

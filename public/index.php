@@ -37,7 +37,7 @@ $DIcontainer->set('Room', new Room(new Database()));
 $DIcontainer->set('User', new User(new Database()));
 $DIcontainer->set('Address', new Address(new Database()));
 $DIcontainer->set('RoomType', new RoomType(new Database()));
-$DIcontainer->set('View', new View());
+$DIcontainer->set('Validator', new Validator());
 // $DIcontainer->set('Mail', \Mail::class);
 
 function myErrorHandler(Throwable $e)

@@ -52,6 +52,7 @@ require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AddressController.php';
 require_once __DIR__ . '/../controllers/RoomTypeController.php';
 
+require_once __DIR__ . '../utils/Validator.php';
 /*
 require_once __DIR__ . '/../exceptions/NothingFoundException.php';
 require_once __DIR__ . '/../exceptions/UnUpdetableParameterException.php';
