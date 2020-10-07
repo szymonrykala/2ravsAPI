@@ -3,18 +3,29 @@
 // !filter_var($endTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
 class Validator
 {
-    private $postalCode = '/^\d{2}-\d{3}$/';
-    private $date = '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/';
-    private $time = '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/';
-    private $password = '/(?=.{8,})(?=.*[!@#$%^&*])(?=.*[0-9]{2,})(?=.*[A-Z])/';
+    public $postalCode = '/^\d{2}-\d{3}$/';
+    public $date = '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/';
+    public $time = '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/';
+    public $password = '/(?=.{8,})(?=.*[!@#$%^&*])(?=.*[0-9]{2,})(?=.*[A-Z])/';
+    public $clearString = '/[-.\w]{3,}/u';
 
     function __construct()
     {
     }
-    public function validateString(string $string, int $minLength = 0): bool
+    public function validateString(string $string, int $minLength = 1): bool
     {
         if (isset($string[$minLength - 1])) return false;
         return true;
+    }
+
+    public function validateClearString(string $string): bool
+    {
+        if (filter_var($string, FILTER_VALIDATE_REGEXP, [
+            'options' => [
+                'regexp' => $this->clearString
+            ]
+        ])) return true;
+        return false;
     }
 
     public function validatePostalCode(string $postalCode): bool
@@ -92,5 +103,9 @@ class Validator
         return false;
     }
 
-    // public function validate
+    public function validateEmail(string $email): bool
+    {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) return true;
+        return false;
+    }
 }
