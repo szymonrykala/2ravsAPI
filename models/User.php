@@ -7,7 +7,7 @@ class User extends Model
     public $unUpdateAble = array('id', 'created_at');
     protected $columns = [
         'id', 'access_id', 'name', 'surname', 'password',
-        'last_login', 'email', 'updated_at', 'img_url',
+        'last_login', 'email', 'updated_at',
         'activated', 'login_fails', 'created_at', 'action_key'
     ];
 
@@ -52,15 +52,14 @@ class User extends Model
 
         $this->DB->query(
             "INSERT INTO 
-                $this->tableName(name,surname,password,email,action_key,img_url)
-               VALUES(:name,:surname,:password,:email,:action_key,:img_url)",
+                $this->tableName(name,surname,password,email,action_key)
+               VALUES(:name,:surname,:password,:email,:action_key)",
             array(
                 ':name' => $data['name'],
                 ':surname' => $data['surname'],
                 ':password' => $data['password'],
                 ':email' => $data['email'],
-                ':action_key' => $data['action_key'],
-                ':img_url' => ROOT . "/img/users/default.jpg"
+                ':action_key' => $data['action_key']
             )
         );
         return $this->DB->lastInsertID();
