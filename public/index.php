@@ -18,13 +18,6 @@ $rootApp = AppFactory::create(); // create the app
 
 $rootApp->addRoutingMiddleware();
 $rootApp->addBodyParsingMiddleware();
-// $rootApp->addErrorMiddleware(true, true, true);
-// $rootApp->add(new JSONMiddleware());
-
-/*  CLIENT  -->  (JSONMiddleware)  -->  (AuthorizationMiddleware)  -->  (AccessMiddleware)  -->  API resources
-    CLIENT  <--  (JSONMiddleware)  <--  (AuthorizationMiddleware)  <--  (AccessMiddleware)  <--  API resources  */
-// $rootApp->add(new AccessMiddleware());
-
 
 
 //Models
@@ -38,7 +31,6 @@ $DIcontainer->set('User', new User(new Database()));
 $DIcontainer->set('Address', new Address(new Database()));
 $DIcontainer->set('RoomType', new RoomType(new Database()));
 $DIcontainer->set('Validator', new Validator());
-// $DIcontainer->set('Mail', \Mail::class);
 
 function myErrorHandler(Throwable $e)
 {
@@ -60,11 +52,11 @@ set_exception_handler("myErrorHandler");
 
 
 
-$rootApp->post('/auth', \UserController::class . ':verifyUser'); //open endpoint
-$rootApp->post('/users', \UserController::class . ':registerNewUser'); // open endpoint
-$rootApp->get('/users/activate', \UserController::class . ':activateUser'); // open endpoint
+$rootApp->post('/v1/auth', \UserController::class . ':verifyUser'); //open endpoint
+$rootApp->post('/v1/users', \UserController::class . ':registerNewUser'); // open endpoint
+$rootApp->get('/v1/users/activate', \UserController::class . ':activateUser'); // open endpoint
 
-$rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
+$rootApp->group('/v1', function (\Slim\Routing\RouteCollectorProxy $app) {
 
     $app->group('/logs', function (\Slim\Routing\RouteCollectorProxy $logs) {
         $logs->get('', \LogController::class . ':getLogs');
@@ -158,7 +150,6 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
 // 404 error heandler 
 $rootApp->any('{route:.*}', function (Request $request, Response $response) {
-
     throw new HttpNotFoundException($request, "Requested URL does not exist");
 });
 
