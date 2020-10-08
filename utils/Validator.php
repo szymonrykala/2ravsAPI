@@ -7,15 +7,15 @@ class Validator
     public $date = '/^([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))$/';
     public $time = '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/';
     public $password = '/(?=.{8,})(?=.*[!@#$%^&*])(?=.*[0-9]{2,})(?=.*[A-Z])/';
-    public $clearString = '/[-.\w]{3,}/u';
+    public $clearString = '/[-.,\w\s]{3,}/u';
 
     function __construct()
     {
     }
     public function validateString(string $string, int $minLength = 1): bool
     {
-        if (isset($string[$minLength - 1])) return false;
-        return true;
+        if (isset($string[$minLength - 1])) return true;
+        return false;
     }
 
     public function validateClearString(string $string): bool
