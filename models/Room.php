@@ -15,7 +15,7 @@ class Room extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {
             switch ($key) {
@@ -36,14 +36,10 @@ class Room extends Model
                     break;
             }
         }
-        return $data;
     }
 
     public function create(array $data): int
     {
-        $data = $this->filterVariables($data);
-        $data = $this->parseData($data);
-
         if ($this->exist([
             "name" => $data["name"],
             "floor" => $data["floor"],

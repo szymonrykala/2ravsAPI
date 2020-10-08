@@ -3,6 +3,22 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[06-10-2020]
+### Added
+ - Validator::class utility
+ - Validation in Controllers
+
+[05-10-2020]
+### Added
+ - searching utilities in Model and Controller abstract classes
+ - Controller:switchKey(array &$array,string $oldKeym, string $newKey)
+### Changed
+ - switching keys ex. 'log_id' -> 'id' with Controller:switchKey() func.
+ - controlling types and variables geted form body in Controller:getFrom
+### Removed 
+ - searching paths in router 
+ - Model.*:search()
+
 
 [04-10-2020]
 
@@ -11,7 +27,7 @@ Room Reservation and Visualisation System API
 -   Operations on results Sorting (sort, sort_key):
     -   limiting (limit)
     -   paging (page, on_page)
--   Controller: parsedQueryString(Request $request, string $key=''):array
+-   Controller: parsedQueryString(Request $request, string $key=null):array
 
 ### Changed
 

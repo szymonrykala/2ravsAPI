@@ -16,7 +16,7 @@ class Reservation extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {
             switch ($key) {
@@ -46,15 +46,12 @@ class Reservation extends Model
                     break;
             }
         }
-        return $data;
     }
 
     private function checkTimeSlot(string $startTime, string $endTime, string $date, int $roomID)
     {
-        $explodedEndTime = explode(':', $endTime);
-        $explodedStartTime = explode(':', $startTime);
-        if ($explodedStartTime[0] > $explodedEndTime[0]) {
-            throw new Exception("Reservation time is not correct. Start time have to be smaller then end time", 400);
+        if (strtotime('+15 minutes',strtotime($startTime)) >= strtotime($endTime)) {
+            throw new LogicException("Reservation time is not correct. Start time have to be smaller then end time. Reservation time slot have to be at least 15 minutes", 400);
         }
         $result = $this->DB->query(
             "SELECT COUNT(id) AS 'conflict' FROM $this->tableName WHERE 
@@ -81,18 +78,15 @@ class Reservation extends Model
 
     public function create(array $data): int
     {
-        $data = $this->filterVariables($data);
-        $data = $this->parseData($data);
-
         //checking time
         $Date = new DateTime();
 
         $currentDate = $Date->format('Y-m-d');
         $currentTime = $Date->format('H:i:s');
         if ($currentDate > $data['date']) {
-            throw new Exception("Reservation date is too late", 400);
+            throw new LogicException("Reservation date is too late", 400);
         } elseif ($currentDate == $data['date'] && $currentTime >= $data['start_time']) {
-            throw new Exception("Reservation time is too late", 400);
+            throw new LogicException("Reservation time is too late", 400);
         }
 
         //building exist?
@@ -101,7 +95,7 @@ class Reservation extends Model
             array(':id' => $data['building_id'])
         );
         if (empty($buildingExist)) { //if not exist
-            throw new Exception("Specified building is not exist. You can not make reservation because building You specified is not Exsist", 400);
+            throw new LogicException("Specified building is not exist. You can not make reservation because building You specified is not Exsist", 400);
         }
 
         //room exist in this building?
@@ -113,11 +107,11 @@ class Reservation extends Model
             )
         );
         if (empty($roomExist)) { //if not exist
-            throw new Exception("Specified room is not exist. You can not make reservation because specified room is not exist in given building", 400);
+            throw new LogicException("Specified room is not exist. You can not make reservation because specified room is not exist in given building", 400);
         } else {
             //room is bookable?
             if ((bool)$roomExist[0]['blockade']) {
-                throw new Exception("Specified room is not bookable. Room You want to reserve has blocked status.", 409); //conflict
+                throw new LogicException("Specified room is not bookable. Room You want to reserve has blocked status.", 409); //conflict
             }
         }
 

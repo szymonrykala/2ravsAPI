@@ -14,11 +14,28 @@ class BuildingController extends Controller
      * 
      */
     protected $Building;
+    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Building = $this->DIcontainer->get('Building');
+    }
+
+    public function validateBuilding(Request $request, array &$data): void
+    {
+        /**
+         * Validate Building
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        if (isset($data['name'])) {
+            if (!$Validator->validateClearString($data['name'])) {
+                throw new HttpBadRequestException($request, 'Incorrect building name value; pattern: ' . $Validator->clearString);
+            }
+        }
     }
 
     // GET /buildings
@@ -35,35 +52,13 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Building->setSearch($mode, $params);
+
         $this->Building->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['building_id'])) {
-            $args['id'] = $args['building_id'];
-            unset($args['building_id']);
-        }
+
+        $this->switchKey($args, 'building_id', 'id');
         $data = $this->handleExtensions($this->Building->read($args), $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
-
-    // GET /buildings/search
-    public function searchBuildings(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Searching for Building with parameters given in Request(query string or body['search'])
-         * Founded results are written into the response body
-         * GET /buildings/search?<queryString>
-         * { "search":{"key":"value","key2":"value2"}}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param array $args
-         * 
-         * @return Response 
-         */
-        $params = $this->getSearchParams($request);
-
-        $data = $this->Building->search($params);;
 
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
@@ -87,7 +82,14 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->getFrom($request, ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer']);
+
+        $data = $this->getFrom(
+            $request,
+            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
+            true
+        );
+
+        $this->validateBuilding($request, $data);
 
         $Address = $this->DIcontainer->get("Address");
         if (!$Address->exist(['id' => $data['address_id']])) {
@@ -124,7 +126,15 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $data = $this->getFrom($request);
+
+        $data = $this->getFrom(
+            $request,
+            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
+            false
+        );
+
+        $this->validateBuilding($request, $data);
+
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');
         $buildingID = (int)$args['building_id'];

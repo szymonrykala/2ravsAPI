@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotImplementedException;
+use Slim\Exception\HttpUnauthorizedException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -44,6 +45,36 @@ class UserController extends Controller
     private function getRandomKey(int $len): string
     {
         return base64_encode(random_bytes($len));
+    }
+
+    public function validateUser(Request $request, array &$data): void
+    {
+        /**
+         * Validate User
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        foreach (['name', 'surname'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateClearString($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect user ' . $item . ' value; pattern: ' . $Validator->clearString);
+                }
+            }
+        }
+
+        foreach (['password', 'old_password', 'repeat_password'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validatePassword($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect user ' . $item . ' format; pattern: ' . $Validator->password);
+                }
+            }
+        }
+
+        if (isset($data['email']) && !$Validator->validateEmail($data['email'])) {
+            throw new HttpBadRequestException($request, 'Incorrect user email value');
+        }
     }
 
     // POST /auth
@@ -82,7 +113,7 @@ class UserController extends Controller
                 'activated' => $activated
             ) = $this->User->read(array('email' => $email))[0];
         } catch (LengthException $e) {
-            throw new HttpBadRequestException($request, "Can not login. User with email '$email' do not exist");
+            throw new HttpBadRequestException($request, "Can not login. Given email '$email' is not exist");
         }
 
         if ((bool)$activated === false) {
@@ -129,7 +160,8 @@ class UserController extends Controller
          *    "name":{"type":"string"},
          *    "surname":{"type":"string"},
          *    "email":{"type":"string"},
-         *    "password":{"type":"string","min":10,"max":20}
+         *    "password":{}
+         *    "repeat_password":{}
          * }
          * 
          * @param Request $request
@@ -142,39 +174,28 @@ class UserController extends Controller
             'name' => $name,
             'surname' => $surname,
             'email' => $email,
-            'password' => $password
+            'password' => $password,
+            'repeat_password' => $repeat_password
         ) = $this->getFrom($request, array(
             'email' => 'string',
             'password' => 'string',
+            'repeat_password' => 'string',
             'name' => 'string',
             'surname' => 'string'
-        ));
+        ), true);
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new HttpBadRequestException($request, "Given email is not in correct format.");
-        }
-
-        $passLen = strlen($password);
-        preg_match_all('/[0-9]/', $password, $numsCount);
-        if ($passLen < 10 || $passLen > 20) {
-            throw new HttpBadRequestException($request, "Password length is not acceptable (min=10, max=20)");
-        } elseif (strpos(' ', $password)) {
-            throw new HttpBadRequestException($request, "Password can not contain spaces");
-        } elseif (strpos('<', $password) || strpos('>', $password)) {
-            throw new HttpBadRequestException($request, "Password can not contain '<' and '>' ");
-        } elseif (count($numsCount[0]) < 4) {
-            throw new HttpBadRequestException($request, "Password need to contain minimum 4 digits");
-        }
-
-        $randomKey = $this->getRandomKey(60);
+        if ($password !== $repeat_password) throw new HttpBadRequestException($request, 'Given password and repeat_password are not the same');
 
         $userData = [
             'name' => $name,
             'surname' => $surname,
             'password' => $password,
             'email' => $email,
-            'action_key' => $randomKey
+            'action_key' => $this->getRandomKey(60)
         ];
+
+        $this->validateUser($request, $userData);
+        
         $userID = $this->User->create($userData);
         unset($userData['password']);
         $this->Log->create(array(
@@ -245,38 +266,16 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->User->setSearch($mode, $params);
+
         $this->User->setQueryStringParams($this->parsedQueryString($request));
 
-        if (isset($args['userID'])) {
-            $args['id'] = $args['userID'];
-            unset($args['userID']);
-        }
+        $this->switchKey($args, 'userID', 'id');
         $data = $this->handleExtensions($this->User->read($args), $request);
 
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
-    }
+        foreach ($data as &$user) unset($user['password'], $user['action_key']);
 
-    // GET users/search
-    public function searchUsers(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Searching for users with parameters given in Request(query string or body['search'])
-         * Founded results are written into the response body
-         * GET /logs/search?<queryString>
-         * { "search":{"key":"value","key2":"value2"}}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $params = $this->getSearchParams($request);
-
-        $data = $this->User->search($params);
-
-        $data = $this->handleExtensions($data, $request);
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -291,8 +290,9 @@ class UserController extends Controller
          *    "name":{string},
          *    "surname":{string},
          *    "email":{string}
-         *    "password":{string},
+         *    "old_password":{string},
          *    "new_password":{string},
+         *    "access_id":{integer}
          * } 
          * 
          * @param Request $request
@@ -301,59 +301,49 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $qData = $this->getFrom($request);
+
+        $data = $this->getFrom($request, [
+            'email' => 'string',
+            'old_password' => 'string',
+            'new_password' => 'string',
+            'name' => 'string',
+            'surname' => 'string',
+            'access_id' => 'integer'
+        ], false);
+
+        $this->validateUser($request, $data);
+
         $currentUser = (int) $request->getAttribute('user_id');
-        $editedUser = $args['userID'];
         $accessID = $request->getAttribute('access_id');
         $userEmail = $request->getAttribute('email');
 
-        $data = [];
-        if (isset($qData['name'])) {
-            $data['name'] = $qData['name'];
+        // checking if user can change acces
+        if (isset($data['access_id'])) {
+            $Access = $this->DIcontainer->get("Access");
+            if (
+                (bool)$Access->read(['id' => $accessID])[0]['access_edit'] === false
+            ) throw new HttpUnauthorizedException($request, 'You do not have acces to edit user access_id');
         }
 
-        if (isset($qData['surname'])) {
-            $data['surname'] = $qData['surname'];
-        }
+        $editedUser = $this->User->read(['id' => $args['userID']])[0];
 
-        if (isset($qData['email']) && $qData['email'] !== $userEmail) {
-            if (!filter_var($qData['email'], FILTER_VALIDATE_EMAIL)) {
-                throw new HttpBadRequestException($request, 'email is not correct format');
+        if (isset($data['old_password'], $data['new_password'])) {
+            if ($data['old_password'] === $data['new_password']) {
+                throw new HttpBadRequestException($request, 'Incorrect passowrds values - old_password and new_password can not be the same');
             }
-            $data['email'] = $qData['email'];
-        }
-
-        if (
-            (isset($qData['password']) && !isset($qData['new_password'])) ||
-            (!isset($qData['password']) && isset($qData['new_password']))
-        ) {
-            throw new HttpBadRequestException($request, "When updateing password, old password is needed to");
-        } elseif (isset($qData['password']) && isset($qData['new_password'])) {
-
-            list('password' => $passwordHash) = $this->User->read(['id' => $editedUser])[0];
-
-            if (password_verify($qData['password'], $passwordHash)) {
-                $password = $qData['new_password'];
-
-                $passLen = strlen($password);
-                preg_match_all('/[0-9]/', $password, $numsCount);
-                if ($passLen < 10 || $passLen > 20) {
-                    throw new HttpBadRequestException($request, 'unwanted password length (min=10, max=20)');
-                } elseif (strpos(' ', $password)) {
-                    throw new HttpBadRequestException($request, 'unwanted spaces in password');
-                } elseif (count($numsCount[0]) < 4) {
-                    throw new HttpBadRequestException($request, 'password requires 4 digits');
-                }
-                $options = [
-                    'cost' => 12,
-                ];
-                $data['password'] = password_hash($password, PASSWORD_BCRYPT, $options);
+            if (password_verify($data['old_password'], $editedUser['password'])) {
+                $data['password'] = password_hash($data['new_password'], PASSWORD_BCRYPT, ['cost' => 12]);
             }
         }
 
-        $this->User->update($editedUser, $data);
+        unset($data['new_password'], $data['old_password']);
+
+        $this->User->update($editedUser['id'], $data);
         unset($data['password']);
-        $this->Log->create(['user_id' => $currentUser, 'message' => "User $userEmail (id=$currentUser) updated user (id=$editedUser) data:" . json_encode($data)]);
+        $this->Log->create([
+            'user_id' => $currentUser,
+            'message' => "Updated User $userEmail (id=" . $editedUser['id'] . ") with data:" . json_encode($data)
+        ]);
 
         return $response->withStatus(204, "Updated");
     }

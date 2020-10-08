@@ -3,17 +3,36 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
 class AccessController extends Controller
 {
     private $Access;
+    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Access = $DIcontainer->get('Access');
+    }
+
+    public function validateAccess(Request $request, array &$data): void
+    {
+        /**
+         * Validate Access
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        if (isset($data['name'])) {
+            if (!$Validator->validateString($data['name'])) {
+                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: '.$Validator->clearString);
+            }
+            $data['name'] = $Validator->sanitizeString($data['name']);
+        }
     }
 
     // GET /access
@@ -31,13 +50,14 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Access->setSearch($mode, $params);
+
         $this->Access->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['access_id'])) {
-            $args['id'] = $args['access_id'];
-            unset($args['access_id']);
-        }
+
+        $this->switchKey($args, 'access_id', 'id');
         $data = $this->Access->read($args);
-        
+
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
     }
@@ -69,6 +89,7 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+
         $data = $this->getFrom($request, [
             "name" => 'string',
             "access_edit" => 'boolean',
@@ -83,16 +104,14 @@ class AccessController extends Controller
             "reservations_edit" => 'boolean',
             "users_edit" => 'boolean',
             "statistics_view" => 'boolean',
-        ]);
-        //name policy
-        if (strlen($data["name"]) < 4) {
-            throw new Exception("Access name need to have at least 4 characters", 400);
-        }
+        ], true);
+
+        $this->validateAccess($request, $data);
 
         $newID = $this->Access->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " created new access class data:" . json_encode($data)
+            'message' => 'User ' . $request->getAttribute('email') . ' created new access class id=' . $newID . ' data:' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -124,7 +143,25 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getFrom($request);
+
+        $data = $this->getFrom($request, [
+            "name" => 'string',
+            "access_edit" => 'boolean',
+            "buildings_view" => 'boolean',
+            "buildings_edit" => 'boolean',
+            "logs_view" => 'boolean',
+            "logs_edit" => 'boolean',
+            "rooms_view" => 'boolean',
+            "rooms_edit" => 'boolean',
+            "reservations_access" => 'boolean',
+            "reservations_confirm" => 'boolean',
+            "reservations_edit" => 'boolean',
+            "users_edit" => 'boolean',
+            "statistics_view" => 'boolean',
+        ], false);
+
+        $this->validateAccess($request, $data);
+
         $this->Access->update($args['access_id'], $data);
         $this->Log->create([
             "user_id" => $request->getAttribute('user_id'),

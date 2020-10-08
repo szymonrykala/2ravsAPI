@@ -3,6 +3,7 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -12,10 +13,31 @@ class RoomTypeController extends Controller
      * Implement endpoints related with buildings/rooms/types paths
      * 
      */
+    private $Type = null;
+    private $request = null;
+
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
         $this->Type = $this->DIcontainer->get('RoomType');
+    }
+
+    public function validateRoomType(Request $request, array &$data): void
+    {
+        /**
+         * Validate Room type
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        foreach (['name'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateClearString($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect room type' . $item . ' value; pattern: ' . $Validator->clearString);
+                }
+            }
+        }
     }
 
     // GET /buildings/rooms/types
@@ -32,12 +54,12 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Type->setSearch($mode, $params);
+
         $this->Type->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['room_type_id'])) {
-            $args['id'] = $args['room_type_id'];
-            unset($args['room_type_id']);
-        }
-        
+
+        $this->switchKey($args, 'room_type_id', 'id');
         $data = $this->Type->read($args);
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
@@ -56,7 +78,11 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getFrom($request, ["name" => "string"]);
+
+        $data = $this->getFrom($request, ["name" => "string"], true);
+
+        $this->validateRoomType($request, $data);
+
         $lastIndex = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -80,7 +106,10 @@ class RoomTypeController extends Controller
          */
         $typeID = (int)$args['room_type_id'];
 
-        $data = $this->getFrom($request);
+        $data = $this->getFrom($request, ["name" => "string"], false);
+
+        $this->validateRoomType($request, $data);
+
         $this->Type->update($typeID, $data);
 
         $this->Log->create([

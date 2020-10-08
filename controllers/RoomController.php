@@ -3,6 +3,7 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpBadRequestException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -11,7 +12,8 @@ class RoomController extends Controller
     /**
      * Responsible for operation with /rooms table in database
      */
-    protected $DIcontainer;
+    private $Room = null;
+    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -19,6 +21,28 @@ class RoomController extends Controller
         $this->Room = $this->DIcontainer->get('Room');
     }
 
+    public function validateRoom(Request $request, array &$data): void
+    {
+        /**
+         * Validate Room
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        if (isset($data['name'])) {
+            if (!$Validator->validateClearString($data['name'])) {
+                throw new HttpBadRequestException($request, 'Incorrect room name value; pattern: ' . $Validator->clearString);
+            }
+        }
+
+        if (isset($data['equipment'])) {
+            if (!$Validator->validateString($data['equipment'], 1)) {
+                throw new HttpBadRequestException($request, 'Incorrect room equipment value (min 1 char. length).');
+            }
+            $data['equipment'] = $Validator->sanitizeString($data['equipment']);
+        }
+    }
 
     // GET /buildings/rooms
     // GET /buildings/rooms/{room_id}
@@ -37,12 +61,12 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
-        $this->Room->setQueryStringParams($this->parsedQueryString($request));
-        if (isset($args['room_id'])) {
-            $args['id'] = $args['room_id'];
-            unset($args['room_id']);
-        }
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Room->setSearch($mode, $params);
 
+        $this->Room->setQueryStringParams($this->parsedQueryString($request));
+
+        $this->switchKey($args, 'room_id', 'id');
         $data = $this->handleExtensions($this->Room->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
@@ -69,6 +93,7 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
+
         $buildingID = (int) $args['building_id'];
         $data = $this->getFrom($request, [
             'name' => "string",
@@ -76,7 +101,10 @@ class RoomController extends Controller
             'seats_count' => 'integer',
             'floor' => 'integer',
             'equipment' => 'string'
-        ]);
+        ], true);
+
+        $this->validateRoom($request, $data);
+
         $data['building_id'] = $buildingID;
         $lastIndex = $this->Room->create($data);
         $this->Log->create([
@@ -110,10 +138,19 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
+
         $roomID = (int) $args['room_id'];
         $buildingID = (int) $args['building_id'];
 
-        $data = $this->getFrom($request);
+        $data = $this->getFrom($request, [
+            'name' => "string",
+            'room_type_id' => 'integer',
+            'seats_count' => 'integer',
+            'floor' => 'integer',
+            'equipment' => 'string'
+        ], false);
+
+        $this->validateRoom($request, $data);
 
         $this->Room->update($roomID, $data);
 

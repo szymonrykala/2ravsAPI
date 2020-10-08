@@ -3,6 +3,9 @@
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Exception\HttpBadRequestException;
+use Slim\Exception\HttpForbiddenException;
+use Slim\Exception\HttpNotImplementedException;
 
 require_once __DIR__ . "/Controller.php";
 
@@ -17,6 +20,43 @@ class ReservationController extends Controller
     {
         parent::__construct($DIcontainer);
         $this->Reservation = $this->DIcontainer->get('Reservation');
+    }
+
+    public function validateReservation(Request &$request, array &$data): void
+    {
+        /**
+         * Validate Reservation
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+
+        if (isset($data['subtitle'])) {
+            if (!$Validator->validateString($data['subtitle'], 3)) {
+                throw new HttpBadRequestException($request, 'Incorrect reservation ' . 'subtitle' . ' value (min 3 char. length).');
+            } else {
+                $data['subtitle'] = $Validator->sanitizeString($data['subtitle']);
+            }
+        }
+
+        if (
+            isset($data['title']) &&
+            !$Validator->validateClearString($data['title'])
+        ) throw new HttpBadRequestException($request, 'Incorrect reservation title format; pattern: ' . $Validator->clearString);
+
+        foreach (['end_time', 'start_time'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateTime($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' format; pattern: hh:mm:ss.');
+                }
+            }
+        }
+        if (isset($data['date'])) {
+            if (!$Validator->validateDate($data['date'])) {
+                throw new HttpBadRequestException($request, 'Incorrect date format; pattern: yyyy-mm-dd.');
+            }
+        }
     }
 
     // GET /reservations
@@ -41,13 +81,12 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Reservation->setSearch($mode, $params);
+
         $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
 
-        $args['deleted'] = (bool)$this->parsedQueryString($request, 'deleted');
-        if (isset($args['reservation_id'])) {
-            $args['id'] = $args['reservation_id'];
-            unset($args['reservation_id']);
-        }
+        $this->switchKey($args, 'reservation_id', 'id');
         $data = $this->handleExtensions($this->Reservation->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
@@ -68,41 +107,10 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        throw new Exception("Confirming Not implemented!", 501);
+        throw new HttpNotImplementedException($request, "Confirming Not implemented!");
+
         $response->getBody()->write("Middleware");
         return $response;
-    }
-
-    // GET buildings/{building_id}/rooms/{room_id}/reservations/search
-    // GET buildings/{building_id}/reservations/search
-    // GET reservations/search
-    public function searchReservations(Request $request, Response $response, $args): Response
-    {
-        /**
-         * Searching for reservtions with parameters given in Request(query string or body['search'])
-         * Founded results are written into the response body
-         * GET /logs/search?<queryString>
-         * { "search":{"key":"value","key2":"value2"}}
-         * 
-         * @param Request $request 
-         * @param Response $response 
-         * @param $args
-         * 
-         * @return Response 
-         */
-        $params = $this->getSearchParams($request);
-        if (isset($args['building_id'])) {
-            $params['building_id'] = $args['building_id'];
-        }
-        if (isset($args['room_id'])) {
-            $params['room_id'] = $args['room_id'];
-        }
-        $data = $this->Reservation->search($params);
-
-        $data = $this->handleExtensions($data, $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
     }
 
     // POST /buildings/{building_id}/rooms/{room_id}/reservations
@@ -126,35 +134,28 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
+
         $currentUser = $request->getAttribute('user_id');
         $currentUserMail = $request->getAttribute('email');
         $buildingID = (int)$args['building_id'];
         $roomID = (int)$args['room_id'];
 
-        list(
-            "title" => $title,
-            "subtitle" => $subtitle,
-            "start_time" => $startTime,
-            "end_time" => $endTime,
-            "date" => $date
-        ) = $this->getFrom($request, [
+        $data = $this->getFrom($request, [
             "title" => 'string',
             "subtitle" => "string",
             "start_time" => "string",
             "end_time" => "string",
             "date" => "string"
-        ]);
+        ], true);
 
-        $reservationData = [
-            "title" => $title,
-            "subtitle" => $subtitle,
-            "start_time" => $startTime,
-            "end_time" => $endTime,
-            "date" => $date,
+        $this->validateReservation($request, $data);
+
+        $reservationData = array_merge($data, [
             "room_id" => $roomID,
             "building_id" => $buildingID,
             "user_id" => $currentUser
-        ];
+        ]);
+        
         $reservationID = $this->Reservation->create($reservationData);
         $this->Log->create([
             'user_id' => $currentUser,
@@ -188,15 +189,27 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $data = $request->getParsedBody();
-        $reservationID = $args['reservation_id'];
+
+        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can ot update confirmed Reservation');
+
+        $data = $this->getFrom($request, [
+            "title" => 'string',
+            "subtitle" => "string",
+            "start_time" => "string",
+            "end_time" => "string",
+            "date" => "string"
+        ], false);
+
+        $this->validateReservation($request, $data);
+
         $currentUserMail = $request->getAttribute('email');
 
-        $this->Reservation->update($reservationID, $data);
+        $this->Reservation->update($args['reservation_id'], $data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'reservation_id' => $reservationID,
+            'reservation_id' => $args['reservation_id'],
             'message' => "User $currentUserMail updated reservation data:" . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");

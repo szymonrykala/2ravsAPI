@@ -7,15 +7,6 @@ define('DB_PASS', '');
 // URL path
 define('ROOT', 'http://localhost:8080');
 
-// //tables in DB
-// define('USER_BASE', 'user');
-// define('RESERVATION_BASE', 'reservation');
-// define('BUILDING_BASE', 'building');
-// define('ROOM_BASE', 'room');
-// define('ACCES_BASE', 'access');
-// define('LOG_BASE', 'log');
-// define('ADDRESS_BASE', 'address');
-// define('ROOM_TYPE_BASE', 'room_type');
 
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
 
@@ -23,8 +14,7 @@ date_default_timezone_set("Europe/Warsaw");
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../interfaces/DBInterface.php';
-require_once __DIR__ . '/../interfaces/ViewInterface.php';
+require_once __DIR__ . '/../utils/DBInterface.php';
 
 require_once __DIR__ . '/../middleware/AuthorizationMiddleware.php';
 require_once __DIR__ . '/../middleware/JWTMiddleware.php';
@@ -52,6 +42,7 @@ require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AddressController.php';
 require_once __DIR__ . '/../controllers/RoomTypeController.php';
 
+require_once __DIR__ . '/../utils/Validator.php';
 /*
 require_once __DIR__ . '/../exceptions/NothingFoundException.php';
 require_once __DIR__ . '/../exceptions/UnUpdetableParameterException.php';

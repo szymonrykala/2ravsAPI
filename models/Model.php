@@ -1,5 +1,6 @@
 <?php
 
+use Slim\Exception\HttpException;
 use Slim\Exception\HttpNotImplementedException;
 
 abstract class Model
@@ -9,6 +10,8 @@ abstract class Model
     protected $DB = null;
     protected $tableName = null;
     protected $queryStringParams = [];
+    protected $searchParams = [];
+    protected $searchMode = "=";
 
     public function __construct(DBInterface $DBInterface)
     {
@@ -25,21 +28,49 @@ abstract class Model
          * @param array $params
          * @return void
          */
-        foreach ($params as $key => $value) {
-            if (!in_array($key, ['limit', 'page', 'on_page', 'sort', 'sort_key'])) {
-                unset($params[$key]);
-            }
-        }
-        if (isset($params['sort_key']) && !in_array($params['sort_key'], $this->columns)) {
-            unset($params['sort_key']);
-        }
-        if (isset($params['page']) && $params['page'] < 0) {
-            unset($params['page']);
-        }
+        // checking right format of variables
+        if (isset($params['limit'])     && !is_numeric($params['limit']))                           unset($params['limit']);
+        if (isset($params['on_page'])   && !is_numeric($params['on_page']))                         unset($params['on_page']);
+        if (isset($params['page'])      && ($params['page'] < 0 || !is_numeric($params['page'])))   unset($params['page']);
+        if (isset($params['sort_key'])  && !in_array($params['sort_key'], $this->columns))          unset($params['sort_key']);
+        if (isset($params['sort'])      && !in_array(strtoupper($params['sort']), ['DESC', 'ASC'])) unset($params['sort']);
+
         $this->queryStringParams = $params;
     }
 
-    protected function filterVariables(array $data): array
+    public function setSearch(string $mode = "=", array $params = []): void
+    {
+        $regex = strtoupper($mode) === 'REGEXP' ? '/[\w\s%-:\.\*\|\{\}\[\]\(\)\?\+\\\,]*/' : '/[\w\s:%-]*/';
+
+        foreach ($params as $key => &$value) {
+            if (!in_array($key, $this->columns)) unset($params[$key]);
+
+            preg_match($regex, $value, $output_array);
+            $value = $output_array[0];
+        }
+        $this->searchMode = $mode;
+        $this->searchParams = $params;
+    }
+
+    private function buildDataString(array $params, string $connector = null): array
+    {
+        /**
+         * Building data array and SQL string to PDO
+         * 
+         * @param array $params - array data
+         * @param string $connector=null - LIKE, =, <, >, REGEXP 
+         */
+        if (!isset($connector)) $connector = $this->searchMode; // by default: '='
+        $queryParams = [];
+        $sql = "";
+        foreach ($params as $key => $value) {
+            $sql .= " AND `$this->tableName`.`$key` $connector :$key";
+            $queryParams[":$key"] = $value;
+        }
+        return ['sql' => $sql, 'params' => $queryParams];
+    }
+
+    protected function filterVariables(array &$data): void
     {
         /**
          * Unsetting unexpected variables from params
@@ -47,12 +78,6 @@ abstract class Model
          * @param array $params
          * @return array $params filtered
          */
-        foreach ($data as $key => $value) {
-            if (!in_array($key, $this->columns)) {
-                unset($data[$key]);
-            }
-        }
-        return $data;
     }
 
     public function exist(array $params): bool
@@ -64,20 +89,15 @@ abstract class Model
          * @return bool
          */
         $sql = "SELECT id FROM $this->tableName WHERE 1=1 ";
-        $queryParams = array();
-
-        foreach ($params as $key => $value) {
-            $sql .= " AND $key=:$key";
-            $queryParams[":$key"] = $value;
-        }
+        ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, "=");
+        $sql .= $sqlData;
 
         return !empty($this->DB->query($sql, $queryParams));
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         throw new Exception("Mode::parseData(array \$data) need to be implemented", 501);
-        return $data;
     }
 
     public function read(array $params = []): array
@@ -92,68 +112,45 @@ abstract class Model
          * @throws LengthException when nothing found
          * @return array $result
          */
-
-        $params = $this->parseData($params);
-
-        $sql = "SELECT * FROM $this->tableName WHERE 1=1";
-        $queryParams = array();
-
         foreach ($params as $key => $value) {
-            $sql .= " AND $key=:$key";
-            $queryParams[":$key"] = $value;
+            if (!in_array($key, $this->columns)) {
+                unset($params[$key]);
+            }
+        }
+        $this->parseData($params);
+
+        // =========MENAGE SEARCHING=========
+        $searchSQL = '';
+        $searchParams = [];
+        if (!empty($this->searchParams)) {
+            ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
 
+        // ======== NORMAL READING ===========
+        $sql = "SELECT * FROM `$this->tableName` WHERE 1=1";
+        ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
+
+        $sql .= $sqlData .= $searchSQL;
+        $queryParams = array_merge($searchParams, $queryParams);
+
+        // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
-        if (isset($sort_key) && isset($sort)) {
-            $sql .= " ORDER BY $sort_key $sort";
-        } elseif (isset($sort_key)) {
-            $sql .= " ORDER BY $sort_key";
-        } elseif (isset($sort)) {
-            $sql .= " ORDER BY id $sort";
-        }
+        if (isset($sort_key, $sort))   $sql .= " ORDER BY $sort_key $sort";
+        elseif (isset($sort_key))               $sql .= ' ORDER BY ' . $sort_key;
+        elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
 
-        if (isset($limit)) {
-            $limit = intval($limit);
-            $sql .= " LIMIT $limit";
-        } elseif (isset($page) && isset($on_page)) {
-            $page = intval($page);
-            $on_page = intval($on_page);
-            $sql .= " LIMIT " . ($page) . ", " . ($on_page);
-        }
+
+        if (isset($limit))                       $sql .= ' LIMIT ' . (int)$limit;
+        elseif (isset($page, $on_page)) $sql .= ' LIMIT ' . (int)$page . ', ' . (int)$on_page;
+        // =======================================================
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($params), 404);
+            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams), 404);
         }
         foreach ($result as &$r) {
-            $r = $this->parseData($r);
-        }
-        return $result;
-    }
-
-    // searching with LIKE %param%
-    public function search(array $params, string $sortKey = 'id', string $direction  = 'DESC')
-    {
-        $params = $this->filterVariables($params);
-        $params = $this->parseData($params);
-
-        $sql = "SELECT * from $this->tableName WHERE 1=1";
-        $queryParams = array();
-
-        foreach ($params as $key => $value) {
-            $sql .= " AND $key LIKE :$key";
-            $queryParams[":$key"] = "%$value%";
-        }
-        $sql .= " ORDER BY $sortKey $direction";
-
-        $result = $this->DB->query($sql, $queryParams);
-        if (empty($result)) {
-            throw new UnexpectedValueException("Nothing Found in $this->tableName with search params:" . json_encode($params), 404);
-        }
-
-        foreach ($result as &$r) {
-            $r = $this->parseData($r);
+            $this->parseData($r);
         }
         return $result;
     }
@@ -170,16 +167,12 @@ abstract class Model
             throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.", 404);
         }
 
-        $params = $this->filterVariables($params);
-        $params = $this->parseData($params);
-
         $sql = "UPDATE $this->tableName SET";
         $queryParams = array();
 
         foreach ($params as $key => $value) {
-            if (in_array($key, $this->unUpdateAble)) {
-                continue;
-            }
+            if (in_array($key, $this->unUpdateAble)) continue;
+
             count($queryParams) >= 1 ? $sql .= "," : null;
             $sql .= " $key=:$key";
             $queryParams[":$key"] = $value;
