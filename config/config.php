@@ -23,8 +23,7 @@ date_default_timezone_set("Europe/Warsaw");
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../interfaces/DBInterface.php';
-require_once __DIR__ . '/../interfaces/ViewInterface.php';
+require_once __DIR__ . '/../utils/DBInterface.php';
 
 require_once __DIR__ . '/../middleware/AuthorizationMiddleware.php';
 require_once __DIR__ . '/../middleware/JWTMiddleware.php';
