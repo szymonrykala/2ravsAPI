@@ -15,7 +15,6 @@ class ReservationController extends Controller
      * Implement endpoints related with reservations
      */
     private $Reservation;
-    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -23,7 +22,7 @@ class ReservationController extends Controller
         $this->Reservation = $this->DIcontainer->get('Reservation');
     }
 
-    public function validateReservation(Request $request, array &$data): void
+    public function validateReservation(Request &$request, array &$data): void
     {
         /**
          * Validate Reservation
@@ -49,7 +48,7 @@ class ReservationController extends Controller
         foreach (['end_time', 'start_time'] as $item) {
             if (isset($data[$item])) {
                 if (!$Validator->validateTime($data[$item])) {
-                    throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' format; pattern: hh-mm-ss.');
+                    throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' format; pattern: hh:mm:ss.');
                 }
             }
         }
