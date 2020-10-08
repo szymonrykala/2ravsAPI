@@ -16,7 +16,7 @@ class User extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {
             switch ($key) {
@@ -37,13 +37,10 @@ class User extends Model
                     break;
             }
         }
-        return $data;
     }
 
     public function create(array $data): int
     {
-        $data = $this->parseData($data);
-
         $data['name'] = preg_replace('/\s/', '', $data['name']);
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 

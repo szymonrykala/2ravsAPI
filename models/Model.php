@@ -59,8 +59,8 @@ abstract class Model
          * 
          * @param array $params - array data
          * @param string $connector=null - LIKE, =, <, >, REGEXP 
-        */
-        if (!isset($connector)) $connector = $this->searchMode;// by default: '='
+         */
+        if (!isset($connector)) $connector = $this->searchMode; // by default: '='
         $queryParams = [];
         $sql = "";
         foreach ($params as $key => $value) {
@@ -78,11 +78,6 @@ abstract class Model
          * @param array $params
          * @return array $params filtered
          */
-        foreach ($data as $key => $value) {
-            if (!in_array($key, $this->columns)) {
-                unset($data[$key]);
-            }
-        }
     }
 
     public function exist(array $params): bool
@@ -100,10 +95,9 @@ abstract class Model
         return !empty($this->DB->query($sql, $queryParams));
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         throw new Exception("Mode::parseData(array \$data) need to be implemented", 501);
-        return $data;
     }
 
     public function read(array $params = []): array
@@ -118,8 +112,12 @@ abstract class Model
          * @throws LengthException when nothing found
          * @return array $result
          */
-        $this->filterVariables($params);
-        $params = $this->parseData($params);
+        foreach ($params as $key => $value) {
+            if (!in_array($key, $this->columns)) {
+                unset($params[$key]);
+            }
+        }
+        $this->parseData($params);
 
         // =========MENAGE SEARCHING=========
         $searchSQL = '';
@@ -138,13 +136,13 @@ abstract class Model
         // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
-        if (isset($sort_key) && isset($sort))   $sql .= " ORDER BY $sort_key $sort";
+        if (isset($sort_key, $sort))   $sql .= " ORDER BY $sort_key $sort";
         elseif (isset($sort_key))               $sql .= ' ORDER BY ' . $sort_key;
         elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
 
 
         if (isset($limit))                       $sql .= ' LIMIT ' . (int)$limit;
-        elseif (isset($page) && isset($on_page)) $sql .= ' LIMIT ' . (int)$page . ', ' . (int)$on_page;
+        elseif (isset($page, $on_page)) $sql .= ' LIMIT ' . (int)$page . ', ' . (int)$on_page;
         // =======================================================
 
         $result = $this->DB->query($sql, $queryParams);
@@ -152,7 +150,7 @@ abstract class Model
             throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams), 404);
         }
         foreach ($result as &$r) {
-            $r = $this->parseData($r);
+            $this->parseData($r);
         }
         return $result;
     }
@@ -168,9 +166,6 @@ abstract class Model
         if (!$this->exist(['id' => $id])) {
             throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.", 404);
         }
-
-        $this->filterVariables($params);
-        $params = $this->parseData($params);
 
         $sql = "UPDATE $this->tableName SET";
         $queryParams = array();

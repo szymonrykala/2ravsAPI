@@ -12,7 +12,7 @@ class Address extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {
             switch ($key) {
@@ -24,14 +24,10 @@ class Address extends Model
                     break;
             }
         }
-        return $data;
     }
 
     public function create(array $data): int
     {
-        $data = $this->filterVariables($data);
-        $data = $this->parseData($data);
-
         if ($this->exist($data))
         {
             throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);

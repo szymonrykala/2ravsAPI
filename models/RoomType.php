@@ -15,7 +15,7 @@ class RoomType extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         /**
          * Used for parsing data to right data type
@@ -37,7 +37,6 @@ class RoomType extends Model
                     break;
             }
         }
-        return $data;
     }
 
     public function create(array $data): int
@@ -48,8 +47,6 @@ class RoomType extends Model
          * @param array $data array with params:name
          * @return int inserted item index
          */
-        $data = $this->filterVariables($data);
-        $data = $this->parseData($data);
 
         if ($this->exist($data))
         {

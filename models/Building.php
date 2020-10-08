@@ -15,7 +15,7 @@ class Building extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         /**
          * Used for parsing data to right data type
@@ -33,7 +33,6 @@ class Building extends Model
                     break;
             }
         }
-        return $data;
     }
 
     public function create(array $data): int

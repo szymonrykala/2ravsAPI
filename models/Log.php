@@ -12,7 +12,7 @@ class Log extends Model
         parent::__construct($db);
     }
 
-    public function parseData(array $data): array
+    public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {
             if ($value === null) {
@@ -30,13 +30,10 @@ class Log extends Model
                     break;
             }
         }
-        return $data;
     }
 
     public function create(array $data): int
     {
-        $data = $this->parseData($data);
-
         foreach ($this->columns as $key) {
             if (!isset($data[$key])) {
                 $data[$key] = Null;
