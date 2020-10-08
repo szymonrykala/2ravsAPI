@@ -22,7 +22,7 @@ class AddressController extends Controller
         $this->Address = $this->DIcontainer->get('Address');
     }
 
-    public function validateAddress(array &$data): void
+    public function validateAddress(Request $request, array &$data): void
     {
         /**
          * Validate Address
@@ -35,12 +35,12 @@ class AddressController extends Controller
             if (isset($data[$item])) {
                 if (
                     !$Validator->validateClearString($data[$item])
-                ) throw new HttpBadRequestException($this->request, 'Incorrect ' . $item . ' value; patern: '.$Validator->clearString);
+                ) throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' value; patern: ' . $Validator->clearString);
                 $data[$item] = $Validator->sanitizeString($data[$item]);
             }
         }
         if (isset($data['postal_code']) && !$Validator->validatePostalCode($data['postal_code'])) {
-            throw new HttpBadRequestException($this->request, 'Incorrect postal code value- example format; pattern: '.$Validator->postalCode);
+            throw new HttpBadRequestException($request, 'Incorrect postal code value- example format; pattern: ' . $Validator->postalCode);
         }
     }
 
@@ -90,7 +90,7 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        $this->request = $request;
+
         $data = $this->getFrom($request, [
             'country' => 'string',
             'town' => 'string',
@@ -99,7 +99,7 @@ class AddressController extends Controller
             'number' => 'string'
         ], true);
 
-        $this->validateAddress($data);
+        $this->validateAddress($request, $data);
 
         $lastIndex = $this->Address->create($data);
         $this->Log->create([
@@ -122,7 +122,7 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        $this->request = $request;
+
         $data = $this->getFrom($request, [
             'country' => 'string',
             'town' => 'string',
@@ -131,7 +131,7 @@ class AddressController extends Controller
             'number' => 'string'
         ], false);
 
-        $this->validateAddress($data);
+        $this->validateAddress($request, $data);
 
         $addressID = $args['address_id'];
         $this->Address->update($addressID, $data);

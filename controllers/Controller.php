@@ -1,5 +1,6 @@
 <?php
 
+use DI\Definition\Resolver\ObjectCreator;
 use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -72,12 +73,12 @@ abstract class Controller
             if (gettype($value) !== $parameters[$key]) {
                 throw new HttpBadRequestException($request, "Bad variable type passed. Variable '$key' need to be a type of " . $parameters[$key]);
             }
-            if (
-                $parameters[$key] === 'string' &&
-                !filter_var($value, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[\w\s@\.,:-]+$/u']])
-            ) {
-                throw new HttpBadRequestException($request, "Incorrect variable value. Variable '$key' has incorrect value; pattern:/^[\w\s@\.,:-]+$/u");
-            }
+            // if (
+            //     $parameters[$key] === 'string' &&
+            //     !filter_var($value, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[\w\s\.!@#$%^&*]+$/u']])
+            // ) {
+            //     throw new HttpBadRequestException($request, "Incorrect variable value. Variable '$key' has incorrect value; pattern: /^[\w\s\.!@#$%^&*]+$/u");
+            // }
 
             $outputData[$key] = $value;
         }

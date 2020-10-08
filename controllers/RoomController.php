@@ -21,7 +21,7 @@ class RoomController extends Controller
         $this->Room = $this->DIcontainer->get('Room');
     }
 
-    public function validateRoom(array &$data): void
+    public function validateRoom(Request $request, array &$data): void
     {
         /**
          * Validate Room
@@ -30,21 +30,17 @@ class RoomController extends Controller
          * @throws HttpBadRequestException
          */
         $Validator = $this->DIcontainer->get('Validator');
-        foreach (['name'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateClearString($data[$item])) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect room ' . $item . ' value; pattern: '.$Validator->clearString);
-                }
+        if (isset($data['name'])) {
+            if (!$Validator->validateClearString($data['name'])) {
+                throw new HttpBadRequestException($request, 'Incorrect room name value; pattern: ' . $Validator->clearString);
             }
         }
-        
-        foreach (['equipment'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateString($data[$item], 1)) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect room ' . $item . ' value (min 3 char. length).');
-                }
-                $data[$item] = $Validator->sanitizeString($data[$item]);
+
+        if (isset($data['equipment'])) {
+            if (!$Validator->validateString($data['equipment'], 1)) {
+                throw new HttpBadRequestException($request, 'Incorrect room equipment value (min 1 char. length).');
             }
+            $data['equipment'] = $Validator->sanitizeString($data['equipment']);
         }
     }
 
@@ -97,7 +93,7 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
-        $this->request = $request;
+
         $buildingID = (int) $args['building_id'];
         $data = $this->getFrom($request, [
             'name' => "string",
@@ -107,7 +103,7 @@ class RoomController extends Controller
             'equipment' => 'string'
         ], true);
 
-        $this->validateRoom($data);
+        $this->validateRoom($request, $data);
 
         $data['building_id'] = $buildingID;
         $lastIndex = $this->Room->create($data);
@@ -142,7 +138,7 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
-        $this->request = $request;
+
         $roomID = (int) $args['room_id'];
         $buildingID = (int) $args['building_id'];
 
@@ -154,7 +150,7 @@ class RoomController extends Controller
             'equipment' => 'string'
         ], false);
 
-        $this->validateRoom($data);
+        $this->validateRoom($request, $data);
 
         $this->Room->update($roomID, $data);
 

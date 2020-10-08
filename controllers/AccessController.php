@@ -18,7 +18,7 @@ class AccessController extends Controller
         $this->Access = $DIcontainer->get('Access');
     }
 
-    public function validateAccess(array &$data): void
+    public function validateAccess(Request $request, array &$data): void
     {
         /**
          * Validate Access
@@ -28,8 +28,8 @@ class AccessController extends Controller
          */
         $Validator = $this->DIcontainer->get('Validator');
         if (isset($data['name'])) {
-            if (!$Validator->validateString($data['name'], 4)) {
-                throw new HttpBadRequestException($this->request, 'Incorrect access name value. Minimum name length = 4.');
+            if (!$Validator->validateString($data['name'])) {
+                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: '.$Validator->clearString);
             }
             $data['name'] = $Validator->sanitizeString($data['name']);
         }
@@ -89,7 +89,7 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        $this->request = $request;
+
         $data = $this->getFrom($request, [
             "name" => 'string',
             "access_edit" => 'boolean',
@@ -106,7 +106,7 @@ class AccessController extends Controller
             "statistics_view" => 'boolean',
         ], true);
 
-        $this->validateAccess($data);
+        $this->validateAccess($request, $data);
 
         $newID = $this->Access->create($data);
         $this->Log->create([
@@ -143,7 +143,7 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        $this->request = $request;
+
         $data = $this->getFrom($request, [
             "name" => 'string',
             "access_edit" => 'boolean',
@@ -160,7 +160,7 @@ class AccessController extends Controller
             "statistics_view" => 'boolean',
         ], false);
 
-        $this->validateAccess($data);
+        $this->validateAccess($request, $data);
 
         $this->Access->update($args['access_id'], $data);
         $this->Log->create([

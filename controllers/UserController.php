@@ -16,8 +16,7 @@ require_once __DIR__ . "/Controller.php";
 
 class UserController extends Controller
 {
-    private $User = null;
-    private $request = null;
+    private $User;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -48,7 +47,7 @@ class UserController extends Controller
         return base64_encode(random_bytes($len));
     }
 
-    public function validateUser(array &$data): void
+    public function validateUser(Request $request, array &$data): void
     {
         /**
          * Validate User
@@ -60,7 +59,7 @@ class UserController extends Controller
         foreach (['name', 'surname'] as $item) {
             if (isset($data[$item])) {
                 if (!$Validator->validateClearString($data[$item])) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect user ' . $item . ' value; pattern: ' . $Validator->clearString);
+                    throw new HttpBadRequestException($request, 'Incorrect user ' . $item . ' value; pattern: ' . $Validator->clearString);
                 }
             }
         }
@@ -68,13 +67,13 @@ class UserController extends Controller
         foreach (['password', 'old_password', 'repeat_password'] as $item) {
             if (isset($data[$item])) {
                 if (!$Validator->validatePassword($data[$item])) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect user ' . $item . ' value; pattern: ' . $Validator->password);
+                    throw new HttpBadRequestException($request, 'Incorrect user ' . $item . ' format; pattern: ' . $Validator->password);
                 }
             }
         }
 
         if (isset($data['email']) && !$Validator->validateEmail($data['email'])) {
-            throw new HttpBadRequestException($this->request, 'Incorrect user email value');
+            throw new HttpBadRequestException($request, 'Incorrect user email value');
         }
     }
 
@@ -171,7 +170,6 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $this->$request = $request;
         list(
             'name' => $name,
             'surname' => $surname,
@@ -186,20 +184,18 @@ class UserController extends Controller
             'surname' => 'string'
         ), true);
 
-        if ($password !== $repeat_password) throw new HttpBadRequestException($this->request, 'Given password and repeat_password are not the same');
-
-        $this->validateUser($data);
-
-        $randomKey = $this->getRandomKey(60);
+        if ($password !== $repeat_password) throw new HttpBadRequestException($request, 'Given password and repeat_password are not the same');
 
         $userData = [
             'name' => $name,
             'surname' => $surname,
             'password' => $password,
             'email' => $email,
-            'action_key' => $randomKey
+            'action_key' => $this->getRandomKey(60)
         ];
 
+        $this->validateUser($request, $userData);
+        
         $userID = $this->User->create($userData);
         unset($userData['password']);
         $this->Log->create(array(
@@ -305,7 +301,7 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $this->$request = $request;
+
         $data = $this->getFrom($request, [
             'email' => 'string',
             'old_password' => 'string',
@@ -315,7 +311,7 @@ class UserController extends Controller
             'access_id' => 'integer'
         ], false);
 
-        $this->validateUser($data);
+        $this->validateUser($request, $data);
 
         $currentUser = (int) $request->getAttribute('user_id');
         $accessID = $request->getAttribute('access_id');
@@ -326,14 +322,14 @@ class UserController extends Controller
             $Access = $this->DIcontainer->get("Access");
             if (
                 (bool)$Access->read(['id' => $accessID])[0]['access_edit'] === false
-            ) throw new HttpUnauthorizedException($this->request, 'You do not have acces to edit user access_id');
+            ) throw new HttpUnauthorizedException($request, 'You do not have acces to edit user access_id');
         }
 
         $editedUser = $this->User->read(['id' => $args['userID']])[0];
 
         if (isset($data['old_password'], $data['new_password'])) {
             if ($data['old_password'] === $data['new_password']) {
-                throw new HttpBadRequestException($this->request, 'Incorrect passowrds values - old_password and new_password can not be the same');
+                throw new HttpBadRequestException($request, 'Incorrect passowrds values - old_password and new_password can not be the same');
             }
             if (password_verify($data['old_password'], $editedUser['password'])) {
                 $data['password'] = password_hash($data['new_password'], PASSWORD_BCRYPT, ['cost' => 12]);

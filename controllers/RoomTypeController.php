@@ -22,7 +22,7 @@ class RoomTypeController extends Controller
         $this->Type = $this->DIcontainer->get('RoomType');
     }
 
-    public function validateRoomType(array &$data): void
+    public function validateRoomType(Request $request, array &$data): void
     {
         /**
          * Validate Room type
@@ -34,7 +34,7 @@ class RoomTypeController extends Controller
         foreach (['name'] as $item) {
             if (isset($data[$item])) {
                 if (!$Validator->validateClearString($data[$item])) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect room type' . $item . ' value; pattern: ' . $Validator->clearString);
+                    throw new HttpBadRequestException($request, 'Incorrect room type' . $item . ' value; pattern: ' . $Validator->clearString);
                 }
             }
         }
@@ -78,10 +78,10 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $this->$request = $request;
+
         $data = $this->getFrom($request, ["name" => "string"], true);
 
-        $this->validateRoomType($data);
+        $this->validateRoomType($request, $data);
 
         $lastIndex = $this->Type->create($data);
         $this->Log->create([
@@ -104,12 +104,11 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $this->$request = $request;
         $typeID = (int)$args['room_type_id'];
 
         $data = $this->getFrom($request, ["name" => "string"], false);
 
-        $this->validateRoomType($data);
+        $this->validateRoomType($request, $data);
 
         $this->Type->update($typeID, $data);
 

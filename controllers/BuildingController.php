@@ -22,7 +22,7 @@ class BuildingController extends Controller
         $this->Building = $this->DIcontainer->get('Building');
     }
 
-    public function validateBuilding(array &$data): void
+    public function validateBuilding(Request $request, array &$data): void
     {
         /**
          * Validate Building
@@ -31,12 +31,11 @@ class BuildingController extends Controller
          * @throws HttpBadRequestException
          */
         $Validator = $this->DIcontainer->get('Validator');
-            if (isset($data['name'])) {
-                if (!$Validator->validateClearString($data['name'])) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect building name value; pattern: '.$Validator->clearString);
-                }
+        if (isset($data['name'])) {
+            if (!$Validator->validateClearString($data['name'])) {
+                throw new HttpBadRequestException($request, 'Incorrect building name value; pattern: ' . $Validator->clearString);
             }
-        
+        }
     }
 
     // GET /buildings
@@ -83,14 +82,14 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $this->request = $request;
+
         $data = $this->getFrom(
             $request,
             ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
             true
         );
 
-        $this->validateBuilding($data);
+        $this->validateBuilding($request, $data);
 
         $Address = $this->DIcontainer->get("Address");
         if (!$Address->exist(['id' => $data['address_id']])) {
@@ -127,14 +126,14 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $this->request = $request;
+
         $data = $this->getFrom(
             $request,
             ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
             false
         );
 
-        $this->validateBuilding($data);
+        $this->validateBuilding($request, $data);
 
         $userMail = $request->getAttribute('email');
         $userID = $request->getAttribute('user_id');

@@ -23,7 +23,7 @@ class ReservationController extends Controller
         $this->Reservation = $this->DIcontainer->get('Reservation');
     }
 
-    public function validateReservation(array &$data): void
+    public function validateReservation(Request $request, array &$data): void
     {
         /**
          * Validate Reservation
@@ -32,24 +32,30 @@ class ReservationController extends Controller
          * @throws HttpBadRequestException
          */
         $Validator = $this->DIcontainer->get('Validator');
-        foreach (['title', 'subtitle'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateString($data[$item], 3)) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect reservation ' . $item . ' value (min 3 char. length).');
-                }
-                $data[$item] = $Validator->sanitizeString($data[$item]);
+
+        if (isset($data['subtitle'])) {
+            if (!$Validator->validateString($data['subtitle'], 3)) {
+                throw new HttpBadRequestException($request, 'Incorrect reservation ' . 'subtitle' . ' value (min 3 char. length).');
+            } else {
+                $data['subtitle'] = $Validator->sanitizeString($data['subtitle']);
             }
         }
+
+        if (
+            isset($data['title']) &&
+            !$Validator->validateClearString($data['title'])
+        ) throw new HttpBadRequestException($request, 'Incorrect reservation title format; pattern: ' . $Validator->clearString);
+
         foreach (['end_time', 'start_time'] as $item) {
             if (isset($data[$item])) {
-                if (!$Validator->validateTime($data[$item], 3)) {
-                    throw new HttpBadRequestException($this->request, 'Incorrect ' . $item . ' format; pattern: hh-mm-ss.');
+                if (!$Validator->validateTime($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' format; pattern: hh-mm-ss.');
                 }
             }
         }
         if (isset($data['date'])) {
-            if (!$Validator->validateTime($data['date'], 3)) {
-                throw new HttpBadRequestException($this->request, 'Incorrect date format; pattern: yyyy-mm-dd.');
+            if (!$Validator->validateDate($data['date'])) {
+                throw new HttpBadRequestException($request, 'Incorrect date format; pattern: yyyy-mm-dd.');
             }
         }
     }
@@ -129,19 +135,13 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $this->request = $request;
+
         $currentUser = $request->getAttribute('user_id');
         $currentUserMail = $request->getAttribute('email');
         $buildingID = (int)$args['building_id'];
         $roomID = (int)$args['room_id'];
 
-        list(
-            "title" => $title,
-            "subtitle" => $subtitle,
-            "start_time" => $startTime,
-            "end_time" => $endTime,
-            "date" => $date
-        ) = $this->getFrom($request, [
+        $data = $this->getFrom($request, [
             "title" => 'string',
             "subtitle" => "string",
             "start_time" => "string",
@@ -149,24 +149,14 @@ class ReservationController extends Controller
             "date" => "string"
         ], true);
 
-        $this->validateReservation([
-            "title" => $title,
-            "subtitle" => $subtitle,
-            "start_time" => $startTime,
-            "end_time" => $endTime,
-            "date" => $date
-        ]);
+        $this->validateReservation($request, $data);
 
-        $reservationData = [
-            "title" => $title,
-            "subtitle" => $subtitle,
-            "start_time" => $startTime,
-            "end_time" => $endTime,
-            "date" => $date,
+        $reservationData = array_merge($data, [
             "room_id" => $roomID,
             "building_id" => $buildingID,
             "user_id" => $currentUser
-        ];
+        ]);
+        
         $reservationID = $this->Reservation->create($reservationData);
         $this->Log->create([
             'user_id' => $currentUser,
@@ -200,7 +190,7 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $this->request = $request;
+
         $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
         if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can ot update confirmed Reservation');
 
@@ -212,7 +202,7 @@ class ReservationController extends Controller
             "date" => "string"
         ], false);
 
-        $this->validateReservation($data);
+        $this->validateReservation($request, $data);
 
         $currentUserMail = $request->getAttribute('email');
 
