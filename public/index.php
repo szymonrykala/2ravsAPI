@@ -31,25 +31,7 @@ $DIcontainer->set('User', new User(new Database()));
 $DIcontainer->set('Address', new Address(new Database()));
 $DIcontainer->set('RoomType', new RoomType(new Database()));
 $DIcontainer->set('Validator', new Validator());
-
-function myErrorHandler(Throwable $e)
-{
-    $data = [
-        'error' => [
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            // 'trace' => $e->getTrace(),
-            'code' => $e->getCode()
-        ]
-    ];
-    http_response_code($e->getCode());
-    header('content-type:application/json');
-    echo json_encode($data);
-    return true;
-}
-set_exception_handler("myErrorHandler");
-
+$DIcontainer->set('MailSender', new MailSender());
 
 
 $rootApp->post('/v1/auth', \UserController::class . ':verifyUser'); //open endpoint
