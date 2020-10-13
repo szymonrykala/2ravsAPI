@@ -195,17 +195,20 @@ class UserController extends Controller
         ];
 
         $this->validateUser($request, $userData);
-        
+
         $userID = $this->User->create($userData);
+        
+        $MailSender = $this->DIcontainer->get('MailSender');
+        $MailSender->setUser($userData, $_SERVER['HTTP_HOST']);
+        $MailSender->setMailSubject('User Activation');
+        $MailSender->send();
+
         unset($userData['password']);
         $this->Log->create(array(
             'user_id' => $userID,
             'message' => "User $email has been registered data:" . json_encode($userData)
         ));
 
-        /* Mail->register($key)->sendTo($email); */
-
-        // $response->getBody()->write("");
         return $response->withStatus(201, "Created");
     }
 
