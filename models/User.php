@@ -59,7 +59,8 @@ class User extends Model
                 ':surname' => $data['surname'],
                 ':password' => $data['password'],
                 ':email' => $data['email'],
-                ':action_key' => $data['action_key']
+                ':action_key' => $data['action_key'],
+                ':access_id' => DEFAULT_ACCESS
             )
         );
         return $this->DB->lastInsertID();

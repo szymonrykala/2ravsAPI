@@ -191,7 +191,7 @@ class UserController extends Controller
             'surname' => $surname,
             'password' => $password,
             'email' => $email,
-            'action_key' => $this->getRandomKey(60)
+            'action_key' => $this->getRandomKey(6)
         ];
 
         $this->validateUser($request, $userData);

@@ -5,6 +5,7 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 
 define('SENDER_MAIL','noreply@maciejkossowski.pl');
+define('DEFAULT_ACCESS',1);
 
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
 
