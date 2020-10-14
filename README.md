@@ -3,6 +3,11 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[14.10.2020]
+### Added
+ - .hatacces
+ - sending emails to new users with activation code
+
 [06-10-2020]
 ### Added
  - Validator::class utility
