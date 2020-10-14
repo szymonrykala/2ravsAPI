@@ -449,7 +449,7 @@ CREATE TABLE `users` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `activated` tinyint(1) NOT NULL DEFAULT 0,
   `login_fails` int(11) NOT NULL DEFAULT 0,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `action_key` tinytext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

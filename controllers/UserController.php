@@ -7,6 +7,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
+use Slim\Exception\HttpException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotImplementedException;
 use Slim\Exception\HttpUnauthorizedException;
@@ -199,7 +200,7 @@ class UserController extends Controller
         $userID = $this->User->create($userData);
 
         $MailSender = $this->DIcontainer->get('MailSender');
-        $MailSender->setUser($userData, $_SERVER['HTTP_HOST']);
+        $MailSender->setUser($userData);
         $MailSender->setMailSubject('User Activation');
         $MailSender->send();
 
@@ -221,7 +222,8 @@ class UserController extends Controller
          * {
          *      "password" : "",
          *      "email" : "",
-         *      "activation_key" : ""
+         *      "activation_key" : "",
+         *      "action" : "resend" | "activate"
          * }
          * 
          * @param Request $request
@@ -230,24 +232,61 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        ['password' => $password, 'email' => $email, 'activation_key' => $key] = $this->getFrom($request, [
+        ['password' => $password, 'email' => $email, 'key' => $key, 'action' => $action] = $this->getFrom($request, [
             'password' => 'string',
             'email' => 'string',
-            'activation_key' => 'string'
-        ]);
-        $user = $this->User->read(['action_key' => $key, 'email' => $email])[0];
+            'key' => 'string',
+            'action' => 'string'
+        ], true);
+
+        $user = $this->User->read(['email' => $email])[0];
 
         if (!password_verify($password, $user['password'])) {
             throw new HttpBadRequestException($request, "Given password is not correct");
         }
+        if ((bool)$user['activated'] === true) {
+            throw new HttpException($request, "Given user is already activated!", 409);
+        }
 
-        $this->User->update($user['id'], ['activated' => 1, 'action_key' => '1']);
-        $this->Log->create([
-            'user_id' => $user['id'],
-            'message' => 'Account user ' . $user['email'] . 'was activated'
-        ]);
+        switch ($action) {
+            case 'resend':
+                $userData = [
+                    'name' => $user['name'],
+                    'surname' => $user['surname'],
+                    'email' => $email,
+                    'action_key' => $this->getRandomKey(6)
+                ];
+                $this->User->update($user['id'], ['action_key' => $userData['action_key']]);
 
-        $response->getBody()->write(json_encode('User succesfully activated'));
+                $MailSender = $this->DIcontainer->get('MailSender');
+                $MailSender->setUser($userData);
+                $MailSender->setMailSubject('User Activation');
+                $MailSender->send();
+
+                $this->Log->create([
+                    'user_id' => $user['id'],
+                    'message' => 'Account user ' . $user['email'] . 'was requested new activation email'
+                ]);
+
+                $response->getBody()->write(json_encode('Your Code has been resended'));
+                break;
+
+            case 'activate':
+                if($user['action_key'] !== $key){
+                    throw new HttpBadRequestException($request,'Your activation key is not correct');
+                }
+                $this->User->update($user['id'], ['activated' => 1, 'action_key' => '1']);
+                $this->Log->create([
+                    'user_id' => $user['id'],
+                    'message' => 'Account user ' . $user['email'] . 'was activated'
+                ]);
+
+                $response->getBody()->write(json_encode('User succesfully activated'));
+                break;
+            default:
+                throw new HttpBadRequestException($request, 'You have to specified action to `activate` or `resend`');
+                break;
+        }
         return $response->withStatus(200);
     }
 
