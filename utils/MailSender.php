@@ -32,14 +32,14 @@ class MailSender
             <!DOCTYPE html>
             <html lang='en'>
                 <head>
-                    <meta charset='UTF-8'>
+                    <meta http-equiv='Content-Type' content='text/html charset=UTF-8' />
                     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                     <title>$this->mailSubject</title>
                 </head>
                 <body>
                     <h1>Hi $this->userName !</h1>
                     <h3>Thank You for joining us</h3>
-                    <p>Your activation key is: $this->userKey</p>
+                    <p>Your activation key is: <b>$this->userKey</b></p>
                 </body>
             </html>
             ";
