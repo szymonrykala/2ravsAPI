@@ -14,7 +14,6 @@ class RoomTypeController extends Controller
      * 
      */
     private $Type = null;
-    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
