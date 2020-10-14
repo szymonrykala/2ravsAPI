@@ -4,6 +4,8 @@ define('DSN', "mysql:host=localhost;dbname=ravs;charset=utf8mb4");
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
+define('SENDER_MAIL','noreply@maciejkossowski.pl');
+
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
 
 date_default_timezone_set("Europe/Warsaw");
