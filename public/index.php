@@ -36,7 +36,7 @@ $DIcontainer->set('MailSender', new MailSender());
 
 $rootApp->post('/v1/auth', \UserController::class . ':verifyUser'); //open endpoint
 $rootApp->post('/v1/users', \UserController::class . ':registerNewUser'); // open endpoint
-$rootApp->get('/v1/users/activate', \UserController::class . ':activateUser'); // open endpoint
+$rootApp->post('/v1/users/activate', \UserController::class . ':activateUser'); // open endpoint
 
 $rootApp->group('/v1', function (\Slim\Routing\RouteCollectorProxy $appV1) {
 

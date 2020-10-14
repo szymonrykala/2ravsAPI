@@ -197,7 +197,7 @@ class UserController extends Controller
         $this->validateUser($request, $userData);
 
         $userID = $this->User->create($userData);
-        
+
         $MailSender = $this->DIcontainer->get('MailSender');
         $MailSender->setUser($userData, $_SERVER['HTTP_HOST']);
         $MailSender->setMailSubject('User Activation');
@@ -212,12 +212,17 @@ class UserController extends Controller
         return $response->withStatus(201, "Created");
     }
 
-    // GET /users/activate?key=<string key>
+    // POST /users/activate?
     public function activateUser(Request $request, Response $response, $args): Response
     {
         /**
          * Activating user and redirect user to given url
-         * GET /users/activate?key=<string key>
+         * POST /users/activate?
+         * {
+         *      "password" : "",
+         *      "email" : "",
+         *      "activation_key" : ""
+         * }
          * 
          * @param Request $request
          * @param Response $response
@@ -225,26 +230,25 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $key = $this->parsedQueryString($request, 'key');
+        ['password' => $password, 'email' => $email, 'activation_key' => $key] = $this->getFrom($request, [
+            'password' => 'string',
+            'email' => 'string',
+            'activation_key' => 'string'
+        ]);
+        $user = $this->User->read(['action_key' => $key, 'email' => $email])[0];
 
-        if (empty($this->User->read(['action_key' => $key])[0])) {
-            //if user with given key was not found
-            throw new HttpBadRequestException($request, 'Given activation key is not exist');
+        if (!password_verify($password, $user['password'])) {
+            throw new HttpBadRequestException($request, "Given password is not correct");
         }
 
-        list(
-            'id' => $userID,
-            'email' => $email,
-        ) = $this->User->read(['action_key' => $key])[0];
-
-        $this->User->update($userID, ['activated' => 1, 'action_key' => '1']);
+        $this->User->update($user['id'], ['activated' => 1, 'action_key' => '1']);
         $this->Log->create([
-            'user_id' => $userID,
-            'message' => "Account user $email was activated"
+            'user_id' => $user['id'],
+            'message' => 'Account user ' . $user['email'] . 'was activated'
         ]);
 
-        //redirect on given address
-        return $response;
+        $response->getBody()->write(json_encode('User succesfully activated'));
+        return $response->withStatus(200);
     }
 
     public function resendActivationEmail(Request $request, Response $response, $args): Response
