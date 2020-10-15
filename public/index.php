@@ -18,13 +18,6 @@ $rootApp = AppFactory::create(); // create the app
 
 $rootApp->addRoutingMiddleware();
 $rootApp->addBodyParsingMiddleware();
-// $rootApp->addErrorMiddleware(true, true, true);
-// $rootApp->add(new JSONMiddleware());
-
-/*  CLIENT  -->  (JSONMiddleware)  -->  (AuthorizationMiddleware)  -->  (AccessMiddleware)  -->  API resources
-    CLIENT  <--  (JSONMiddleware)  <--  (AuthorizationMiddleware)  <--  (AccessMiddleware)  <--  API resources  */
-// $rootApp->add(new AccessMiddleware());
-
 
 
 //Models
@@ -38,41 +31,22 @@ $DIcontainer->set('User', new User(new Database()));
 $DIcontainer->set('Address', new Address(new Database()));
 $DIcontainer->set('RoomType', new RoomType(new Database()));
 $DIcontainer->set('Validator', new Validator());
-// $DIcontainer->set('Mail', \Mail::class);
-
-function myErrorHandler(Throwable $e)
-{
-    $data = [
-        'error' => [
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            // 'trace' => $e->getTrace(),
-            'code' => $e->getCode()
-        ]
-    ];
-    http_response_code($e->getCode());
-    header('content-type:application/json');
-    echo json_encode($data);
-    return true;
-}
-set_exception_handler("myErrorHandler");
+$DIcontainer->set('MailSender', new MailSender());
 
 
+$rootApp->post('/v1/auth', \UserController::class . ':verifyUser'); //open endpoint
+$rootApp->post('/v1/users', \UserController::class . ':registerNewUser'); // open endpoint
+$rootApp->post('/v1/users/activate', \UserController::class . ':activateUser'); // open endpoint
 
-$rootApp->post('/auth', \UserController::class . ':verifyUser'); //open endpoint
-$rootApp->post('/users', \UserController::class . ':registerNewUser'); // open endpoint
-$rootApp->get('/users/activate', \UserController::class . ':activateUser'); // open endpoint
+$rootApp->group('/v1', function (\Slim\Routing\RouteCollectorProxy $appV1) {
 
-$rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
-
-    $app->group('/logs', function (\Slim\Routing\RouteCollectorProxy $logs) {
+    $appV1->group('/logs', function (\Slim\Routing\RouteCollectorProxy $logs) {
         $logs->get('', \LogController::class . ':getLogs');
         $logs->get('/{log_id:[0-9]+}', \LogController::class . ':getLogs');
         $logs->delete('/{log_id:.*[0-9]+}', \LogController::class . ':deleteLogByID');
     });
 
-    $app->group('/addresses', function (\Slim\Routing\RouteCollectorProxy $addresses) {
+    $appV1->group('/addresses', function (\Slim\Routing\RouteCollectorProxy $addresses) {
         $addresses->get('', \AddressController::class . ':getAddresses');
         $addresses->post('', \AddressController::class . ':createAddress');
 
@@ -83,7 +57,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/access', function (\Slim\Routing\RouteCollectorProxy $accesses) {
+    $appV1->group('/access', function (\Slim\Routing\RouteCollectorProxy $accesses) {
         $accesses->get('', \AccessController::class . ':getAccessTypes');
         $accesses->post('', \AccessController::class . ':createNewAccessType');
 
@@ -94,7 +68,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
+    $appV1->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
         $reservations->get('', \ReservationController::class . ':getReservations');
 
         // $reservations->post('', \ReservationController::class . ':createReservation');
@@ -107,7 +81,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/users', function (\Slim\Routing\RouteCollectorProxy $user) {
+    $appV1->group('/users', function (\Slim\Routing\RouteCollectorProxy $user) {
 
         $user->get('', \UserController::class . ':getUsers');
 
@@ -119,7 +93,7 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
         });
     });
 
-    $app->group('/buildings', function (\Slim\Routing\RouteCollectorProxy $buildings) {
+    $appV1->group('/buildings', function (\Slim\Routing\RouteCollectorProxy $buildings) {
         $buildings->get('', \BuildingController::class . ':getBuildings');
         $buildings->post('', \BuildingController::class . ':createBuilding');
 
@@ -158,7 +132,6 @@ $rootApp->group('', function (\Slim\Routing\RouteCollectorProxy $app) {
 
 // 404 error heandler 
 $rootApp->any('{route:.*}', function (Request $request, Response $response) {
-
     throw new HttpNotFoundException($request, "Requested URL does not exist");
 });
 

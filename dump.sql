@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.1
+-- version 5.0.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Czas generowania: 06 Paź 2020, 10:23
--- Wersja serwera: 10.4.8-MariaDB
--- Wersja PHP: 7.3.10
+-- Czas generowania: 14 Paź 2020, 22:57
+-- Wersja serwera: 10.4.14-MariaDB
+-- Wersja PHP: 7.4.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -51,7 +50,7 @@ CREATE TABLE `accesses` (
 
 INSERT INTO `accesses` (`id`, `name`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
 (1, 'admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-(3, 'demo', 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0),
+(3, 'demo', 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0),
 (4, 'test', 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
@@ -86,7 +85,7 @@ INSERT INTO `addresses` (`id`, `country`, `town`, `postal_code`, `street`, `numb
 CREATE TABLE `buildings` (
   `id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
-  `rooms_count` int(11) NOT NULL,
+  `rooms_count` int(11) NOT NULL DEFAULT 0,
   `address_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -95,13 +94,13 @@ CREATE TABLE `buildings` (
 --
 
 INSERT INTO `buildings` (`id`, `name`, `rooms_count`, `address_id`) VALUES
-(2, 'Budynek A', 10, 1),
-(3, 'Budynek B', 35, 2),
-(4, 'Budynek C', 36, 1),
-(6, 'Budynek D', 36, 2),
-(7, 'Budynek E', 37, 1),
-(8, 'Budynek F', 38, 2),
-(9, 'Budynek testowy', 45, 1);
+(2, 'Budynek A', 5, 1),
+(3, 'Budynek B', 3, 2),
+(4, 'Budynek C', 1, 1),
+(6, 'Budynek D', 3, 2),
+(7, 'Budynek E', 3, 1),
+(8, 'Budynek F', 0, 2),
+(9, 'Budynek testowy', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -271,7 +270,38 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 (351, 'User weronika1212@gmail.com (id=8) updated user (id=8) data:{&#34;name&#34;:&#34;Weronika&#34;}', 8, NULL, NULL, NULL, '2020-10-05 21:34:38'),
 (352, 'User weronika1212@gmail.com (id=8) updated user (id=8) data:{&#34;name&#34;:&#34;Weronika&#34;}', 8, NULL, NULL, NULL, '2020-10-05 21:34:52'),
 (353, 'User weronika1212@gmail.com (id=8) updated user (id=8) data:{&#34;name&#34;:&#34;Weronika&#34;}', 8, NULL, NULL, NULL, '2020-10-05 21:36:12'),
-(354, 'User weronika1212@gmail.com (id=8) updated user (id=8) data:{&#34;name&#34;:&#34;WeronikaX&#34;}', 8, NULL, NULL, NULL, '2020-10-05 21:36:45');
+(354, 'User weronika1212@gmail.com (id=8) updated user (id=8) data:{&#34;name&#34;:&#34;WeronikaX&#34;}', 8, NULL, NULL, NULL, '2020-10-05 21:36:45'),
+(355, 'Updated User weronika1212@gmail.com (id=8) with data:{&#34;name&#34;:&#34;WeronikaX&#34;,&#34;access_id&#34;:1}', 8, NULL, NULL, NULL, '2020-10-07 16:41:02'),
+(356, 'Updated User weronika1212@gmail.com (id=8) with data:{&#34;name&#34;:&#34;Weronika12&#34;}', 8, NULL, NULL, NULL, '2020-10-07 17:43:38'),
+(357, 'Updated User weronika1212@gmail.com (id=8) with data:{&#34;name&#34;:&#34;Weronika&#34;}', 8, NULL, NULL, NULL, '2020-10-07 17:43:42'),
+(358, 'User szymonrykala1214@gmail.com has been registered data:{&#34;name&#34;:&#34;Szymon&#34;,&#34;surname&#34;:&#34;Ryka\\u0142a&#34;,&#34;email&#34;:&#34;szymonrykala1214@gmail.com&#34;,&#34;action_key&#34;:&#34;EWvWRyhD2bszfhd8P8+tkz+Kedb1bLj8cKEAxq25PUGY2KTLQhPk8xvxAhWlchoTHQAAb8HcB8r3LqOk&#34;}', 10, NULL, NULL, NULL, '2020-10-07 17:54:52'),
+(359, 'User weronika1212@gmail.com created new room type id=7; data:{&#34;name&#34;:&#34;sala bardzo du\\u017ca og\\u00f3lnie&#34;}', 8, NULL, NULL, NULL, '2020-10-07 18:03:10'),
+(360, 'User weronika1212@gmail.com updated room type id=7 data:{&#34;name&#34;:&#34;testowej update&#34;}', 8, NULL, NULL, NULL, '2020-10-07 18:03:35'),
+(361, 'User weronika1212@gmail.com updated room type id=7', 8, NULL, NULL, NULL, '2020-10-07 22:13:13'),
+(362, 'User weronika1212@gmail.com created new room in building id=2; data:{&#34;name&#34;:&#34;ABCDsuper budynek&#34;,&#34;room_type_id&#34;:5,&#34;seats_count&#34;:350,&#34;floor&#34;:2,&#34;equipment&#34;:&#34;umywalka,kreda,tablica&#34;,&#34;building_id&#34;:2}', 8, NULL, 2, 17, '2020-10-07 22:34:02'),
+(363, 'User weronika1212@gmail.com updated room data:{&#34;floor&#34;:3,&#34;name&#34;:&#34;pok\\u00f3j update itd&#34;}', 8, NULL, 2, 17, '2020-10-07 22:37:50'),
+(364, 'User weronika1212@gmail.com deleted room', 8, NULL, 2, 17, '2020-10-07 22:39:55'),
+(365, 'User weronika1212@gmail.com created reservation data:{&#34;title&#34;:&#34;rezerwacja v4&#34;,&#34;subtitle&#34;:&#34;super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;&#34;,&#34;start_time&#34;:&#34;14:00&#34;,&#34;end_time&#34;:&#34;14:45&#34;,&#34;date&#34;:&#34;2020-10-21&#34;,&#34;room_id&#34;:15,&#34;building_id&#34;:7,&#34;user_id&#34;:8}', 8, 23, 7, 15, '2020-10-07 23:31:11'),
+(366, 'User weronika1212@gmail.com updated reservation data:{&#34;title&#34;:&#34;aktualizacja&#34;,&#34;start_time&#34;:&#34;12:00:00&#34;,&#34;end_time&#34;:&#34;13:30:00&#34;,&#34;date&#34;:&#34;2020-09-12&#34;}', 8, 23, NULL, NULL, '2020-10-07 23:35:34'),
+(367, 'User weronika1212@gmail.com moved reservation to trash', 8, 23, NULL, NULL, '2020-10-07 23:37:50'),
+(368, 'User weronika1212@gmail.com updated reservation data:{&#34;title&#34;:&#34;aktualizacja&#34;,&#34;start_time&#34;:&#34;12:00:00&#34;,&#34;end_time&#34;:&#34;13:30:00&#34;,&#34;date&#34;:&#34;2020-09-12&#34;}', 8, 23, NULL, NULL, '2020-10-07 23:37:56'),
+(369, 'User weronika1212@gmail.com hard deleted reservation', 8, 23, NULL, NULL, '2020-10-07 23:38:07'),
+(370, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 24, 7, 15, '2020-10-08 15:03:37'),
+(371, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 25, 7, 15, '2020-10-08 15:04:08'),
+(372, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 26, 7, 15, '2020-10-08 15:05:02'),
+(373, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 27, 7, 15, '2020-10-08 15:05:06'),
+(374, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 28, 7, 15, '2020-10-08 15:05:07'),
+(375, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 29, 7, 15, '2020-10-08 15:05:08'),
+(376, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 30, 7, 15, '2020-10-08 15:09:18'),
+(377, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 31, 7, 15, '2020-10-08 15:10:43'),
+(378, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 32, 7, 15, '2020-10-08 15:11:17'),
+(379, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 33, 7, 15, '2020-10-08 15:12:26'),
+(380, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 34, 7, 15, '2020-10-08 15:12:45'),
+(381, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 35, 7, 15, '2020-10-08 15:14:04'),
+(382, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 36, 7, 15, '2020-10-08 15:14:14'),
+(383, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 37, 7, 15, '2020-10-08 15:14:20'),
+(384, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"15:00:00\",\"end_time\":\"15:16:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 38, 7, 15, '2020-10-08 15:50:14'),
+(385, 'Account user szymonrykala1214@gmail.comwas activated', 10, NULL, NULL, NULL, '2020-10-14 22:02:20');
 
 -- --------------------------------------------------------
 
@@ -302,12 +332,9 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`id`, `title`, `subtitle`, `room_id`, `building_id`, `user_id`, `start_time`, `end_time`, `date`, `created_at`, `updated_at`, `confirmed`, `confirming_user_id`, `confirmed_at`, `deleted`) VALUES
-(3, 'próbna rezerwacja', 'bardzo fajny podtytuł który zachęca niechcących studentów', 2, 2, 4, '12:00:00', '13:30:00', '2020-09-12', '2020-10-05 19:40:10', '2020-10-05 19:40:10', 0, NULL, NULL, 0),
 (4, 'rezerwacja próbna', 'test - próbna rezerwacja', 2, 2, 8, '12:00:00', '13:30:00', '2020-10-12', '2020-08-24 22:11:19', '2020-08-24 22:11:19', 0, NULL, NULL, 0),
 (7, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-12', '2020-08-24 22:11:30', '2020-08-24 22:11:30', 0, NULL, NULL, 0),
-(9, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 3, 3, 6, '11:00:00', '11:20:00', '2020-08-28', '2020-08-25 21:44:06', '2020-08-25 21:44:06', 0, NULL, NULL, 0),
 (10, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-14', '2020-08-24 22:11:26', '2020-08-24 22:11:26', 0, NULL, NULL, 0),
-(11, 'rezerwacja próbna', 'update - próbna rezerwacja', 3, 3, 6, '12:00:00', '13:30:00', '2020-08-15', '2020-08-12 16:40:20', '2020-08-12 16:40:20', 0, NULL, NULL, 0),
 (12, 'rezerwacja v1', 'podtytuł rezerwacji, opis', 4, 2, 8, '10:00:00', '11:15:00', '2020-08-11', '2020-08-25 21:27:20', '2020-08-25 21:27:20', 0, NULL, NULL, 0),
 (13, 'rezerwacja v1', 'podtytuł rezerwacji, opis', 4, 2, 8, '10:00:00', '11:15:00', '2020-08-28', '2020-08-25 21:28:04', '2020-08-25 21:28:04', 0, NULL, NULL, 0),
 (14, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 4, 2, 8, '11:00:00', '11:20:00', '2020-08-27', '2020-08-28 00:37:49', '2020-08-28 00:37:49', 0, NULL, NULL, 0),
@@ -317,7 +344,22 @@ INSERT INTO `reservations` (`id`, `title`, `subtitle`, `room_id`, `building_id`,
 (19, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 12, 6, 8, '14:00:00', '14:45:00', '2020-10-02', '2020-10-01 17:47:50', '2020-10-01 17:47:50', 0, NULL, NULL, 0),
 (20, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 11, 6, 8, '14:00:00', '14:45:00', '2020-10-02', '2020-10-01 17:47:55', '2020-10-01 17:47:55', 0, NULL, NULL, 0),
 (21, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 14, 7, 8, '14:00:00', '14:45:00', '2020-10-02', '2020-10-01 17:48:41', '2020-10-01 17:48:41', 0, NULL, NULL, 0),
-(22, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 15, 7, 8, '14:00:00', '14:45:00', '2020-10-02', '2020-10-01 17:48:45', '2020-10-01 17:48:45', 0, NULL, NULL, 0);
+(22, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 15, 7, 8, '14:00:00', '14:45:00', '2020-10-02', '2020-10-01 17:48:45', '2020-10-01 17:48:45', 0, NULL, NULL, 0),
+(24, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:03:37', '2020-10-08 15:03:37', 0, NULL, NULL, 0),
+(25, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:04:08', '2020-10-08 15:04:08', 0, NULL, NULL, 0),
+(26, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:05:02', '2020-10-08 15:05:02', 0, NULL, NULL, 0),
+(27, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:05:06', '2020-10-08 15:05:06', 0, NULL, NULL, 0),
+(28, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:05:07', '2020-10-08 15:05:07', 0, NULL, NULL, 0),
+(29, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:05:08', '2020-10-08 15:05:08', 0, NULL, NULL, 0),
+(30, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:09:18', '2020-10-08 15:09:18', 0, NULL, NULL, 0),
+(31, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:10:43', '2020-10-08 15:10:43', 0, NULL, NULL, 0),
+(32, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:11:17', '2020-10-08 15:11:17', 0, NULL, NULL, 0),
+(33, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:12:26', '2020-10-08 15:12:26', 0, NULL, NULL, 0),
+(34, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:12:45', '2020-10-08 15:12:45', 0, NULL, NULL, 0),
+(35, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:14:04', '2020-10-08 15:14:04', 0, NULL, NULL, 0),
+(36, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:14:14', '2020-10-08 15:14:14', 0, NULL, NULL, 0),
+(37, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '14:45:00', '14:00:00', '2020-10-21', '2020-10-08 15:14:20', '2020-10-08 15:14:20', 0, NULL, NULL, 0),
+(38, 'rezerwacja v4', 'super fajny tytuł i opis rezerwacji kt&oacute;ry powinien zawierać kropki, przecinki.:a czasem nawet &quot;cytat&quot;', 15, 7, 8, '15:00:00', '15:16:00', '2020-10-21', '2020-10-08 15:50:14', '2020-10-08 15:50:14', 0, NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -358,6 +400,18 @@ INSERT INTO `rooms` (`id`, `name`, `building_id`, `room_type_id`, `seats_count`,
 (15, 'E101', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
 (16, 'E201', 7, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0);
 
+--
+-- Wyzwalacze `rooms`
+--
+DELIMITER $$
+CREATE TRIGGER `Update_rooms_count_after_delete` AFTER DELETE ON `rooms` FOR EACH ROW UPDATE buildings set buildings.rooms_count=(SELECT COUNT(rooms.id) FROM rooms WHERE rooms.building_id=buildings.id)
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `Update_rooms_count_after_insert` AFTER INSERT ON `rooms` FOR EACH ROW UPDATE buildings set buildings.rooms_count=(SELECT COUNT(rooms.id) FROM rooms WHERE rooms.building_id=buildings.id)
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -393,10 +447,9 @@ CREATE TABLE `users` (
   `last_login` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `email` tinytext NOT NULL,
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `img_url` tinytext NOT NULL,
   `activated` tinyint(1) NOT NULL DEFAULT 0,
   `login_fails` int(11) NOT NULL DEFAULT 0,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `action_key` tinytext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -404,11 +457,9 @@ CREATE TABLE `users` (
 -- Zrzut danych tabeli `users`
 --
 
-INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `img_url`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
-(4, 1, 'Szymon', 'Rykała', '$2y$12$53Gv4712tmvJTTuyPniUeuSipJarTnb5Ck9tTQ4uVo/j2Jn5FeNqK', '2020-08-24 21:33:57', 'szymonrykalaAdmin@gmail.com', '2020-08-24 21:33:57', 'http://localhost:8080/img/users/default.jpg', 0, 0, '2020-08-24 21:33:57', 'xxxyyy111222'),
-(6, 1, 'Szymon', 'Rykała', '$2y$12$4mBLGUlJa6qqtUZZR6wpwu6sMXW1aPBuVPXQvNBf8zjACrd3MQlyq', '2020-08-22 19:01:42', 'szymonrykalaDemo@gmail.com', '2020-08-22 19:01:42', 'http://localhost:8080/img/users/default.jpg', 1, 0, '2020-08-22 19:01:42', '1'),
-(8, 3, 'WeronikaX', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-10-05 21:36:45', 'weronika1212@gmail.com', '2020-10-05 21:36:45', 'http://localhost:8080/img/users/default.jpg', 1, 0, '2020-10-05 21:36:45', '1'),
-(9, 1, 'imięTest', 'nazwizkoTest', '$2y$12$7cR1aElaT5pNyMxldZzW5.ogA77Uira62w4DWnJac3FkcK30Seyum', '2020-09-08 22:57:16', 'test@gmail.com', '2020-09-08 22:57:16', 'http://localhost:8080/img/users/default.jpg', 1, 0, '2020-09-08 22:57:16', 'lHnWEnB2Vg8waORt6exxGUXxqmdRbsMZ0IMnc1OuJx/vBRSxr8isege5xgPV16T/BF02lD4dNqJUo7Zu');
+INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
+(8, 3, 'Weronika', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-10-07 17:43:42', 'weronika1212@gmail.com', '2020-10-07 17:43:42', 1, 0, '2020-10-07 17:43:42', '1'),
+(10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-14 22:02:20', 'szymonrykala1214@gmail.com', '2020-10-14 22:02:20', 1, 0, '2020-10-14 22:02:20', '1');
 
 --
 -- Indeksy dla zrzutów tabel
@@ -418,8 +469,7 @@ INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_log
 -- Indeksy dla tabeli `accesses`
 --
 ALTER TABLE `accesses`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_name` (`name`) USING HASH;
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indeksy dla tabeli `addresses`
@@ -462,8 +512,7 @@ ALTER TABLE `rooms`
 -- Indeksy dla tabeli `room_types`
 --
 ALTER TABLE `room_types`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_name` (`name`) USING HASH;
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indeksy dla tabeli `users`
@@ -499,31 +548,31 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT dla tabeli `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=355;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=386;
 
 --
 -- AUTO_INCREMENT dla tabeli `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT dla tabeli `rooms`
 --
 ALTER TABLE `rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT dla tabeli `room_types`
 --
 ALTER TABLE `room_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT dla tabeli `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Ograniczenia dla zrzutów tabel

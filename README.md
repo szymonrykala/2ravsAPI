@@ -3,6 +3,13 @@
 Room Reservation and Visualisation System API
 
 ## Changelog
+[14.10.2020]
+### Added
+ - .hatacces
+ - sending emails to new users with activation code
+### Changed
+ - activation process to POST method and key is passed in 'activation_key' with password and email
+
 [06-10-2020]
 ### Added
  - Validator::class utility

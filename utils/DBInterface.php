@@ -16,7 +16,7 @@ class Database implements DBInterface
             $this->conn = new PDO(DSN, DB_USER, DB_PASS);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            throw new Exception("DBInterface connect error: ", 500);
+            throw new Exception("DBInterface connect error: ".$e->getMessage(), 500);
         }
     }
 

@@ -85,7 +85,7 @@ class BuildingController extends Controller
 
         $data = $this->getFrom(
             $request,
-            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
+            ['name' => 'string', 'address_id' => 'integer'],
             true
         );
 
