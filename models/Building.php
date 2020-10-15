@@ -49,11 +49,10 @@ class Building extends Model
         }
 
         $this->DB->query(
-            "INSERT INTO $this->tableName(address_id,name,rooms_count) VALUES(:address_id,:name,:rooms_count)",
+            "INSERT INTO $this->tableName(address_id,name) VALUES(:address_id,:name)",
             array(
                 ':address_id' => $data['address_id'],
-                ':name' => $data['name'],
-                ':rooms_count' => $data['rooms_count'],
+                ':name' => $data['name']
             )
         );
         return $this->DB->lastInsertID();

@@ -31,7 +31,7 @@ class AuthorizationMiddleware
 
         $userAccessID = $request->getAttribute("access_id");
         $userID = $request->getAttribute("user_id");
-        list("access_id" => $currentAccessID) = $this->User->read(['id' => $userID])[0];
+        ["access_id" => $currentAccessID] = $this->User->read(['id' => $userID])[0];
 
         if ($userAccessID !== $currentAccessID) {
             throw new HttpUnauthorizedException($request,"Your access has changed - please login again");
@@ -64,8 +64,6 @@ class AuthorizationMiddleware
         $len = count($path) - 1;
         if (is_numeric($path[$len])) {
             $this->resourceNumber = array_pop($path);
-        } elseif ($path[$len] == 'search') {
-            array_pop($path);
         }
         $resource =  array_pop($path);
         return $resource;

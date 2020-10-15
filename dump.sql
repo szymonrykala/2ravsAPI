@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Czas generowania: 08 Paź 2020, 17:40
+-- Czas generowania: 14 Paź 2020, 22:57
 -- Wersja serwera: 10.4.14-MariaDB
 -- Wersja PHP: 7.4.10
 
@@ -85,7 +85,7 @@ INSERT INTO `addresses` (`id`, `country`, `town`, `postal_code`, `street`, `numb
 CREATE TABLE `buildings` (
   `id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
-  `rooms_count` int(11) NOT NULL,
+  `rooms_count` int(11) NOT NULL DEFAULT 0,
   `address_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -94,13 +94,13 @@ CREATE TABLE `buildings` (
 --
 
 INSERT INTO `buildings` (`id`, `name`, `rooms_count`, `address_id`) VALUES
-(2, 'Budynek A', 10, 1),
-(3, 'Budynek B', 35, 2),
-(4, 'Budynek C', 36, 1),
-(6, 'Budynek D', 36, 2),
-(7, 'Budynek E', 37, 1),
-(8, 'Budynek F', 38, 2),
-(9, 'Budynek testowy', 45, 1);
+(2, 'Budynek A', 5, 1),
+(3, 'Budynek B', 3, 2),
+(4, 'Budynek C', 1, 1),
+(6, 'Budynek D', 3, 2),
+(7, 'Budynek E', 3, 1),
+(8, 'Budynek F', 0, 2),
+(9, 'Budynek testowy', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -300,7 +300,8 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 (381, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 35, 7, 15, '2020-10-08 15:14:04'),
 (382, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 36, 7, 15, '2020-10-08 15:14:14'),
 (383, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 37, 7, 15, '2020-10-08 15:14:20'),
-(384, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"15:00:00\",\"end_time\":\"15:16:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 38, 7, 15, '2020-10-08 15:50:14');
+(384, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"15:00:00\",\"end_time\":\"15:16:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 38, 7, 15, '2020-10-08 15:50:14'),
+(385, 'Account user szymonrykala1214@gmail.comwas activated', 10, NULL, NULL, NULL, '2020-10-14 22:02:20');
 
 -- --------------------------------------------------------
 
@@ -331,12 +332,9 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`id`, `title`, `subtitle`, `room_id`, `building_id`, `user_id`, `start_time`, `end_time`, `date`, `created_at`, `updated_at`, `confirmed`, `confirming_user_id`, `confirmed_at`, `deleted`) VALUES
-(3, 'próbna rezerwacja', 'bardzo fajny podtytuł który zachęca niechcących studentów', 2, 2, 4, '12:00:00', '13:30:00', '2020-09-12', '2020-10-05 19:40:10', '2020-10-05 19:40:10', 0, NULL, NULL, 0),
 (4, 'rezerwacja próbna', 'test - próbna rezerwacja', 2, 2, 8, '12:00:00', '13:30:00', '2020-10-12', '2020-08-24 22:11:19', '2020-08-24 22:11:19', 0, NULL, NULL, 0),
 (7, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-12', '2020-08-24 22:11:30', '2020-08-24 22:11:30', 0, NULL, NULL, 0),
-(9, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 3, 3, 6, '11:00:00', '11:20:00', '2020-08-28', '2020-08-25 21:44:06', '2020-08-25 21:44:06', 0, NULL, NULL, 0),
 (10, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-14', '2020-08-24 22:11:26', '2020-08-24 22:11:26', 0, NULL, NULL, 0),
-(11, 'rezerwacja próbna', 'update - próbna rezerwacja', 3, 3, 6, '12:00:00', '13:30:00', '2020-08-15', '2020-08-12 16:40:20', '2020-08-12 16:40:20', 0, NULL, NULL, 0),
 (12, 'rezerwacja v1', 'podtytuł rezerwacji, opis', 4, 2, 8, '10:00:00', '11:15:00', '2020-08-11', '2020-08-25 21:27:20', '2020-08-25 21:27:20', 0, NULL, NULL, 0),
 (13, 'rezerwacja v1', 'podtytuł rezerwacji, opis', 4, 2, 8, '10:00:00', '11:15:00', '2020-08-28', '2020-08-25 21:28:04', '2020-08-25 21:28:04', 0, NULL, NULL, 0),
 (14, 'rezerwacja v3', 'podtytuł rezerwacji, update rezerwacji', 4, 2, 8, '11:00:00', '11:20:00', '2020-08-27', '2020-08-28 00:37:49', '2020-08-28 00:37:49', 0, NULL, NULL, 0),
@@ -402,6 +400,18 @@ INSERT INTO `rooms` (`id`, `name`, `building_id`, `room_type_id`, `seats_count`,
 (15, 'E101', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
 (16, 'E201', 7, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0);
 
+--
+-- Wyzwalacze `rooms`
+--
+DELIMITER $$
+CREATE TRIGGER `Update_rooms_count_after_delete` AFTER DELETE ON `rooms` FOR EACH ROW UPDATE buildings set buildings.rooms_count=(SELECT COUNT(rooms.id) FROM rooms WHERE rooms.building_id=buildings.id)
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `Update_rooms_count_after_insert` AFTER INSERT ON `rooms` FOR EACH ROW UPDATE buildings set buildings.rooms_count=(SELECT COUNT(rooms.id) FROM rooms WHERE rooms.building_id=buildings.id)
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -439,7 +449,7 @@ CREATE TABLE `users` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `activated` tinyint(1) NOT NULL DEFAULT 0,
   `login_fails` int(11) NOT NULL DEFAULT 0,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `action_key` tinytext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -448,11 +458,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
-(4, 1, 'Szymon', 'Rykała', '$2y$12$53Gv4712tmvJTTuyPniUeuSipJarTnb5Ck9tTQ4uVo/j2Jn5FeNqK', '2020-08-24 21:33:57', 'szymonrykalaAdmin@gmail.com', '2020-08-24 21:33:57', 0, 0, '2020-08-24 21:33:57', 'xxxyyy111222'),
-(6, 1, 'Szymon', 'Rykała', '$2y$12$4mBLGUlJa6qqtUZZR6wpwu6sMXW1aPBuVPXQvNBf8zjACrd3MQlyq', '2020-08-22 19:01:42', 'szymonrykalaDemo@gmail.com', '2020-08-22 19:01:42', 1, 0, '2020-08-22 19:01:42', '1'),
 (8, 3, 'Weronika', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-10-07 17:43:42', 'weronika1212@gmail.com', '2020-10-07 17:43:42', 1, 0, '2020-10-07 17:43:42', '1'),
-(9, 1, 'imięTest', 'nazwizkoTest', '$2y$12$7cR1aElaT5pNyMxldZzW5.ogA77Uira62w4DWnJac3FkcK30Seyum', '2020-09-08 22:57:16', 'test@gmail.com', '2020-09-08 22:57:16', 1, 0, '2020-09-08 22:57:16', 'lHnWEnB2Vg8waORt6exxGUXxqmdRbsMZ0IMnc1OuJx/vBRSxr8isege5xgPV16T/BF02lD4dNqJUo7Zu'),
-(10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-07 17:54:52', 'szymonrykala1214@gmail.com', '2020-10-07 17:54:52', 0, 0, '2020-10-07 17:54:52', 'EWvWRyhD2bszfhd8P8+tkz+Kedb1bLj8cKEAxq25PUGY2KTLQhPk8xvxAhWlchoTHQAAb8HcB8r3LqOk');
+(10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-14 22:02:20', 'szymonrykala1214@gmail.com', '2020-10-14 22:02:20', 1, 0, '2020-10-14 22:02:20', '1');
 
 --
 -- Indeksy dla zrzutów tabel
@@ -462,8 +469,7 @@ INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_log
 -- Indeksy dla tabeli `accesses`
 --
 ALTER TABLE `accesses`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_name` (`name`) USING HASH;
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indeksy dla tabeli `addresses`
@@ -506,8 +512,7 @@ ALTER TABLE `rooms`
 -- Indeksy dla tabeli `room_types`
 --
 ALTER TABLE `room_types`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_name` (`name`) USING HASH;
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indeksy dla tabeli `users`
@@ -543,7 +548,7 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT dla tabeli `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=385;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=386;
 
 --
 -- AUTO_INCREMENT dla tabeli `reservations`
