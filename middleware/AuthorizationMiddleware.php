@@ -136,7 +136,10 @@ class AuthorizationMiddleware
                 'POST' => $result['access_edit'],
                 'PATCH' => $result['access_edit'],
                 'DELETE' => $result['access_edit']
-            )
+            ),
+            'rfid' =>[
+                'PATCH' => $result['rfid_action']
+            ]
         );
     }
 }

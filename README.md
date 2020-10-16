@@ -1,8 +1,13 @@
 # 2ravsAPI
 
-Room Reservation and Visualisation System API
+Reservation and Visualisation System API
 
 ## Changelog
+[16.10.2020]
+### Added
+ - rfid in accesses and rooms
+ - PATCH /rfid is toggling state of room with given rfid
+
 [14.10.2020]
 ### Added
  - .hatacces

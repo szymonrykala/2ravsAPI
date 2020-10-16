@@ -40,6 +40,8 @@ $rootApp->post('/v1/users/activate', \UserController::class . ':activateUser'); 
 
 $rootApp->group('/v1', function (\Slim\Routing\RouteCollectorProxy $appV1) {
 
+    $appV1->patch('/rfid', \RoomController::class.':rfidAction');
+
     $appV1->group('/logs', function (\Slim\Routing\RouteCollectorProxy $logs) {
         $logs->get('', \LogController::class . ':getLogs');
         $logs->get('/{log_id:[0-9]+}', \LogController::class . ':getLogs');

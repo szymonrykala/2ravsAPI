@@ -6,7 +6,7 @@ class Room extends Model
     protected $tableName = 'rooms';
     public $unUpdateAble = array('id');
     public $columns = [
-        'id', 'name', 'building_id', 'room_type_id', 'seats_count', 'floor',
+        'id', 'name','rfid', 'building_id', 'room_type_id', 'seats_count', 'floor',
         'equipment', 'blockade', 'state'
     ];
 
@@ -20,6 +20,9 @@ class Room extends Model
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'name':
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    break;
+                case 'rfid':
                     $value = filter_var($value, FILTER_SANITIZE_STRING);
                     break;
                 case 'equipment':

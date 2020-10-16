@@ -44,6 +44,35 @@ class RoomController extends Controller
         }
     }
 
+    // PATCH /rfid
+    public function rfidAction(Request $request, Response $response, $args): Response
+    {
+        /**
+         * Toggle the state of room with rfid in "rfid"
+         * {
+         *      "rfid" : ""
+         * }
+         */
+        $rfid = $this->getFrom($request, ['rfid' => 'string'],true)['rfid'];
+        $rfid = str_replace(' ', '', $rfid);
+        if (empty($rfid)) {
+            throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
+        }
+
+        $room = $this->Room->read(['rfid' => $rfid])[0];
+
+        $this->Room->update($room['id'], ['state' => (bool)!$room['state']]);
+
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'room_id' => $room['id'],
+            'message' => 'User ' . $request->getAttribute('email') . ' toggled to ' . (!$room['state'] ? 'true' : 'false') . ' state of room with rfid: ' . $rfid
+        ]);
+
+        $response->getBody()->write('toggled to '.(!$room['state'] ? 'true' : 'false'));
+        return $response->withStatus(200);
+    }
+
     // GET /buildings/rooms
     // GET /buildings/rooms/{room_id}
     // GET /buildings/{building_id}/rooms

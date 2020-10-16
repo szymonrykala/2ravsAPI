@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Czas generowania: 14 Paź 2020, 22:57
+-- Czas generowania: 16 Paź 2020, 18:43
 -- Wersja serwera: 10.4.14-MariaDB
 -- Wersja PHP: 7.4.10
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Baza danych: `ravs`
+-- Baza danych: `ravs_dev`
 --
 
 -- --------------------------------------------------------
@@ -30,6 +30,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `accesses` (
   `id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
+  `rfid_action` tinyint(1) NOT NULL DEFAULT 0,
   `access_edit` tinyint(1) NOT NULL DEFAULT 0,
   `buildings_view` tinyint(1) NOT NULL DEFAULT 1,
   `buildings_edit` tinyint(1) NOT NULL DEFAULT 0,
@@ -48,10 +49,10 @@ CREATE TABLE `accesses` (
 -- Zrzut danych tabeli `accesses`
 --
 
-INSERT INTO `accesses` (`id`, `name`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
-(1, 'admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-(3, 'demo', 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0),
-(4, 'test', 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO `accesses` (`id`, `name`, `rfid_action`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
+(1, 'admin', 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+(3, 'demo', 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0),
+(4, 'test', 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -301,7 +302,24 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 (382, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 36, 7, 15, '2020-10-08 15:14:14'),
 (383, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"14:45\",\"end_time\":\"14:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 37, 7, 15, '2020-10-08 15:14:20'),
 (384, 'User weronika1212@gmail.com created reservation data:{\"title\":\"rezerwacja v4\",\"subtitle\":\"super fajny tytu\\u0142 i opis rezerwacji kt&oacute;ry powinien zawiera\\u0107 kropki, przecinki.:a czasem nawet &quot;cytat&quot;\",\"start_time\":\"15:00:00\",\"end_time\":\"15:16:00\",\"date\":\"2020-10-21\",\"room_id\":15,\"building_id\":7,\"user_id\":8}', 8, 38, 7, 15, '2020-10-08 15:50:14'),
-(385, 'Account user szymonrykala1214@gmail.comwas activated', 10, NULL, NULL, NULL, '2020-10-14 22:02:20');
+(385, 'Account user szymonrykala1214@gmail.comwas activated', 10, NULL, NULL, NULL, '2020-10-14 22:02:20'),
+(386, 'User weronika1212@gmail.com toggled to trueroom with rfid: d', 8, NULL, NULL, 12, '2020-10-16 17:48:11'),
+(387, 'User weronika1212@gmail.com toggled to falseroom with rfid: d', 8, NULL, NULL, 12, '2020-10-16 17:48:39'),
+(388, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:06:49'),
+(389, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:06:53'),
+(390, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:24:12'),
+(391, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:24:31'),
+(392, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:24:34'),
+(393, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:24:38'),
+(394, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:27:37'),
+(395, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:27:39'),
+(396, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:28:43'),
+(397, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:29:17'),
+(398, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:29:36'),
+(399, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:29:50'),
+(400, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:07'),
+(401, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:30'),
+(402, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:42');
 
 -- --------------------------------------------------------
 
@@ -370,6 +388,7 @@ INSERT INTO `reservations` (`id`, `title`, `subtitle`, `room_id`, `building_id`,
 CREATE TABLE `rooms` (
   `id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
+  `rfid` tinytext NOT NULL DEFAULT '',
   `building_id` int(11) NOT NULL,
   `room_type_id` int(11) NOT NULL,
   `seats_count` int(11) NOT NULL,
@@ -383,22 +402,22 @@ CREATE TABLE `rooms` (
 -- Zrzut danych tabeli `rooms`
 --
 
-INSERT INTO `rooms` (`id`, `name`, `building_id`, `room_type_id`, `seats_count`, `floor`, `equipment`, `blockade`, `state`) VALUES
-(2, 'B001', 3, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(3, 'B201', 3, 5, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(4, 'B101', 3, 2, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(5, 'A001', 2, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(6, 'A201', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(7, 'A101', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(8, 'C001', 4, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(9, 'C201', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(10, 'C101', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(11, 'D001', 6, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(12, 'D101', 6, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(13, 'D201', 6, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(14, 'E001', 7, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(15, 'E101', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(16, 'E201', 7, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0);
+INSERT INTO `rooms` (`id`, `name`, `rfid`, `building_id`, `room_type_id`, `seats_count`, `floor`, `equipment`, `blockade`, `state`) VALUES
+(2, 'B001', 'w', 3, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(3, 'B201', 'r', 3, 5, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
+(4, 'B101', 't', 3, 2, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
+(5, 'A001', 'y', 2, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(6, 'A201', 'u', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
+(7, 'A101', 'i', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
+(8, 'C001', 'o', 4, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(9, 'C201', 'p', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
+(10, 'C101', 'a', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
+(11, 'D001', 's', 6, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(12, 'D101', 'd', 6, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 1),
+(13, 'D201', 'f', 6, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
+(14, 'E001', 'g', 7, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(15, 'E101', 'h', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
+(16, 'E201', 'j', 7, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0);
 
 --
 -- Wyzwalacze `rooms`
@@ -505,6 +524,7 @@ ALTER TABLE `reservations`
 --
 ALTER TABLE `rooms`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_rfid` (`rfid`(255)) USING BTREE,
   ADD KEY `rooms_to_buildings` (`building_id`),
   ADD KEY `rooms_to_room_types` (`room_type_id`);
 
@@ -548,7 +568,7 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT dla tabeli `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=386;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=403;
 
 --
 -- AUTO_INCREMENT dla tabeli `reservations`
