@@ -6,9 +6,8 @@ class RoomType extends Model
     /**
      * Responsible for operation with room_types table in database
      */
-    protected $tableName = 'room_types';
-    public $unUpdateAble = array('id');
-    public $columns = ['id', 'name'];
+    protected string $tableName = 'room_types';
+    public array $columns = ['id', 'name'];
 
     public function __construct(DBInterface $db)
     {

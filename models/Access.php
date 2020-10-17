@@ -3,9 +3,8 @@ require_once __DIR__ . '/Model.php';
 
 class Access extends Model
 {
-    protected $tableName = 'accesses';
-    public $unUpdateAble = array('id');
-    protected $columns = [
+    protected string $tableName = 'accesses';
+    protected array $columns = [
         'id', 'name','rfid_action', 'access_edit', 'buildings_view',
         'buildings_edit', 'logs_view', 'logs_edit', 'rooms_view', 'rooms_edit',
         'reservations_access', 'reservations_confirm', 'reservations_edit',

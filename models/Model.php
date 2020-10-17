@@ -3,13 +3,12 @@
 
 abstract class Model
 {
-    public $unUpdateAble = array();
-    protected $columns = [];
-    protected $DB = null;
-    protected $tableName = null;
-    protected $queryStringParams = [];
-    protected $searchParams = [];
-    protected $searchMode = "=";
+    protected array $columns;
+    protected DBInterface $DB;
+    protected string $tableName;
+    protected array $queryStringParams = [];
+    protected array $searchParams;
+    protected string $searchMode = "=";
 
     public function __construct(DBInterface $DBInterface)
     {
@@ -116,10 +115,10 @@ abstract class Model
         // ======== NORMAL READING ===========
         $sql = "SELECT * FROM `$this->tableName` WHERE 1=1";
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
-        
+
         $sql .= $sqlData .= $searchSQL;
         $queryParams = array_merge($searchParams, $queryParams);
-        
+
         // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
@@ -158,7 +157,6 @@ abstract class Model
         $queryParams = array();
 
         foreach ($params as $key => $value) {
-            if (in_array($key, $this->unUpdateAble)) continue;
 
             count($queryParams) >= 1 ? $sql .= "," : null;
             $sql .= " $key=:$key";

@@ -3,9 +3,8 @@ require_once __DIR__ . '/Model.php';
 
 class Room extends Model
 {
-    protected $tableName = 'rooms';
-    public $unUpdateAble = array('id');
-    public $columns = [
+    protected string $tableName = 'rooms';
+    public array $columns = [
         'id', 'name','rfid', 'building_id', 'room_type_id', 'seats_count', 'floor',
         'equipment', 'blockade', 'state'
     ];

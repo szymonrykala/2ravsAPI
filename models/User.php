@@ -3,9 +3,8 @@ require_once __DIR__ . '/Model.php';
 
 class User extends Model
 {
-    protected $tableName = 'users';
-    public $unUpdateAble = array('id', 'created_at');
-    protected $columns = [
+    protected string $tableName = 'users';
+    protected array $columns = [
         'id', 'access_id', 'name', 'surname', 'password',
         'last_login', 'email', 'updated_at',
         'activated', 'login_fails', 'created_at', 'action_key'

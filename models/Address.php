@@ -3,9 +3,8 @@ require_once __DIR__ . '/Model.php';
 
 class Address extends Model
 {
-    protected $tableName = 'addresses';
-    public $unUpdateAble = array('id');
-    public $columns = ['id', 'country', 'town', 'postal_code', 'street', 'number'];
+    protected string $tableName = 'addresses';
+    public array $columns = ['id', 'country', 'town', 'postal_code', 'street', 'number'];
 
     public function __construct(DBInterface $db)
     {

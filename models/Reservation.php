@@ -3,9 +3,8 @@ require_once __DIR__ . '/Model.php';
 
 class Reservation extends Model
 {
-    protected $tableName = 'reservations';
-    public $unUpdateAble = array('id', 'room_id', 'building_id', 'user_id', 'created-at');
-    protected $columns = [
+    protected string $tableName = 'reservations';
+    protected array $columns = [
         'id', 'title', 'subtitle', 'room_id', 'building_id', 'user_id',
         'start_time', 'end_time', 'date', 'created_at', 'updated_at',
         'confirmed', 'confirming_user_id', 'confirmed_at', 'deleted'
