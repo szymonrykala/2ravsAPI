@@ -13,7 +13,6 @@ class RoomController extends Controller
      * Responsible for operation with /rooms table in database
      */
     private $Room = null;
-    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

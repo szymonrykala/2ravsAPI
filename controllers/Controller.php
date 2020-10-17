@@ -1,6 +1,5 @@
 <?php
 
-use DI\Definition\Resolver\ObjectCreator;
 use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 

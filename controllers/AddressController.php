@@ -14,7 +14,6 @@ class AddressController extends Controller
      * 
      */
     private $Address = null;
-    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
