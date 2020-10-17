@@ -14,7 +14,6 @@ class BuildingController extends Controller
      * 
      */
     protected $Building;
-    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -38,7 +37,7 @@ class BuildingController extends Controller
         }
     }
 
-    // GET /buildings
+    // GET /buildings | {id}
     public function getBuildings(Request $request, Response $response, $args): Response
     {
         /**

@@ -10,7 +10,6 @@ require_once __DIR__ . "/Controller.php";
 class AccessController extends Controller
 {
     private $Access;
-    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -69,6 +68,7 @@ class AccessController extends Controller
          * POST /access/{access_id}
          * {
          *     "name":"",
+         *     "rfid_action":"",
          *     "access_edit":"",
          *     "buildings_view":"",
          *     "buildings_edit":"",

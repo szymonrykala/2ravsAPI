@@ -87,6 +87,7 @@ class ReservationController extends Controller
         $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
 
         $this->switchKey($args, 'reservation_id', 'id');
+        $this->switchKey($args, 'userID', 'user_id');
         $data = $this->handleExtensions($this->Reservation->read($args), $request);
 
         $response->getBody()->write(json_encode($data));

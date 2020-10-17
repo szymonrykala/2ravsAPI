@@ -7,7 +7,7 @@ class Building extends Model
      * Responsible for operation with buildings table in database
      */
     protected $tableName = 'buildings';
-    public $unUpdateAble = array('id');
+    public $unUpdateAble = ['id'];
     public $columns = ['id', 'name', 'rooms_count', 'address_id'];
 
     public function __construct(DBInterface $db)

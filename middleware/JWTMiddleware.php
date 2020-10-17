@@ -1,6 +1,5 @@
 <?php
 
-use Nowakowskir\JWT\Exceptions\TokenExpiredException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Response;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;

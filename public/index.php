@@ -100,13 +100,13 @@ $rootApp->group('/v1', function (\Slim\Routing\RouteCollectorProxy $appV1) {
         $buildings->post('', \BuildingController::class . ':createBuilding');
 
         $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
-            $rooms->get('/types', \RoomTypeController::class . ':getAllTypes');
+            $rooms->get('/types', \RoomTypeController::class . ':getTypes');
             $rooms->post('/types', \RoomTypeController::class . ':createType');
             $rooms->patch('/types/{room_type_id:[0-9]+}', \RoomTypeController::class . ':updateType');
             $rooms->delete('/types/{room_type_id:[0-9]+}', \RoomTypeController::class . ':deleteType');
 
             $rooms->get('', \RoomController::class . ':getRooms');
-            $rooms->get('/{room_id}', \RoomController::class . ':getRoom');
+            $rooms->get('/{room_id}', \RoomController::class . ':getRooms');
         });
 
         $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {

@@ -50,7 +50,7 @@ class Reservation extends Model
 
     private function checkTimeSlot(string $startTime, string $endTime, string $date, int $roomID)
     {
-        if (strtotime('+15 minutes',strtotime($startTime)) >= strtotime($endTime)) {
+        if (strtotime('+15 minutes', strtotime($startTime)) >= strtotime($endTime)) {
             throw new LogicException("Reservation time is not correct. Start time have to be smaller then end time. Reservation time slot have to be at least 15 minutes", 400);
         }
         $result = $this->DB->query(
@@ -72,7 +72,7 @@ class Reservation extends Model
         )[0];
 
         if ((int) $result['conflict'] > 0) {
-            throw new Exception("Given time slot is not accessible for given room. Room is reserved in time slot You specified.", 409);
+            throw new HttpConflictException("Given time slot is not accessible for given room. Room is reserved in time slot You specified.");
         }
     }
 
@@ -95,7 +95,7 @@ class Reservation extends Model
             array(':id' => $data['building_id'])
         );
         if (empty($buildingExist)) { //if not exist
-            throw new LogicException("Specified building is not exist. You can not make reservation because building You specified is not Exsist", 400);
+            throw new HttpNotFoundException("Specified building is not exist. You can not make reservation because building You specified is not Exsist");
         }
 
         //room exist in this building?
@@ -107,11 +107,11 @@ class Reservation extends Model
             )
         );
         if (empty($roomExist)) { //if not exist
-            throw new LogicException("Specified room is not exist. You can not make reservation because specified room is not exist in given building", 400);
+            throw new HttpNotFoundException("Specified room is not exist. You can not make reservation because specified room is not exist in given building");
         } else {
             //room is bookable?
             if ((bool)$roomExist[0]['blockade']) {
-                throw new LogicException("Specified room is not bookable. Room You want to reserve has blocked status.", 409); //conflict
+                throw new HttpConflictException("Specified room is not bookable. Room You want to reserve has blocked status."); //conflict
             }
         }
 
@@ -128,7 +128,7 @@ class Reservation extends Model
                     :building_id,:confirmed,:confirming_user_id,:confirmed_at,
                     NOW(),:end_time,:room_id,:start_time,:date,:subtitle,:title,:user_id
                )",
-            array(
+            [
                 ':user_id' => $data['user_id'],
                 ':building_id' => $data['building_id'],
                 ':room_id' => $data['room_id'],
@@ -140,7 +140,7 @@ class Reservation extends Model
                 ':start_time' => $data['start_time'],
                 ':end_time' => $data['end_time'],
                 ':date' => $data['date']
-            )
+            ]
         );
         return $this->DB->lastInsertID();
     }

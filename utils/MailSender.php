@@ -45,16 +45,32 @@ class MailSender
             ";
                 break;
             default:
-                throw new Exception('No such type of mail implemented', 501);
+                throw new NoSuchMailSubjectimplementedException();
                 break;
         }
     }
 
-    public function send(): bool
+    public function send(): void
     {
-        if (mail($this->userMail, $this->mailSubject, $this->mailContent,SENDER_MAIL)) {
-            return true;
+        if (!mail($this->userMail, $this->mailSubject, $this->mailContent, SENDER_MAIL)) {
+            throw new MailServiceNotAvaliableException();
         }
-        return false;
+    }
+}
+
+class MailServiceNotAvaliableException extends Exception
+{
+    public function __construct(string $message = 'Mail service is not avaliable', int $code = 503)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
+    }
+}
+class NoSuchMailSubjectimplementedException extends Exception
+{
+    public function __construct(string $message = 'No such type of mail implemented', int $code = 501)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
     }
 }

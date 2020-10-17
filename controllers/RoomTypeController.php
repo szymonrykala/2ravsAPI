@@ -40,7 +40,7 @@ class RoomTypeController extends Controller
     }
 
     // GET /buildings/rooms/types
-    public function getAllTypes(Request $request, Response $response, $args): Response
+    public function getTypes(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all room types,

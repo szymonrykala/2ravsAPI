@@ -1,6 +1,6 @@
 <?php
 //DB
-define('DSN', "mysql:host=localhost;dbname=ravs;charset=utf8mb4");
+define('DSN', "mysql:host=localhost;dbname=ravs_dev;charset=utf8mb4");
 define('DB_USER', 'root');
 define('DB_PASS', '');
 

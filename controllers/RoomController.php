@@ -111,6 +111,7 @@ class RoomController extends Controller
          * POST /buildings/{building_id}/rooms
          * {
          *      "name":"",
+         *      "rfid":"sdafgw435tgwtr",
          *      "room_type_id":1,
          *      "seats_count":1,
          *      "floor":1,
@@ -158,8 +159,7 @@ class RoomController extends Controller
          *      "seats_count":1,
          *      "floor":1,
          *      "equipment":"umywalka,kreda,tablica",
-         *      "blockade":true,
-         *      "status":false
+         *      "blockade":true
          * }
          * @param Request $request 
          * @param Response $response
@@ -176,6 +176,7 @@ class RoomController extends Controller
             'room_type_id' => 'integer',
             'seats_count' => 'integer',
             'floor' => 'integer',
+            'blockade' => 'bool',
             'equipment' => 'string'
         ], false);
 

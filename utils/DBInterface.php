@@ -4,6 +4,7 @@ interface DBInterface
 {
     public function connect(): void;
     public function query(string $sql, array $params = []): array;
+    public function lastInsertID():int;
 }
 
 class Database implements DBInterface
@@ -16,7 +17,22 @@ class Database implements DBInterface
             $this->conn = new PDO(DSN, DB_USER, DB_PASS);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            throw new Exception("DBInterface connect error: ".$e->getMessage(), 500);
+            throw new HttpServiceNotAvaliableException("Database connection error: " . $e->getMessage());
+        }
+    }
+
+    private function handleException(PDOException $e): void
+    {
+        switch ($e->getCode()) {
+            case 23000:
+                throw new Exception("Database Integrity: " . substr($e->getMessage(), 17), 400);
+                break;
+            case 42000:
+                throw new Exception("SQL Syntax error:" . substr($e->getMessage(), 17), 500);
+                break;
+            default:
+                throw new Exception("Database Interface Exception: " . substr($e->getMessage(), 17), 500);
+                break;
         }
     }
 
@@ -27,17 +43,7 @@ class Database implements DBInterface
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);
         } catch (PDOException $e) {
-            switch ($e->getCode()) {
-                case 23000:
-                    throw new Exception("Database Integrity: " . substr($e->getMessage(), 17), 400);
-                    break;
-                case 42000:
-                    throw new Exception("SQL Syntax error:" . substr($e->getMessage(), 17), 500);
-                    break;
-            }
-            echo $e->getCode();
-            echo $e->getMessage();
-            exit();
+            $this->handleException($e);
         }
 
         $keyWord = strtoupper(explode(' ', $sql)[0]);
@@ -50,16 +56,24 @@ class Database implements DBInterface
         return $results;
     }
 
-    public function lastInsertID()
+    public function lastInsertID():int
     {
         try {
             $stmt = $this->conn->prepare("SELECT LAST_INSERT_ID() AS 'id'");
             $stmt->execute();
-        } catch (Exception $e) {
-            echo $e->getMessage();
-            exit();
+        } catch (PDOException $e) {
+            $this->handleException($e);
         }
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return (int) $results[0]['id'];
+    }
+}
+
+class HttpServiceNotAvaliableException extends Exception
+{
+    public function __construct(string $message, int $code = 503)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
     }
 }

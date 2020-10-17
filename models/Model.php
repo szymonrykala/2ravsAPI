@@ -1,7 +1,5 @@
 <?php
 
-use Slim\Exception\HttpException;
-use Slim\Exception\HttpNotImplementedException;
 
 abstract class Model
 {
@@ -70,16 +68,6 @@ abstract class Model
         return ['sql' => $sql, 'params' => $queryParams];
     }
 
-    protected function filterVariables(array &$data): void
-    {
-        /**
-         * Unsetting unexpected variables from params
-         * 
-         * @param array $params
-         * @return array $params filtered
-         */
-    }
-
     public function exist(array $params): bool
     {
         /**
@@ -109,7 +97,7 @@ abstract class Model
          * @param string $sortKey=''
          * @param string $direction='DESC'
          * 
-         * @throws LengthException when nothing found
+         * @throws HttpNotFoundException when nothing found
          * @return array $result
          */
         foreach ($params as $key => $value) {
@@ -125,14 +113,13 @@ abstract class Model
         if (!empty($this->searchParams)) {
             ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
-
         // ======== NORMAL READING ===========
         $sql = "SELECT * FROM `$this->tableName` WHERE 1=1";
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
-
+        
         $sql .= $sqlData .= $searchSQL;
         $queryParams = array_merge($searchParams, $queryParams);
-
+        
         // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
@@ -147,7 +134,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams), 404);
+            throw new HttpNotFoundException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams));
         }
         foreach ($result as &$r) {
             $this->parseData($r);
@@ -164,7 +151,7 @@ abstract class Model
     public function update(int $id, array $params): void
     {
         if (!$this->exist(['id' => $id])) {
-            throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.", 404);
+            throw new HttpNotFoundException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.");
         }
 
         $sql = "UPDATE $this->tableName SET";
@@ -187,12 +174,29 @@ abstract class Model
     public function delete(int $id): void
     {
         if (!$this->exist(['id' => $id])) {
-            throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot delete non existing collection item.", 404);
+            throw new HttpNotFoundException("$this->tableName with id=$id do not exist. You cannot delete non existing collection item.");
         }
 
         $this->DB->query(
             "DELETE FROM $this->tableName WHERE id=:id",
             array(':id' => $id)
         );
+    }
+}
+
+class HttpNotFoundException extends Exception
+{
+    public function __construct(string $message, int $code = 404)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
+    }
+}
+class HttpConflictException extends Exception
+{
+    public function __construct(string $message, int $code = 409)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
     }
 }
