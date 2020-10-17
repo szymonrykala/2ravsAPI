@@ -4,8 +4,8 @@ define('DSN', "mysql:host=localhost;dbname=ravs;charset=utf8mb4");
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
-define('SENDER_MAIL','noreply@maciejkossowski.pl');
-define('DEFAULT_ACCESS',1);
+define('SENDER_MAIL', 'noreply@maciejkossowski.pl');
+define('DEFAULT_ACCESS', 1);
 
 define('JWT_SIGNATURE', 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko');
 
@@ -45,7 +45,9 @@ require_once __DIR__ . '/../utils/Validator.php';
 
 function myErrorHandler(Throwable $e)
 {
-    $data = [
+    http_response_code($e->getCode());
+    header('content-type:application/json');
+    echo json_encode([
         'error' => [
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
@@ -53,10 +55,7 @@ function myErrorHandler(Throwable $e)
             // 'trace' => $e->getTrace(),
             'code' => $e->getCode()
         ]
-    ];
-    http_response_code($e->getCode());
-    header('content-type:application/json');
-    echo json_encode($data);
+    ]);
     return true;
 }
 set_exception_handler("myErrorHandler");
