@@ -1,11 +1,11 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Address extends Model
 {
-    protected $tableName = 'addresses';
-    public $unUpdateAble = array('id');
-    public $columns = ['id', 'country', 'town', 'postal_code', 'street', 'number'];
+    protected string $tableName = 'addresses';
+    public array $columns = ['id', 'country', 'town', 'postal_code', 'street', 'number'];
 
     public function __construct(DBInterface $db)
     {
@@ -30,7 +30,7 @@ class Address extends Model
     {
         if ($this->exist($data))
         {
-            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
         }
 
         $this->DB->query(

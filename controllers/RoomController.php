@@ -1,11 +1,10 @@
 <?php
-
+namespace controllers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 
-require_once __DIR__ . "/Controller.php";
 
 class RoomController extends Controller
 {
@@ -13,7 +12,6 @@ class RoomController extends Controller
      * Responsible for operation with /rooms table in database
      */
     private $Room = null;
-    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -42,6 +40,35 @@ class RoomController extends Controller
             }
             $data['equipment'] = $Validator->sanitizeString($data['equipment']);
         }
+    }
+
+    // PATCH /rfid
+    public function rfidAction(Request $request, Response $response, $args): Response
+    {
+        /**
+         * Toggle the state of room with rfid in "rfid"
+         * {
+         *      "rfid" : ""
+         * }
+         */
+        $rfid = $this->getFrom($request, ['rfid' => 'string'],true)['rfid'];
+        $rfid = str_replace(' ', '', $rfid);
+        if (empty($rfid)) {
+            throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
+        }
+
+        $room = $this->Room->read(['rfid' => $rfid])[0];
+
+        $this->Room->update($room['id'], ['state' => (bool)!$room['state']]);
+
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'room_id' => $room['id'],
+            'message' => 'User ' . $request->getAttribute('email') . ' toggled to ' . (!$room['state'] ? 'true' : 'false') . ' state of room with rfid: ' . $rfid
+        ]);
+
+        $response->getBody()->write('toggled to '.(!$room['state'] ? 'true' : 'false'));
+        return $response->withStatus(200);
     }
 
     // GET /buildings/rooms
@@ -82,6 +109,7 @@ class RoomController extends Controller
          * POST /buildings/{building_id}/rooms
          * {
          *      "name":"",
+         *      "rfid":"sdafgw435tgwtr",
          *      "room_type_id":1,
          *      "seats_count":1,
          *      "floor":1,
@@ -129,8 +157,7 @@ class RoomController extends Controller
          *      "seats_count":1,
          *      "floor":1,
          *      "equipment":"umywalka,kreda,tablica",
-         *      "blockade":true,
-         *      "status":false
+         *      "blockade":true
          * }
          * @param Request $request 
          * @param Response $response
@@ -147,6 +174,7 @@ class RoomController extends Controller
             'room_type_id' => 'integer',
             'seats_count' => 'integer',
             'floor' => 'integer',
+            'blockade' => 'bool',
             'equipment' => 'string'
         ], false);
 

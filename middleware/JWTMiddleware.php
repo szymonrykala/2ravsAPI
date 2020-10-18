@@ -1,9 +1,8 @@
 <?php
-
-use Nowakowskir\JWT\Exceptions\TokenExpiredException;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Psr7\Response;
+namespace middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
 
 use Nowakowskir\JWT\TokenEncoded;
 use Nowakowskir\JWT\JWT;
@@ -12,6 +11,11 @@ use Slim\Exception\HttpUnauthorizedException;
 class JWTMiddleware
 {
     private $request = null;
+
+    public function __construct(string $JWTsignature)
+    {
+        $this->JWTsignature = $JWTsignature;
+    }
 
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
@@ -58,9 +62,9 @@ class JWTMiddleware
     {
         try {
             $tokenEncoded = new TokenEncoded($token);
-            $tokenEncoded->validate(JWT_SIGNATURE, JWT::ALGORITHM_HS384);
+            $tokenEncoded->validate($this->JWTsignature, JWT::ALGORITHM_HS384);
             $tokenData = (array) $tokenEncoded->decode()->getPayload();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new HttpUnauthorizedException($this->request, "JWT: " . $e->getMessage());
         }
         return $tokenData;

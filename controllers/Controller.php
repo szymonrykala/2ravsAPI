@@ -1,6 +1,6 @@
 <?php
+namespace controllers;
 
-use DI\Definition\Resolver\ObjectCreator;
 use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -63,7 +63,7 @@ abstract class Controller
          */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new InvalidArgumentException("Request body is empty or is not in right format", 400);
+            throw new \models\HttpBadRequestException("Request body is empty or is not in right format", 400);
         }
 
         //skipping unnessesry values
@@ -73,12 +73,6 @@ abstract class Controller
             if (gettype($value) !== $parameters[$key]) {
                 throw new HttpBadRequestException($request, "Bad variable type passed. Variable '$key' need to be a type of " . $parameters[$key]);
             }
-            // if (
-            //     $parameters[$key] === 'string' &&
-            //     !filter_var($value, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[\w\s\.!@#$%^&*]+$/u']])
-            // ) {
-            //     throw new HttpBadRequestException($request, "Incorrect variable value. Variable '$key' has incorrect value; pattern: /^[\w\s\.!@#$%^&*]+$/u");
-            // }
 
             $outputData[$key] = $value;
         }
@@ -138,6 +132,7 @@ abstract class Controller
          * @return array $dataArray 
          */
         $extensions = $this->parsedQueryString($request, 'ext');
+
         $roomMark = in_array('room_id', $extensions);
         $buildingMark = in_array('building_id', $extensions);
         $userMark = in_array('user_id', $extensions);
@@ -147,27 +142,13 @@ abstract class Controller
         $accessMark = in_array('access_id', $extensions);
         $roomTypeMark = in_array('room_type_id', $extensions);
 
-        if ($roomMark) {
-            $Room = $this->DIcontainer->get('Room');
-        }
-        if ($roomTypeMark) {
-            $RoomType = $this->DIcontainer->get('RoomType');
-        }
-        if ($buildingMark) {
-            $Building = $this->DIcontainer->get('Building');
-        }
-        if ($addressMark) {
-            $Address = $this->DIcontainer->get('Address');
-        }
-        if ($reservationMark) {
-            $Reservation = $this->DIcontainer->get('Reservation');
-        }
-        if ($userMark || $confirmedMark) {
-            $User = $this->DIcontainer->get('User');
-        }
-        if ($accessMark) {
-            $Access = $this->DIcontainer->get('Access');
-        }
+        if ($roomMark) $Room = $this->DIcontainer->get('Room');
+        if ($roomTypeMark) $RoomType = $this->DIcontainer->get('RoomType');
+        if ($buildingMark) $Building = $this->DIcontainer->get('Building');
+        if ($addressMark) $Address = $this->DIcontainer->get('Address');
+        if ($reservationMark) $Reservation = $this->DIcontainer->get('Reservation');
+        if ($userMark || $confirmedMark) $User = $this->DIcontainer->get('User');
+        if ($accessMark) $Access = $this->DIcontainer->get('Access');
 
         foreach ($dataArray as &$dataEntry) {
             if ($roomMark && $dataEntry['room_id'] !== null) {
@@ -197,10 +178,10 @@ abstract class Controller
 
             if ($userMark && $dataEntry['user_id'] !== null) {
                 $dataEntry['user'] = $User->read(['id' => $dataEntry['user_id']])[0];
-                unset($dataEntry['user_id']);
-                unset($dataEntry['user']['password']);
-                unset($dataEntry['user']['action_key']);
-                unset($dataEntry['user']['login_fails']);
+                unset($dataEntry['user_id'],
+                $dataEntry['user']['password'],
+                $dataEntry['user']['action_key'],
+                $dataEntry['user']['login_fails']);
             }
 
             if ($accessMark && $dataEntry['access_id'] !== null) {
@@ -208,12 +189,13 @@ abstract class Controller
                 unset($dataEntry['access_id']);
             }
 
-            if ($confirmedMark && $dataEntry['confirming_user_id'] !== null) {
+            if ($confirmedMark && $dataEntry['confirming_user_id'] !== 0) {
+                var_dump($dataEntry);
                 $dataEntry['confirming_user'] = $User->read(['id' => $dataEntry['confirming_user_id']])[0];
-                unset($dataEntry['confirming_user_id']);
-                unset($dataEntry['confirming_user']['password']);
-                unset($dataEntry['confirming_user']['action_key']);
-                unset($dataEntry['confirming_user']['login_fails']);
+                unset($dataEntry['confirming_user_id'],
+                $dataEntry['confirming_user']['password'],
+                $dataEntry['confirming_user']['action_key'],
+                $dataEntry['confirming_user']['login_fails']);
             } elseif (isset($dataEntry['confirmed'])) {
                 $dataEntry['confirming_user_id'] = null;
             }

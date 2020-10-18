@@ -1,17 +1,15 @@
 <?php
-
-use Slim\Exception\HttpException;
-use Slim\Exception\HttpNotImplementedException;
+namespace models;
+use utils\DBInterface;
 
 abstract class Model
 {
-    public $unUpdateAble = array();
-    protected $columns = [];
-    protected $DB = null;
-    protected $tableName = null;
-    protected $queryStringParams = [];
-    protected $searchParams = [];
-    protected $searchMode = "=";
+    protected array $columns;
+    protected DBInterface $DB;
+    protected string $tableName;
+    protected array $queryStringParams = [];
+    protected array $searchParams;
+    protected string $searchMode = "=";
 
     public function __construct(DBInterface $DBInterface)
     {
@@ -70,16 +68,6 @@ abstract class Model
         return ['sql' => $sql, 'params' => $queryParams];
     }
 
-    protected function filterVariables(array &$data): void
-    {
-        /**
-         * Unsetting unexpected variables from params
-         * 
-         * @param array $params
-         * @return array $params filtered
-         */
-    }
-
     public function exist(array $params): bool
     {
         /**
@@ -97,7 +85,7 @@ abstract class Model
 
     public function parseData(array &$data): void
     {
-        throw new Exception("Mode::parseData(array \$data) need to be implemented", 501);
+        throw new \Exception("Mode::parseData(array \$data) need to be implemented", 501);
     }
 
     public function read(array $params = []): array
@@ -109,7 +97,7 @@ abstract class Model
          * @param string $sortKey=''
          * @param string $direction='DESC'
          * 
-         * @throws LengthException when nothing found
+         * @throws HttpNotFoundException when nothing found
          * @return array $result
          */
         foreach ($params as $key => $value) {
@@ -125,7 +113,6 @@ abstract class Model
         if (!empty($this->searchParams)) {
             ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
-
         // ======== NORMAL READING ===========
         $sql = "SELECT * FROM `$this->tableName` WHERE 1=1";
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
@@ -147,7 +134,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new LengthException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams), 404);
+            throw new HttpNotFoundException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams));
         }
         foreach ($result as &$r) {
             $this->parseData($r);
@@ -157,21 +144,20 @@ abstract class Model
 
     public function create(array $params): int
     {
-        throw new Exception("Model::create() need to be implemented", 501);
+        throw new \Exception("Model::create() need to be implemented", 501);
         return -1;
     }
 
     public function update(int $id, array $params): void
     {
         if (!$this->exist(['id' => $id])) {
-            throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.", 404);
+            throw new HttpNotFoundException("$this->tableName with id=$id do not exist. You cannot update non existing collection item.");
         }
 
         $sql = "UPDATE $this->tableName SET";
         $queryParams = array();
 
         foreach ($params as $key => $value) {
-            if (in_array($key, $this->unUpdateAble)) continue;
 
             count($queryParams) >= 1 ? $sql .= "," : null;
             $sql .= " $key=:$key";
@@ -187,12 +173,37 @@ abstract class Model
     public function delete(int $id): void
     {
         if (!$this->exist(['id' => $id])) {
-            throw new InvalidArgumentException("$this->tableName with id=$id do not exist. You cannot delete non existing collection item.", 404);
+            throw new HttpNotFoundException("$this->tableName with id=$id do not exist. You cannot delete non existing collection item.");
         }
 
         $this->DB->query(
             "DELETE FROM $this->tableName WHERE id=:id",
             array(':id' => $id)
         );
+    }
+}
+
+class HttpNotFoundException extends \Exception
+{
+    public function __construct(string $message, int $code = 404)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
+    }
+}
+class HttpConflictException extends \Exception
+{
+    public function __construct(string $message, int $code = 409)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
+    }
+}
+class HttpBadRequestException extends \Exception
+{
+    public function __construct(string $message, int $code = 400)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
     }
 }

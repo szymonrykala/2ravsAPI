@@ -1,11 +1,10 @@
 <?php
-
+namespace controllers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 
-require_once __DIR__ . "/Controller.php";
 
 class RoomTypeController extends Controller
 {
@@ -40,7 +39,7 @@ class RoomTypeController extends Controller
     }
 
     // GET /buildings/rooms/types
-    public function getAllTypes(Request $request, Response $response, $args): Response
+    public function getTypes(Request $request, Response $response, $args): Response
     {
         /**
          * Getting all room types,

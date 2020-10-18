@@ -1,11 +1,10 @@
 <?php
-
+namespace controllers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 
-require_once __DIR__ . "/Controller.php";
 
 class BuildingController extends Controller
 {
@@ -14,7 +13,6 @@ class BuildingController extends Controller
      * 
      */
     protected $Building;
-    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -38,7 +36,7 @@ class BuildingController extends Controller
         }
     }
 
-    // GET /buildings
+    // GET /buildings | {id}
     public function getBuildings(Request $request, Response $response, $args): Response
     {
         /**

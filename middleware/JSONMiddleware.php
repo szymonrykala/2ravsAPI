@@ -1,7 +1,7 @@
 <?php
-
-use Psr\Http\Message\ServerRequestInterface as Request;
+namespace middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
 
@@ -14,10 +14,12 @@ class JSONMiddleware
         $code = $response->getStatusCode();
         $reason = $response->getReasonPhrase();
         $body = $response->getBody();
+
         $responseData = null;
         if ($body !== null) {
-            $body = json_decode($body);
-            $responseData['items'] = $body;
+            $decodedBody = json_decode($body);
+            if (empty($decodedBody)) $responseData['message'] = (string) $body;
+            else $responseData['items'] = $decodedBody;
         }
 
         $response = new Response();

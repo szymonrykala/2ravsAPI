@@ -1,14 +1,14 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Building extends Model
 {
     /**
      * Responsible for operation with buildings table in database
      */
-    protected $tableName = 'buildings';
-    public $unUpdateAble = array('id');
-    public $columns = ['id', 'name', 'rooms_count', 'address_id'];
+    protected string $tableName = 'buildings';
+    public array $columns = ['id', 'name', 'rooms_count', 'address_id'];
 
     public function __construct(DBInterface $db)
     {
@@ -45,7 +45,7 @@ class Building extends Model
          */
         if ($this->exist($data))
         {
-            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
         }
 
         $this->DB->query(

@@ -1,11 +1,10 @@
 <?php
-
+namespace controllers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 
-require_once __DIR__ . "/Controller.php";
 
 class AddressController extends Controller
 {
@@ -14,7 +13,6 @@ class AddressController extends Controller
      * 
      */
     private $Address = null;
-    private $request = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

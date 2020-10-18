@@ -1,14 +1,14 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class RoomType extends Model
 {
     /**
      * Responsible for operation with room_types table in database
      */
-    protected $tableName = 'room_types';
-    public $unUpdateAble = array('id');
-    public $columns = ['id', 'name'];
+    protected string $tableName = 'room_types';
+    public array $columns = ['id', 'name'];
 
     public function __construct(DBInterface $db)
     {
@@ -50,7 +50,7 @@ class RoomType extends Model
 
         if ($this->exist($data))
         {
-            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
         }
 
         $this->DB->query(

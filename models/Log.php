@@ -1,11 +1,11 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Log extends Model
 {
-    protected $tableName = 'logs';
-    public $unUpdateAble = array('id', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id');
-    public $columns = ['id', 'message', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id'];
+    protected string $tableName = 'logs';
+    public array $columns = ['id', 'message', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id'];
 
     public function __construct(DBInterface $db)
     {

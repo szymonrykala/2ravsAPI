@@ -1,11 +1,11 @@
 <?php
-
-use Psr\Http\Message\ServerRequestInterface as Request;
+namespace middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpUnauthorizedException;
-use Slim\Psr7\Response;
 
 /* 
 checking if authenticated user have access to resources he want to perform
@@ -18,7 +18,7 @@ class AuthorizationMiddleware
     private $resourceNumber = null;
     private $Access = null;
 
-    public function __construct(DI\Container $container)
+    public function __construct(\DI\Container $container)
     {
         $this->Access = $container->get("Access");
         $this->User = $container->get("User");
@@ -93,7 +93,7 @@ class AuthorizationMiddleware
                 'DELETE' => $result['reservations_edit']
             ),
             'confirm' => array(
-                'POST' => $result['reservations_confirm']
+                'PATCH' => $result['reservations_confirm']
             ),
             'buildings' => array(
                 'GET' => $result['buildings_view'],
@@ -136,7 +136,10 @@ class AuthorizationMiddleware
                 'POST' => $result['access_edit'],
                 'PATCH' => $result['access_edit'],
                 'DELETE' => $result['access_edit']
-            )
+            ),
+            'rfid' =>[
+                'PATCH' => $result['rfid_action']
+            ]
         );
     }
 }

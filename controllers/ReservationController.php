@@ -1,13 +1,11 @@
 <?php
-
+namespace controllers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
-use Slim\Exception\HttpNotImplementedException;
 
-require_once __DIR__ . "/Controller.php";
 
 class ReservationController extends Controller
 {
@@ -87,6 +85,7 @@ class ReservationController extends Controller
         $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
 
         $this->switchKey($args, 'reservation_id', 'id');
+        $this->switchKey($args, 'userID', 'user_id');
         $data = $this->handleExtensions($this->Reservation->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
@@ -107,9 +106,17 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        throw new HttpNotImplementedException($request, "Confirming Not implemented!");
+        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
-        $response->getBody()->write("Middleware");
+        if ((bool)$reservation['confirmed'] === true) throw new HttpConflictException('Reservation is already confirmed');
+
+        $this->Reservation->update($reservation['id'], ['confirmed' => true]);
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'reservation_id' => $args['reservation_id'],
+            'message' => 'User ' . $request->getAttribute('email') . ' confirmed reservation',
+        ]);
+        $response->getBody()->write("Reservation confirmed");
         return $response;
     }
 
@@ -155,7 +162,7 @@ class ReservationController extends Controller
             "building_id" => $buildingID,
             "user_id" => $currentUser
         ]);
-        
+
         $reservationID = $this->Reservation->create($reservationData);
         $this->Log->create([
             'user_id' => $currentUser,

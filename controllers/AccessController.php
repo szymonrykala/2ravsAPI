@@ -1,16 +1,16 @@
 <?php
+namespace controllers;
 
+use App\Models\HttpConflictException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 
-require_once __DIR__ . "/Controller.php";
 
 class AccessController extends Controller
 {
     private $Access;
-    private $request;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -69,6 +69,7 @@ class AccessController extends Controller
          * POST /access/{access_id}
          * {
          *     "name":"",
+         *     "rfid_action":"",
          *     "access_edit":"",
          *     "buildings_view":"",
          *     "buildings_edit":"",
@@ -185,7 +186,7 @@ class AccessController extends Controller
         // each user with current access have to 
         $User = $this->DIcontainer->get('User');
         if ($User->exist(['access_id' => $args['access_id']])) {
-            throw new Exception("Some Users stil have this access class. You can't delete it", 409); //conflict
+            throw new HttpConflictException("Some Users stil have this access class. You can't delete it", 409); //conflict
         } else {
             $this->Access->delete($args['access_id']);
             $this->Log->create([

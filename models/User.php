@@ -1,11 +1,11 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class User extends Model
 {
-    protected $tableName = 'users';
-    public $unUpdateAble = array('id', 'created_at');
-    protected $columns = [
+    protected string $tableName = 'users';
+    protected array $columns = [
         'id', 'access_id', 'name', 'surname', 'password',
         'last_login', 'email', 'updated_at',
         'activated', 'login_fails', 'created_at', 'action_key'
@@ -45,22 +45,22 @@ class User extends Model
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 
         if ($this->exist(['email' => $data['email']])) {
-            throw new InvalidArgumentException("$this->tableName with given email already exist.", 400);
+            throw new HttpConflictException("$this->tableName with given email already exist.");
         }
 
         $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
 
         $this->DB->query(
             "INSERT INTO 
-                $this->tableName(name,surname,password,email,action_key)
-               VALUES(:name,:surname,:password,:email,:action_key)",
+                $this->tableName(name,surname,password,email,action_key,access_id)
+               VALUES(:name,:surname,:password,:email,:action_key,:access_id)",
             array(
                 ':name' => $data['name'],
                 ':surname' => $data['surname'],
                 ':password' => $data['password'],
                 ':email' => $data['email'],
                 ':action_key' => $data['action_key'],
-                ':access_id' => DEFAULT_ACCESS
+                ':access_id' => $data['access_id']
             )
         );
         return $this->DB->lastInsertID();

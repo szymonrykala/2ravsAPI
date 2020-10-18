@@ -1,12 +1,12 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Access extends Model
 {
-    protected $tableName = 'accesses';
-    public $unUpdateAble = array('id');
-    protected $columns = [
-        'id', 'name', 'access_edit', 'buildings_view',
+    protected string $tableName = 'accesses';
+    protected array $columns = [
+        'id', 'name','rfid_action', 'access_edit', 'buildings_view',
         'buildings_edit', 'logs_view', 'logs_edit', 'rooms_view', 'rooms_edit',
         'reservations_access', 'reservations_confirm', 'reservations_edit',
         'users_edit', 'statistics_view'
@@ -36,7 +36,7 @@ class Access extends Model
 
     public function create(array $data): int
     {
-        if ($this->exist($data)) throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+        if ($this->exist($data)) throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
     
         $this->DB->query(
             "INSERT INTO $this->tableName(

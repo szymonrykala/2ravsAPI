@@ -1,12 +1,12 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Room extends Model
 {
-    protected $tableName = 'rooms';
-    public $unUpdateAble = array('id');
-    public $columns = [
-        'id', 'name', 'building_id', 'room_type_id', 'seats_count', 'floor',
+    protected string $tableName = 'rooms';
+    public array $columns = [
+        'id', 'name','rfid', 'building_id', 'room_type_id', 'seats_count', 'floor',
         'equipment', 'blockade', 'state'
     ];
 
@@ -20,6 +20,9 @@ class Room extends Model
         foreach ($data as $key => &$value) {
             switch ($key) {
                 case 'name':
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    break;
+                case 'rfid':
                     $value = filter_var($value, FILTER_SANITIZE_STRING);
                     break;
                 case 'equipment':
@@ -45,7 +48,7 @@ class Room extends Model
             "floor" => $data["floor"],
             "building_id" => $data["building_id"]
         ])) {
-            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
         }
 
         $this->DB->query(

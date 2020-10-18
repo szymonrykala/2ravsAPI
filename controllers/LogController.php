@@ -1,10 +1,9 @@
 <?php
-
+namespace controllers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-
-require_once __DIR__ . "/Controller.php";
+use Slim\Exception\HttpBadRequestException;
 
 class LogController extends Controller
 {
@@ -67,7 +66,7 @@ class LogController extends Controller
             $data = $request->getParsedBody();
 
             if ($data == null || !isset($data['IDs'])) {
-                throw new Exception("No data has been passed - 'IDs' param is required when 'log_id' in query string is below 0.", 400);
+                throw new HttpBadRequestException($request,"No data has been passed - 'IDs' param is required when 'log_id' in query string is below 0.");
             }
             foreach ($data['IDs'] as $logID) {
                 $this->Log->delete($logID);
