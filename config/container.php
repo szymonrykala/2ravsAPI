@@ -3,6 +3,18 @@
 use Psr\Container\ContainerInterface;
 use Slim\Factory\AppFactory;
 
+use models\Access;
+use models\Address;
+use models\Building;
+use models\Log;
+use models\Reservation;
+use models\Room;
+use models\RoomType;
+use models\User;
+use utils\Validator;
+use utils\Database;
+use utils\MailSender;
+
 return [
     App::class => function (ContainerInterface $container) {
         AppFactory::setContainer($container);
@@ -43,7 +55,11 @@ return [
     'RoomType' => function (ContainerInterface $container) {
         return new RoomType($container->get(Database::class));
     },
-    'Validator' => new Validator(),
-    'MailSender' => new MailSender(),
+    'Validator' => function (ContainerInterface $container) {
+        return new Validator();
+    },
+    'MailSender' => function (ContainerInterface $container) {
+        return new MailSender();
+    },
     'settings' => (require __DIR__ . '/defaults.php')
 ];

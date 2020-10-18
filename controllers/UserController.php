@@ -1,5 +1,9 @@
 <?php
 
+namespace controllers;
+
+use models\HttpConflictException;
+use models\HttpNotFoundException;
 use Nowakowskir\JWT\JWT;
 use Nowakowskir\JWT\TokenDecoded;
 use Psr\Container\ContainerInterface;
@@ -10,8 +14,6 @@ use Slim\Exception\HttpException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotImplementedException;
 use Slim\Exception\HttpUnauthorizedException;
-
-require_once __DIR__ . "/Controller.php";
 
 
 class UserController extends Controller
@@ -38,7 +40,7 @@ class UserController extends Controller
             )
         );
         // encoding the token
-        $tokenEncoded = $tokenDecoded->encode(JWT_SIGNATURE, JWT::ALGORITHM_HS384);
+        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['secret'], JWT::ALGORITHM_HS384);
         return $tokenEncoded->__toString();
     }
 
@@ -97,10 +99,10 @@ class UserController extends Controller
         list(
             'email' => $email,
             'password' => $password
-        ) = $this->getFrom($request, array(
+        ) = $this->getFrom($request, [
             'email' => 'string',
             'password' => 'string'
-        ));
+        ]);
 
         $email = filter_var($email, FILTER_SANITIZE_EMAIL);
 
@@ -111,8 +113,8 @@ class UserController extends Controller
                 'access_id' => $accessID,
                 'login_fails' => $loginFails,
                 'activated' => $activated
-            ) = $this->User->read(array('email' => $email))[0];
-        } catch (LengthException $e) {
+            ) = $this->User->read(['email' => $email])[0];
+        } catch (HttpNotFoundException $e) {
             throw new HttpBadRequestException($request, "Can not login. Given email '$email' is not exist");
         }
 
@@ -293,6 +295,7 @@ class UserController extends Controller
                 /* given email is new user email - it's not set yet*/
                 $editedEmail = ['email' => $email];
                 if ($this->User->exist($editedEmail)) {
+                    // throw new HttpConflictException('Given email ' . $email . ' already exist. Someone activated the same email before You.');
                     throw new HttpConflictException('Given email ' . $email . ' already exist. Someone activated the same email before You.');
                 }
                 $this->validateUser($request, $editedEmail);

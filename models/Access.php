@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Access extends Model
 {
@@ -35,7 +36,7 @@ class Access extends Model
 
     public function create(array $data): int
     {
-        if ($this->exist($data)) throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+        if ($this->exist($data)) throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
     
         $this->DB->query(
             "INSERT INTO $this->tableName(

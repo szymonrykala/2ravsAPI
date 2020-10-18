@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class RoomType extends Model
 {
@@ -49,7 +50,7 @@ class RoomType extends Model
 
         if ($this->exist($data))
         {
-            throw new InvalidArgumentException("$this->tableName with given data already exist. Data:" . json_encode($data), 400);
+            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
         }
 
         $this->DB->query(

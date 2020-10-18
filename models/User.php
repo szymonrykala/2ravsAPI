@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class User extends Model
 {
@@ -44,7 +45,7 @@ class User extends Model
         $data['surname'] = preg_replace('/\s/', '', $data['surname']);
 
         if ($this->exist(['email' => $data['email']])) {
-            throw new InvalidArgumentException("$this->tableName with given email already exist.", 400);
+            throw new HttpConflictException("$this->tableName with given email already exist.");
         }
 
         $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);

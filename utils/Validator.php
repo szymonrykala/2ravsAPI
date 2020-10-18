@@ -1,6 +1,6 @@
 <?php
-// !filter_var($startTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
-// !filter_var($endTime, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[0-2][0-4]:[0-5][0-9](:[0-5][0-9])?$/']]) &&
+namespace utils;
+
 class Validator
 {
     public $postalCode = '/^\d{2}-\d{3}$/';

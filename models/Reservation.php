@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/Model.php';
+namespace models;
+use utils\DBInterface;
 
 class Reservation extends Model
 {
@@ -50,7 +51,7 @@ class Reservation extends Model
     private function checkTimeSlot(string $startTime, string $endTime, string $date, int $roomID)
     {
         if (strtotime('+15 minutes', strtotime($startTime)) >= strtotime($endTime)) {
-            throw new LogicException("Reservation time is not correct. Start time have to be smaller then end time. Reservation time slot have to be at least 15 minutes", 400);
+            throw new HttpBadRequestException("Reservation time is not correct. Start time have to be smaller then end time. Reservation time slot have to be at least 15 minutes");
         }
         $result = $this->DB->query(
             "SELECT COUNT(id) AS 'conflict' FROM $this->tableName WHERE 
@@ -78,14 +79,14 @@ class Reservation extends Model
     public function create(array $data): int
     {
         //checking time
-        $Date = new DateTime();
+        $Date = new \DateTime();
 
         $currentDate = $Date->format('Y-m-d');
         $currentTime = $Date->format('H:i:s');
         if ($currentDate > $data['date']) {
-            throw new LogicException("Reservation date is too late", 400);
+            throw new HttpBadRequestException("Reservation date is too late");
         } elseif ($currentDate == $data['date'] && $currentTime >= $data['start_time']) {
-            throw new LogicException("Reservation time is too late", 400);
+            throw new HttpBadRequestException("Reservation time is too late");
         }
 
         //building exist?

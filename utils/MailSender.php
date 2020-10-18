@@ -1,5 +1,5 @@
 <?php
-
+namespace utils;
 class MailSender
 {
     private $userName = '';
@@ -16,7 +16,7 @@ class MailSender
     public function setUser(array $user): void
     {
         if (!isset($user['name'], $user['action_key'], $user['email'])) {
-            throw new Exception('name, action_key and email are required to build and send email', 500);
+            throw new \InvalidArgumentException('name, action_key and email are required to build and send email', 500);
         }
         $this->userName = $user['name'];
         $this->userKey = $user['action_key'];
@@ -58,7 +58,7 @@ class MailSender
     }
 }
 
-class MailServiceNotAvaliableException extends Exception
+class MailServiceNotAvaliableException extends \Exception
 {
     public function __construct(string $message = 'Mail service is not avaliable', int $code = 503)
     {
@@ -66,7 +66,7 @@ class MailServiceNotAvaliableException extends Exception
         $this->code = $code;
     }
 }
-class NoSuchMailSubjectimplementedException extends Exception
+class NoSuchMailSubjectimplementedException extends \Exception
 {
     public function __construct(string $message = 'No such type of mail implemented', int $code = 501)
     {

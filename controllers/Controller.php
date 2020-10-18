@@ -1,4 +1,5 @@
 <?php
+namespace controllers;
 
 use Invoker\Exception\NotEnoughParametersException;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -62,7 +63,7 @@ abstract class Controller
          */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new InvalidArgumentException("Request body is empty or is not in right format", 400);
+            throw new \models\HttpBadRequestException("Request body is empty or is not in right format", 400);
         }
 
         //skipping unnessesry values

@@ -1,5 +1,6 @@
 <?php
-
+namespace models;
+use utils\DBInterface;
 
 abstract class Model
 {
@@ -84,7 +85,7 @@ abstract class Model
 
     public function parseData(array &$data): void
     {
-        throw new Exception("Mode::parseData(array \$data) need to be implemented", 501);
+        throw new \Exception("Mode::parseData(array \$data) need to be implemented", 501);
     }
 
     public function read(array $params = []): array
@@ -143,7 +144,7 @@ abstract class Model
 
     public function create(array $params): int
     {
-        throw new Exception("Model::create() need to be implemented", 501);
+        throw new \Exception("Model::create() need to be implemented", 501);
         return -1;
     }
 
@@ -182,7 +183,7 @@ abstract class Model
     }
 }
 
-class HttpNotFoundException extends Exception
+class HttpNotFoundException extends \Exception
 {
     public function __construct(string $message, int $code = 404)
     {
@@ -190,9 +191,17 @@ class HttpNotFoundException extends Exception
         $this->code = $code;
     }
 }
-class HttpConflictException extends Exception
+class HttpConflictException extends \Exception
 {
     public function __construct(string $message, int $code = 409)
+    {
+        parent::__construct($message, $code);
+        $this->code = $code;
+    }
+}
+class HttpBadRequestException extends \Exception
+{
+    public function __construct(string $message, int $code = 400)
     {
         parent::__construct($message, $code);
         $this->code = $code;
