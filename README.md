@@ -2,11 +2,12 @@
 
 Reservation and Visualisation System API
 
--   [ ] po zmianie emaila, wymagana aktywacja użytkownika
+-   [x] po zmianie emaila, wymagana aktywacja użytkownika
 -   [ ] zatwierdzanie rezerwacji
 -   [ ] usunąć rooms_count z tworzenia budynku
 
 ## Shortcuts:
+
 1. [Features](#Features)
 2. [Responses](#Responses)
 3. [Endpoints](Endpoints)
@@ -22,6 +23,7 @@ Reservation and Visualisation System API
 4. [Catalog structure](#Catalog_structure)
 5. [Changelog](#Changelog)
 
+---
 
 ## #Features
 
@@ -62,6 +64,8 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
 -   `LIKE` - działa jak `LIKE` w języku SQL
 -   `REGEXP` - wyszukuje według wyrażeń regularnych
 
+---
+
 ## #Responses:
 
 -   Succes:
@@ -80,6 +84,7 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
     -   Internal Server Error 500
     -   Service Not Avaliable 503
 
+---
 
 ## #Endpoints
 
@@ -282,19 +287,23 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
         "repeat_password": "myPassS144$"
     }
     ```
--   POST /users/activate
-    > Aktywacja użytkownika po rejestracji lub zmianie hasła; Ponowne wysłanie maila aktywacyjnego.
-    > W przypdaku gdy pole `action`:`resend`, następuje prośba o ponowne wysłanie maila z kodem aktywacyjnym. Natomiast gdy `action`:`activate`, następuje aktywacja użytkownika. Pola `email` oraz `password` są wymagane w celach uwierzytelniania.
+-   PATCH /users/action
+    > Akcja z użyciem kodu otrzymanego na maila. Pola `email` oraz `password` są wymagane w celach uwierzytelniania.
+    > Pole `action` może przyjmować trzy wartości:
+    -   `resend` - prośba o ponowne wysłanie maila z kodem aktywacyjnym
+    -   `activate` - aktywacja użytkownika
+    -   `change_email` - zmiana emaila użytkownika. Pole `email` wówczas musi zawierać nowy email
     ```json
     {
         "email": "my.email@exemail.com",
         "password": "myPassS144$",
         "activation_key": "9t85v",
-        "action": "resend | activate"
+        "action": "resend | activate | change_email"
     }
     ```
 -   PATCH /users/{id}
     > Aktualizacja danych użytkownika. Pola `old_password` i `new_password` są wymagane tylko w przypadku, gdy użytkownik chce zmienić hasło. Aktualizacja klasy kodstępu użytkownika przez pole `access_id` jest możliwa tylko przez użytkownika mającego zezwalającą na to klasę dostępu. Reszta pól jest opcjonalna.
+    > Chcąc zmienić email, wpisujemy w pole `email` nową wartość. Na nowy adres email zostaje wysłany mail z kodem aktywacyjnym. Kod aktywacyjny potrzebny należy wykorzystać w `PATCH /users/action`
     ```json
     {
         "name": "Jan",
@@ -392,6 +401,8 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
 -   DELETE /buildings/{building_id}/rooms/{room_id}
     > Usuwanie pokoju o danym `room_id` znajdującego się w budynku o `building_id`
 
+---
+
 ## #Catalog_structure
 
 ```s
@@ -437,6 +448,8 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
    +-- dump.sql
    +-- README.md
 ```
+
+---
 
 ## Changelog
 

@@ -51,8 +51,8 @@ class User extends Model
 
         $this->DB->query(
             "INSERT INTO 
-                $this->tableName(name,surname,password,email,action_key)
-               VALUES(:name,:surname,:password,:email,:action_key)",
+                $this->tableName(name,surname,password,email,action_key,access_id)
+               VALUES(:name,:surname,:password,:email,:action_key,:access_id)",
             array(
                 ':name' => $data['name'],
                 ':surname' => $data['surname'],
