@@ -2,7 +2,6 @@
 
 use Nowakowskir\JWT\JWT;
 use Nowakowskir\JWT\TokenDecoded;
-use Opis\Closure\SecurityException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
