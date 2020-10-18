@@ -1,5 +1,8 @@
 <?php
 
+use middleware\AuthorizationMiddleware;
+use middleware\JSONMiddleware;
+use middleware\JWTMiddleware;
 use Psr\Container\ContainerInterface;
 use Slim\Factory\AppFactory;
 
@@ -30,6 +33,16 @@ return [
             $db['name'],
             $db['charset'],
         );
+    },
+    JWTMiddleware::class => function (ContainerInterface $container) {
+        $JWTsignature = $container->get('settings')['jwt']['signature'];
+        return new JWTMiddleware($JWTsignature);
+    },
+    JSONMiddleware::class => function (ContainerInterface $container) {
+        return new JSONMiddleware();
+    },
+    AuthorizationMiddleware::class => function (ContainerInterface $container) {
+        return new AuthorizationMiddleware($container);
     },
     'Building' => function (ContainerInterface $container) {
         return new Building($container->get(Database::class));

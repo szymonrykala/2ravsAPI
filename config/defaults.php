@@ -11,6 +11,10 @@ $settings = [];
 
 $settings['root'] = dirname(__DIR__);
 
+$settings['default_params']=[
+    'access'=>1
+];
+
 $settings['Database'] = [
     'user' => 'root',
     'password' => '',
@@ -24,7 +28,7 @@ $settings['mail']=[
 ];
 
 $settings['jwt'] = [
-    'secret' => 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko'
+    'signature' => 'r@f@#dog#l435eks#kej4$*%$ci%w5fg5g4ghf^i^3456&o7zdgdfciesko'
 ];
 
 return $settings;

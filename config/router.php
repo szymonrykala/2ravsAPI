@@ -2,8 +2,8 @@
 
 use DI\Container;
 use Slim\App;
-use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use middleware\AuthorizationMiddleware;
 use middleware\JSONMiddleware;
 use middleware\JWTMiddleware;
@@ -113,13 +113,13 @@ return function (App $app, Container $DIcontainer) {
                 });
             });
         });
-    })->add(new AuthorizationMiddleware($DIcontainer))
-        ->add(new JWTMiddleware());
+    })->add($DIcontainer->get(AuthorizationMiddleware::class))
+        ->add($DIcontainer->get(JWTMiddleware::class));
 
     $app->any('{route:.*}', function (Request $request, Response $response) {
         throw new HttpNotFoundException($request, "Requested URL does not exist");
     });
-    $app->add(new JSONMiddleware());
+    $app->add($DIcontainer->get(JSONMiddleware::class));
     $app->addRoutingMiddleware();
     $app->addBodyParsingMiddleware();
 };

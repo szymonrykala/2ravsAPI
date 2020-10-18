@@ -40,7 +40,7 @@ class UserController extends Controller
             )
         );
         // encoding the token
-        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['secret'], JWT::ALGORITHM_HS384);
+        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['signature'], JWT::ALGORITHM_HS384);
         return $tokenEncoded->__toString();
     }
 
@@ -193,6 +193,7 @@ class UserController extends Controller
             'surname' => $surname,
             'password' => $password,
             'email' => $email,
+            'access_id'=>$this->DIcontainer->get('settings')['default_params']['access'],
             'action_key' => $this->getRandomKey(6)
         ];
 
@@ -202,7 +203,7 @@ class UserController extends Controller
         $MailSender = $this->DIcontainer->get('MailSender');
         $MailSender->setUser($userData);
         $MailSender->setMailSubject('User Activation');
-        $MailSender->send();
+        // $MailSender->send();
 
         $userID = $this->User->create($userData);
         unset($userData['password']);

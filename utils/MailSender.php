@@ -10,7 +10,7 @@ class MailSender
 
     public function __construct()
     {
-        ini_set("sendmail_from", SENDER_MAIL);
+        // ini_set("sendmail_from", SENDER_MAIL);
     }
 
     public function setUser(array $user): void

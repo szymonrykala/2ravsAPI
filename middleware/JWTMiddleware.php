@@ -12,6 +12,11 @@ class JWTMiddleware
 {
     private $request = null;
 
+    public function __construct(string $JWTsignature)
+    {
+        $this->JWTsignature = $JWTsignature;
+    }
+
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
         $this->request = $request;
@@ -57,7 +62,7 @@ class JWTMiddleware
     {
         try {
             $tokenEncoded = new TokenEncoded($token);
-            $tokenEncoded->validate(JWT_SIGNATURE, JWT::ALGORITHM_HS384);
+            $tokenEncoded->validate($this->JWTsignature, JWT::ALGORITHM_HS384);
             $tokenData = (array) $tokenEncoded->decode()->getPayload();
         } catch (\Exception $e) {
             throw new HttpUnauthorizedException($this->request, "JWT: " . $e->getMessage());
