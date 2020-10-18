@@ -4,17 +4,33 @@ interface DBInterface
 {
     public function connect(): void;
     public function query(string $sql, array $params = []): array;
-    public function lastInsertID():int;
+    public function lastInsertID(): int;
 }
 
 class Database implements DBInterface
 {
     private $conn = null;
-
+    public function __construct(
+        string $user,
+        string $password,
+        string $host,
+        string $name,
+        string $charset
+    ) {
+        $this->user = $user;
+        $this->password = $password;
+        $this->host = $host;
+        $this->name = $name;
+        $this->charset = $charset;
+    }
     public function connect(): void
     {
         try {
-            $this->conn = new PDO(DSN, DB_USER, DB_PASS);
+            $this->conn = new PDO(
+                'mysql:host=' . $this->host . ';dbname=' . $this->name . ';charset=' . $this->charset,
+                $this->user,
+                $this->password
+            );
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
             throw new HttpServiceNotAvaliableException("Database connection error: " . $e->getMessage());
@@ -56,7 +72,7 @@ class Database implements DBInterface
         return $results;
     }
 
-    public function lastInsertID():int
+    public function lastInsertID(): int
     {
         try {
             $stmt = $this->conn->prepare("SELECT LAST_INSERT_ID() AS 'id'");

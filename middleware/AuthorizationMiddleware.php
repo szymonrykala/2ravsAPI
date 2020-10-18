@@ -93,7 +93,7 @@ class AuthorizationMiddleware
                 'DELETE' => $result['reservations_edit']
             ),
             'confirm' => array(
-                'POST' => $result['reservations_confirm']
+                'PATCH' => $result['reservations_confirm']
             ),
             'buildings' => array(
                 'GET' => $result['buildings_view'],
