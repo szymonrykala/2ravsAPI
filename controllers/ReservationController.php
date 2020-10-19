@@ -35,7 +35,7 @@ class ReservationController extends Controller
 
         if (isset($data['subtitle'])) {
             if (!$Validator->validateString($data['subtitle'], 3)) {
-                throw new HttpBadRequestException($request, 'Incorrect reservation ' . 'subtitle' . ' value (min 3 char. length).');
+                throw new HttpBadRequestException($request, 'Incorrect reservation subtitle value (min 3 char. length).');
             } else {
                 $data['subtitle'] = $Validator->sanitizeString($data['subtitle']);
             }

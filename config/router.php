@@ -90,8 +90,13 @@ return function (App $app, Container $DIcontainer) {
                 $rooms->delete('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':deleteType');
 
                 $rooms->get('', RoomController::class . ':getRooms');
-                $rooms->get('/{room_id}', RoomController::class . ':getRooms');
+                $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
+                    $room->get('', RoomController::class . ':getRooms');
+                    $room->patch('', RoomController::class . ':updateRoom');
+                    $room->delete('', RoomController::class . ':deleteRoom');
+                });
             });
+
 
             $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
                 $specBuilding->get('', BuildingController::class . ':getBuildings');
@@ -105,8 +110,7 @@ return function (App $app, Container $DIcontainer) {
 
                     $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
                         $room->get('', RoomController::class . ':getRooms');
-                        $room->patch('', RoomController::class . ':updateRoomByID');
-                        $room->delete('', RoomController::class . ':deleteRoomByID');
+
                         $room->get('/reservations', ReservationController::class . ':getReservations');
                         $room->post('/reservations', ReservationController::class . ':createReservation');
                     });

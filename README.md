@@ -323,7 +323,7 @@ By easy changing default settings for JWT authorization You can disable or enabl
     }
     ```
 -   DELETE /users/{id}
-    > Usuwanie użytkownika o danym `id`. Dokonać może tego albo usuwany użytkownik, albo użytkownik do tego upoważniony przez odpowiednią klasę dostępu.
+    > Usuwanie użytkownika o danym `id`. Dokonać może tego albo usuwany użytkownik, albo użytkownik do tego upoważniony przez odpowiednią klasę dostępu. Usunięcie użytkownika spowoduje usunięcie wszystkich jego rezerwacji.
 
 ### #Buildings:
 
@@ -379,9 +379,10 @@ By easy changing default settings for JWT authorization You can disable or enabl
     > Pobieranie pokoji lub pokoju o danym `id` bez względu na budynek.
     -   GET /buildings/rooms
     -   GET /buildings/rooms/{id}
-        > Pobieranie pokoji lub pokoju o danym `room_id` znajdującym się w danym budynku o danym `building_id`.
+        > Pobieranie pokoji lub pokoju o danym `room_id`.
     -   GET /buildings/{building_id}/rooms
     -   GET /buildings/{building_id}/rooms/{id}
+        > Pobieranie pokoji lub pokoju o danym `room_id` znajdującym się w danym budynku o danym `building_id`.
 -   POST /buildings/{id}/rooms
     > Tworzenie nowego pokoju wewnątrz budynku o danym `id`. Wszystkie pola są wymagane.
     ```json
@@ -394,8 +395,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
         "equipment": "umywalka,kreda,tablica"
     }
     ```
--   PATCH /buildings/{building_id}/rooms/{room_id}
-    > Aktualizacja danych pokoju o danym `room_id` znajdującego się w budynku `building_id`. Gdy "blockad":true, rezerwacja pokoju jest niemożliwa.
+-   PATCH /buildings/rooms/{room_id}
+    > Aktualizacja danych pokoju o danym `room_id`. Gdy "blockad":true, rezerwacja pokoju jest niemożliwa.
     ```json
     {
         "name": "B.002",
@@ -406,8 +407,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
         "blockade": true
     }
     ```
--   DELETE /buildings/{building_id}/rooms/{room_id}
-    > Usuwanie pokoju o danym `room_id` znajdującego się w budynku o `building_id`
+-   DELETE /buildings/rooms/{room_id}
+    > Usuwanie pokoju o danym `room_id`. Usunięcie spowoduje usunięcie wszystkich rezerwacji tego pokoju.
 
 ---
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Czas generowania: 16 Paź 2020, 18:43
+-- Czas generowania: 19 Paź 2020, 16:01
 -- Wersja serwera: 10.4.14-MariaDB
 -- Wersja PHP: 7.4.10
 
@@ -51,7 +51,7 @@ CREATE TABLE `accesses` (
 
 INSERT INTO `accesses` (`id`, `name`, `rfid_action`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
 (1, 'admin', 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-(3, 'demo', 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0),
+(3, 'demo', 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0),
 (4, 'test', 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
@@ -319,7 +319,24 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 (399, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:29:50'),
 (400, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:07'),
 (401, 'User weronika1212@gmail.com toggled to false state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:30'),
-(402, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:42');
+(402, 'User weronika1212@gmail.com toggled to true state of room with rfid: d', 8, NULL, NULL, 12, '2020-10-16 18:31:42'),
+(403, 'User weronika1212@gmail.com succesfully veryfied', 8, NULL, NULL, NULL, '2020-10-17 21:12:06'),
+(404, 'User test@gmail.com succesfully veryfied', 11, NULL, NULL, NULL, '2020-10-18 13:26:56'),
+(405, 'User test@gmail.com veryfing failed count:1', 11, NULL, NULL, NULL, '2020-10-18 13:27:23'),
+(406, 'User test@gmail.comchanged his email to testupdate@gmail.com', 11, NULL, NULL, NULL, '2020-10-18 14:06:20'),
+(407, 'User weronika1212@gmail.com confirmed reservation', 8, 4, NULL, NULL, '2020-10-18 15:45:40'),
+(408, 'User test@gmail.com has been registered data:{\"name\":\"testName\",\"surname\":\"testSurname\",\"email\":\"test@gmail.com\",\"access_id\":1,\"action_key\":\"1ePjDzo9\"}', 12, NULL, NULL, NULL, '2020-10-18 22:56:46'),
+(409, 'User szymonrykala1214@gmail.com succesfully veryfied', 10, NULL, NULL, NULL, '2020-10-19 12:52:28'),
+(410, 'User szymonrykala1214@gmail.com succesfully veryfied', 10, NULL, NULL, NULL, '2020-10-19 13:18:56'),
+(411, 'User szymonrykala1214@gmail.com succesfully veryfied', 10, NULL, NULL, NULL, '2020-10-19 13:23:59'),
+(412, 'User szymonrykala1214@gmail.com succesfully veryfied', 10, NULL, NULL, NULL, '2020-10-19 13:24:02'),
+(413, 'User szymonrykala1214@gmail.com succesfully veryfied', 10, NULL, NULL, NULL, '2020-10-19 13:53:19'),
+(414, 'User szymonrykala1214@gmail.com succesfully veryfied', 10, NULL, NULL, NULL, '2020-10-19 13:53:39'),
+(415, 'User szymonrykala1214@gmail.com updated room data:{\"rfid\":\"0x450x45ksouigrnoo8gdfg\"}', 10, NULL, 2, 8, '2020-10-19 15:03:20'),
+(416, 'User szymonrykala1214@gmail.com updated room data:{\"rfid\":\"erkjn495gn\"}', 10, NULL, 2, 8, '2020-10-19 15:09:11'),
+(417, 'User szymonrykala1214@gmail.com updated room data:{\"rfid\":\"erkjn495gnddd\"}', 10, NULL, 2, 12, '2020-10-19 15:26:05'),
+(418, 'User szymonrykala1214@gmail.com updated room data:{\"rfid\":\"erkjn495gnsdhyn345h\"}', 10, NULL, NULL, 2, '2020-10-19 15:30:06'),
+(419, 'User szymonrykala1214@gmail.com updated room data:{\"rfid\":\"erkjn495gnsdhyn345\"}', 10, NULL, NULL, 2, '2020-10-19 15:50:15');
 
 -- --------------------------------------------------------
 
@@ -350,7 +367,7 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`id`, `title`, `subtitle`, `room_id`, `building_id`, `user_id`, `start_time`, `end_time`, `date`, `created_at`, `updated_at`, `confirmed`, `confirming_user_id`, `confirmed_at`, `deleted`) VALUES
-(4, 'rezerwacja próbna', 'test - próbna rezerwacja', 2, 2, 8, '12:00:00', '13:30:00', '2020-10-12', '2020-08-24 22:11:19', '2020-08-24 22:11:19', 0, NULL, NULL, 0),
+(4, 'rezerwacja próbna', 'test - próbna rezerwacja', 2, 2, 10, '12:00:00', '13:30:00', '2020-10-12', '2020-08-24 22:11:19', '2020-10-18 15:45:40', 1, NULL, NULL, 0),
 (7, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-12', '2020-08-24 22:11:30', '2020-08-24 22:11:30', 0, NULL, NULL, 0),
 (10, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-14', '2020-08-24 22:11:26', '2020-08-24 22:11:26', 0, NULL, NULL, 0),
 (12, 'rezerwacja v1', 'podtytuł rezerwacji, opis', 4, 2, 8, '10:00:00', '11:15:00', '2020-08-11', '2020-08-25 21:27:20', '2020-08-25 21:27:20', 0, NULL, NULL, 0),
@@ -403,17 +420,17 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `name`, `rfid`, `building_id`, `room_type_id`, `seats_count`, `floor`, `equipment`, `blockade`, `state`) VALUES
-(2, 'B001', 'w', 3, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(2, 'B001', 'erkjn495gnsdhyn345', 3, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
 (3, 'B201', 'r', 3, 5, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
 (4, 'B101', 't', 3, 2, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
 (5, 'A001', 'y', 2, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
 (6, 'A201', 'u', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
 (7, 'A101', 'i', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(8, 'C001', 'o', 4, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
+(8, 'C001', 'erkjn495gn', 4, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
 (9, 'C201', 'p', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
 (10, 'C101', 'a', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
 (11, 'D001', 's', 6, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(12, 'D101', 'd', 6, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 1),
+(12, 'D101', 'erkjn495gnddd', 6, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 1),
 (13, 'D201', 'f', 6, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
 (14, 'E001', 'g', 7, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
 (15, 'E101', 'h', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
@@ -478,7 +495,9 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
 (8, 3, 'Weronika', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-10-07 17:43:42', 'weronika1212@gmail.com', '2020-10-07 17:43:42', 1, 0, '2020-10-07 17:43:42', '1'),
-(10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-14 22:02:20', 'szymonrykala1214@gmail.com', '2020-10-14 22:02:20', 1, 0, '2020-10-14 22:02:20', '1');
+(10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-14 22:02:20', 'szymonrykala1214@gmail.com', '2020-10-14 22:02:20', 1, 0, '2020-10-14 22:02:20', '1'),
+(11, 1, 'testName', 'testSurname', '$2y$12$FXd5UMeI5hpVTUyTUjqRyOCYUNYRdgdMxzw1tC/dNwB.2ecaKgP.K', '2020-10-18 14:06:20', 'testupdate@gmail.com', '2020-10-18 14:06:20', 0, 1, '2020-10-18 13:15:53', 'NONE_NONE'),
+(12, 1, 'testName', 'testSurname', '$2y$12$bXhBq9HzVmwWXd76dLee4uddfCQWnqbwm3zDMvOxrtopQjDDCWasW', '2020-10-18 22:56:46', 'test@gmail.com', '2020-10-18 22:56:46', 0, 0, '2020-10-18 22:56:46', '1ePjDzo9');
 
 --
 -- Indeksy dla zrzutów tabel
@@ -568,7 +587,7 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT dla tabeli `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=403;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=420;
 
 --
 -- AUTO_INCREMENT dla tabeli `reservations`
@@ -592,7 +611,7 @@ ALTER TABLE `room_types`
 -- AUTO_INCREMENT dla tabeli `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Ograniczenia dla zrzutów tabel

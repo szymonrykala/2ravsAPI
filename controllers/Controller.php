@@ -1,4 +1,5 @@
 <?php
+
 namespace controllers;
 
 use Invoker\Exception\NotEnoughParametersException;
@@ -92,6 +93,7 @@ abstract class Controller
                 }
             }
         }
+        if (empty($outputData)) throw new HttpBadRequestException($request, "No valid data has been passed");
         return $outputData;
     }
 

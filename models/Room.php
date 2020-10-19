@@ -1,12 +1,14 @@
 <?php
+
 namespace models;
+
 use utils\DBInterface;
 
 class Room extends Model
 {
     protected string $tableName = 'rooms';
     public array $columns = [
-        'id', 'name','rfid', 'building_id', 'room_type_id', 'seats_count', 'floor',
+        'id', 'name', 'rfid', 'building_id', 'room_type_id', 'seats_count', 'floor',
         'equipment', 'blockade', 'state'
     ];
 
@@ -52,15 +54,17 @@ class Room extends Model
         }
 
         $this->DB->query(
-            "INSERT INTO $this->tableName(building_id,name,state,floor,room_type_id,seats_count,equipment)
-                         VALUES(:building_id,:name,0,:floor,:room_type_id,:seats_count,:equipment)",
+            "INSERT INTO $this->tableName(building_id,name,state,floor,room_type_id,seats_count,equipment,rfid,blockade)
+                         VALUES(:building_id,:name,0,:floor,:room_type_id,:seats_count,:equipment,:rfid,:blockade)",
             array(
                 ':name' => $data['name'],
                 ':floor' => $data['floor'],
                 ':room_type_id' => $data['room_type_id'],
                 ':seats_count' => $data['seats_count'],
                 ':equipment' => $data['equipment'],
-                ':building_id' => $data['building_id']
+                ':building_id' => $data['building_id'],
+                ':rfid' => $data['rfid'],
+                ':blockade' => $data['blockade']
             )
         );
         return $this->DB->lastInsertID();

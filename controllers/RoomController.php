@@ -1,10 +1,14 @@
 <?php
+
 namespace controllers;
+
+use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\Room;
+use Slim\Exception\HttpNotFoundException;
 use utils\Validator;
 
 class RoomController extends Controller
@@ -52,7 +56,7 @@ class RoomController extends Controller
          *      "rfid" : ""
          * }
          */
-        $rfid = $this->getFrom($request, ['rfid' => 'string'],true)['rfid'];
+        $rfid = $this->getFrom($request, ['rfid' => 'string'], true)['rfid'];
         $rfid = str_replace(' ', '', $rfid);
         if (empty($rfid)) {
             throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
@@ -68,7 +72,7 @@ class RoomController extends Controller
             'message' => 'User ' . $request->getAttribute('email') . ' toggled to ' . (!$room['state'] ? 'true' : 'false') . ' state of room with rfid: ' . $rfid
         ]);
 
-        $response->getBody()->write('toggled to '.(!$room['state'] ? 'true' : 'false'));
+        $response->getBody()->write('toggled to ' . (!$room['state'] ? 'true' : 'false'));
         return $response->withStatus(200);
     }
 
@@ -129,10 +133,13 @@ class RoomController extends Controller
             'room_type_id' => 'integer',
             'seats_count' => 'integer',
             'floor' => 'integer',
+            'rfid' => 'string',
             'equipment' => 'string'
         ], true);
-
+        $data['blockade'] = $this->DIcontainer->get('settings')['default_params']['room_blockade'];
         $this->validateRoom($request, $data);
+
+        if ($this->Room->exist(['rfid' => $data['rfid']])) throw new HttpConflictException("Room with given `rfid` already exist. RFID identificator have to be unique");
 
         $data['building_id'] = $buildingID;
         $lastIndex = $this->Room->create($data);
@@ -145,8 +152,8 @@ class RoomController extends Controller
         return $response->withStatus(201, "Created");
     }
 
-    // PATCH /buildings/{building_id}/rooms/{room_id}
-    public function updateRoomByID(Request $request, Response $response, $args): Response
+    // PATCH /buildings/rooms/{room_id}
+    public function updateRoom(Request $request, Response $response, $args): Response
     {
         /**
          * creating room in specified building
@@ -167,49 +174,44 @@ class RoomController extends Controller
          * @return Response 
          */
 
-        $roomID = (int) $args['room_id'];
-        $buildingID = (int) $args['building_id'];
-
         $data = $this->getFrom($request, [
             'name' => "string",
             'room_type_id' => 'integer',
             'seats_count' => 'integer',
             'floor' => 'integer',
-            'blockade' => 'bool',
+            'rfid' => 'string',
+            'blockade' => 'boolean',
             'equipment' => 'string'
         ], false);
 
         $this->validateRoom($request, $data);
 
-        $this->Room->update($roomID, $data);
+        if ($this->Room->exist(['rfid' => $data['rfid']])) throw new HttpConflictException("Room with given `rfid` already exist. RFID identificator have to be unique");
+        $this->Room->update($args['room_id'], $data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $roomID,
-            'building_id' => $buildingID,
+            'room_id' => $args['room_id'],
             'message' => "User " . $request->getAttribute('email') . " updated room data:" . json_encode($data)
         ]);
 
         return $response->withStatus(204, "Updated");
     }
 
-    // DELETE /building/{building_id}/rooms/{room_id}
-    public function deleteRoomByID(Request $request, Response $response, $args): Response
+    // DELETE /building/rooms/{room_id}
+    public function deleteRoom(Request $request, Response $response, $args): Response
     {
         /**
          * Deleting room from building
          * returning 204
-         * DELETE /building/{building_id}/rooms/{room_id}
+         * DELETE /building/rooms/{room_id}
          * 
          */
-        $roomID = (int) $args['room_id'];
-        $buildingID = (int) $args['building_id'];
 
-        $this->Room->delete($roomID);
+        $this->Room->delete($args['room_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $roomID,
-            'building_id' => $buildingID,
+            'room_id' => $args['room_id'],
             'message' => "User " . $request->getAttribute('email') . " deleted room"
         ]);
         return $response->withStatus(204, "Deleted");

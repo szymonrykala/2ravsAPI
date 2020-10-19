@@ -10,7 +10,8 @@ $settings = [];
 $settings['root'] = dirname(__DIR__);
 
 $settings['default_params'] = [
-    'access' => 1
+    'access' => 1,
+    'room_blockade' => true
 ];
 
 $settings['Database'] = [

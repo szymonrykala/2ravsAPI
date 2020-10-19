@@ -128,8 +128,8 @@ abstract class Model
         elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
 
 
-        if (isset($limit))                       $sql .= ' LIMIT ' . (int)$limit;
-        elseif (isset($page, $on_page)) $sql .= ' LIMIT ' . (int)$page . ', ' . (int)$on_page;
+        if (isset($page, $on_page)) $sql .= ' LIMIT ' . ((int)$page * (int)$on_page) . ', ' . (int)$on_page;
+        elseif (isset($limit))      $sql .= ' LIMIT ' . (int)$limit;
         // =======================================================
 
         $result = $this->DB->query($sql, $queryParams);

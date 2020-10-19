@@ -99,18 +99,18 @@ class Reservation extends Model
         }
 
         //room exist in this building?
-        $roomExist = $this->DB->query(
+        $room = $this->DB->query(
             "SELECT id,blockade FROM rooms WHERE id=:room_id AND building_id=:building_id",
             array(
                 ':room_id' => $data['room_id'],
                 ':building_id' => $data['building_id']
             )
         );
-        if (empty($roomExist)) { //if not exist
+        if (empty($room)) { //if not exist
             throw new HttpNotFoundException("Specified room is not exist. You can not make reservation because specified room is not exist in given building");
         } else {
             //room is bookable?
-            if ((bool)$roomExist[0]['blockade']) {
+            if ((bool)$room[0]['blockade']) {
                 throw new HttpConflictException("Specified room is not bookable. Room You want to reserve has blocked status."); //conflict
             }
         }
