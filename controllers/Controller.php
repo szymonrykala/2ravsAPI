@@ -17,7 +17,7 @@ use models\Address;
 
 abstract class Controller
 {
-    protected $DIcontainer = null;
+    protected ContainerInterface $DIcontainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

@@ -12,7 +12,7 @@ class LogController extends Controller
      * Implement endpoints related with logs routs
      * 
      */
-    public $Log = null;
+    public Log $Log;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

@@ -13,7 +13,7 @@ class AddressController extends Controller
      * Implement endpoints related with saddresses paths
      * 
      */
-    private $Address = null;
+    private Address $Address;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

@@ -7,8 +7,8 @@ use models\HttpNotFoundException;
 use Nowakowskir\JWT\JWT;
 use Nowakowskir\JWT\TokenDecoded;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpException;
 use Slim\Exception\HttpForbiddenException;
@@ -21,7 +21,7 @@ use utils\Validator;
 
 class UserController extends Controller
 {
-    private $User;
+    private User $User;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

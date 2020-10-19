@@ -15,7 +15,7 @@ class ReservationController extends Controller
     /**
      * Implement endpoints related with reservations
      */
-    private $Reservation;
+    private Reservation $Reservation;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

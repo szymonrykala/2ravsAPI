@@ -14,7 +14,7 @@ class BuildingController extends Controller
      * Implement endpoints related with buildings paths
      * 
      */
-    protected $Building;
+    protected Building $Building;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

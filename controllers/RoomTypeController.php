@@ -1,8 +1,8 @@
 <?php
 namespace controllers;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\RoomType;
 use utils\Validator;
@@ -13,7 +13,7 @@ class RoomTypeController extends Controller
      * Implement endpoints related with buildings/rooms/types paths
      * 
      */
-    private $Type = null;
+    private RoomType $Type;
 
     public function __construct(ContainerInterface $DIcontainer)
     {

@@ -13,7 +13,7 @@ use utils\Validator;
 
 class AccessController extends Controller
 {
-    private $Access;
+    private Access $Access;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
