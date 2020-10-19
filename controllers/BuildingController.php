@@ -1,5 +1,7 @@
 <?php
+
 namespace controllers;
+
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
@@ -91,19 +93,11 @@ class BuildingController extends Controller
 
         $this->validateBuilding($request, $data);
 
-        $Address = $this->DIcontainer->get(Address::class);
-        if (!$Address->exist(['id' => $data['address_id']])) {
-            throw new HttpBadRequestException($request, "Address with id=" . $data['address_id'] . " do not exist. You cannot create building with data:" . json_encode($data));
-        }
-
-        $userMail = $request->getAttribute('email');
-        $userID = $request->getAttribute('user_id');
-
-        $lastIndex = $this->Building->create($data);
+        $data['id'] = $this->Building->create($data);
         $this->Log->create([
-            'user_id' => $userID,
-            'building_id' => $lastIndex,
-            'message' => "User $userMail created Building id=$lastIndex; data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'building_id' => $data['id'],
+            'message' => "USER " . $request->getAttribute('email') . " CREATE building DATA " . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -129,23 +123,22 @@ class BuildingController extends Controller
 
         $data = $this->getFrom(
             $request,
-            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
+            [
+                'name' => 'string',
+                'rooms_count' => 'integer',
+                'address_id' => 'integer'
+            ],
             false
         );
 
         $this->validateBuilding($request, $data);
 
-        $userMail = $request->getAttribute('email');
-        $userID = $request->getAttribute('user_id');
-        $buildingID = (int)$args['building_id'];
-
-
-        $this->Building->update($buildingID, $data);
+        $this->Building->update((int)$args['building_id'], $data);
 
         $this->Log->create([
-            'user_id' => $userID,
-            'building_id' => $buildingID,
-            'message' => "user $userMail updated Building id=$buildingID data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'building_id' => $args['building_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE building DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -163,15 +156,12 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $userMail = $request->getAttribute('email');
-        $userID = $request->getAttribute('user_id');
-        $buildingID = (int)$args['building_id'];
-
+        $building = $this->Building->read(['id' => $args['building_id']])[0];
         $this->Building->delete((int)$args['building_id']);
         $this->Log->create([
-            'user_id' => $userID,
-            'building_id' => $buildingID,
-            'message' => "User $userMail deleted Building id=$buildingID"
+            'user_id' => $request->getAttribute('user_id'),
+            'building_id' => $args['building_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE building DATA ' . json_encode($building)
         ]);
 
         return $response->withStatus(204, "Deleted");

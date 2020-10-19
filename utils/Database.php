@@ -36,7 +36,10 @@ class Database implements DBInterface
     {
         switch ($e->getCode()) {
             case 23000:
-                throw new \Exception("Database Integrity: " . substr($e->getMessage(), 17), 400);
+                // preg_match('/\.`([\w]+)`.*REFERENCES `(\w+)`/', $e->getMessage(), $output_array);
+                // throw new \Exception("Database model integrity error. You can't delete " . $output_array[2].' becouse it still contains '.$output_array[1]
+                // .'. First You have to delete all '.$output_array[1].' containing this '.$output_array[2], 409);
+                throw new \models\HttpConflictException('Database model: '.substr($e->getMessage(), 17));
                 break;
             case 42000:
                 throw new \Exception("SQL Syntax error:" . substr($e->getMessage(), 17), 500);

@@ -1,5 +1,7 @@
 <?php
+
 namespace controllers;
+
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
@@ -100,10 +102,10 @@ class AddressController extends Controller
 
         $this->validateAddress($request, $data);
 
-        $lastIndex = $this->Address->create($data);
+        $data['id'] = $this->Address->create($data);
         $this->Log->create([
-            "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex; data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('user_id') . ' CREATE address DATA ' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -137,7 +139,7 @@ class AddressController extends Controller
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data:" . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE address DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -153,12 +155,14 @@ class AddressController extends Controller
          * @param Response $response 
          * @param $args
          * 
-         * @return Response 
+         * @return Response
          */
+        $address = $this->Address->read(['id' => $args['address_id']])[0];
+
         $this->Address->delete((int)$args['address_id']);
         $this->Log->create([
             'user_id' => (int)$request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " deleted Address id=" . $args['address_id']
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE address DATA ' . json_encode($address)
         ]);
         return $response->withStatus(204, "Deleted");
     }

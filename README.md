@@ -323,7 +323,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
     }
     ```
 -   DELETE /users/{id}
-    > Usuwanie użytkownika o danym `id`. Dokonać może tego albo usuwany użytkownik, albo użytkownik do tego upoważniony przez odpowiednią klasę dostępu. Usunięcie użytkownika spowoduje usunięcie wszystkich jego rezerwacji.
+    > Usuwanie użytkownika o danym `id`. Dokonać może tego albo usuwany użytkownik, albo użytkownik do tego upoważniony przez odpowiednią klasę dostępu. 
+    Usunięcie użytkownika spowoduje usunięcie wszystkich jego rezerwacji.
 
 ### #Buildings:
 
@@ -349,36 +350,37 @@ By easy changing default settings for JWT authorization You can disable or enabl
     }
     ```
 -   DELETE /buildings/{id}
-    > Usuwanie budynku - powiedzie się jeśli nie ma w nim żadnego pokoju.
-    > Jako `id` podajemy id budynku który chcemy usunąć
+    > Jako `id` podajemy id budynku który chcemy usunąć - powiedzie się jęsli nie ma w nim pokoji.
+    Usuwanie budynku; spowoduje:
+     - usunięcie rezerwacji pokoji w tym budynku 
 
 ### #Room_types:
 
--   GET /buildings/rooms/types
+-   GET /rooms/types
     > Pobieranie wszystkich typów pokoji (zgodnych z funkcją search).
--   POST /buildings/rooms/types
+-   POST /rooms/types
     > Tworzenie nowego typu pokoji. Pole jest wymagane.
     ```json
     {
         "name": "laboratorium"
     }
     ```
--   PATCH /buildings/rooms/types
+-   PATCH /rooms/types
     > Aktualizacja danych typu. Pole jest wymagane.
     ```json
     {
         "name": "laboratorium"
     }
     ```
--   DELETE /buildings/rooms/types
+-   DELETE /rooms/types
     > Usunięcie typu - powiedzie się, jeśli nie ma pokoji z takim typem.
 
 ### #Rooms:
 
 -   Pobieranie pokoji:
     > Pobieranie pokoji lub pokoju o danym `id` bez względu na budynek.
-    -   GET /buildings/rooms
-    -   GET /buildings/rooms/{id}
+    -   GET /rooms
+    -   GET /rooms/{id}
         > Pobieranie pokoji lub pokoju o danym `room_id`.
     -   GET /buildings/{building_id}/rooms
     -   GET /buildings/{building_id}/rooms/{id}
@@ -408,7 +410,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
     }
     ```
 -   DELETE /buildings/rooms/{room_id}
-    > Usuwanie pokoju o danym `room_id`. Usunięcie spowoduje usunięcie wszystkich rezerwacji tego pokoju.
+    > Usuwanie pokoju o danym `room_id`. 
+    Usunięcie spowoduje usunięcie wszystkich rezerwacji tego pokoju.
 
 ---
 

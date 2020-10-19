@@ -1,4 +1,5 @@
 <?php
+
 namespace controllers;
 
 use models\HttpConflictException;
@@ -32,7 +33,7 @@ class AccessController extends Controller
         $Validator = $this->DIcontainer->get(Validator::class);
         if (isset($data['name'])) {
             if (!$Validator->validateString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: '.$Validator->clearString);
+                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: ' . $Validator->clearString);
             }
             $data['name'] = $Validator->sanitizeString($data['name']);
         }
@@ -112,10 +113,10 @@ class AccessController extends Controller
 
         $this->validateAccess($request, $data);
 
-        $newID = $this->Access->create($data);
+        $data['id'] = $this->Access->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => 'User ' . $request->getAttribute('email') . ' created new access class id=' . $newID . ' data:' . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' CREATE access DATA ' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -149,27 +150,27 @@ class AccessController extends Controller
          */
 
         $data = $this->getFrom($request, [
-            "name" => 'string',
-            "access_edit" => 'boolean',
-            "buildings_view" => 'boolean',
-            "buildings_edit" => 'boolean',
-            "logs_view" => 'boolean',
-            "logs_edit" => 'boolean',
-            "rooms_view" => 'boolean',
-            "rooms_edit" => 'boolean',
-            "reservations_access" => 'boolean',
-            "reservations_confirm" => 'boolean',
-            "reservations_edit" => 'boolean',
-            "users_edit" => 'boolean',
-            "statistics_view" => 'boolean',
+            'name' => 'string',
+            'access_edit' => 'boolean',
+            'buildings_view' => 'boolean',
+            'buildings_edit' => 'boolean',
+            'logs_view' => 'boolean',
+            'logs_edit' => 'boolean',
+            'rooms_view' => 'boolean',
+            'rooms_edit' => 'boolean',
+            'reservations_access' => 'boolean',
+            'reservations_confirm' => 'boolean',
+            'reservations_edit' => 'boolean',
+            'users_edit' => 'boolean',
+            'statistics_view' => 'boolean',
         ], false);
 
         $this->validateAccess($request, $data);
 
         $this->Access->update($args['access_id'], $data);
         $this->Log->create([
-            "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " updated data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE access DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -186,17 +187,13 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        // each user with current access have to 
-        $User = $this->DIcontainer->get(User::class);
-        if ($User->exist(['access_id' => $args['access_id']])) {
-            throw new HttpConflictException("Some Users stil have this access class. You can't delete it", 409); //conflict
-        } else {
-            $this->Access->delete($args['access_id']);
-            $this->Log->create([
-                "user_id" => $request->getAttribute('user_id'),
-                "message" => "User " . $request->getAttribute('email') . " deleted access id=" . $args['access_id']
-            ]);
-        }
+        $access = $this->Access->read(['id' => $args['access_id']])[0];
+
+        $this->Access->delete($args['access_id']);
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE access DATA ' . json_encode($access)
+        ]);
         return $response->withStatus(204, "Deleted");
     }
 }

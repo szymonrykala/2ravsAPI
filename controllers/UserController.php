@@ -39,7 +39,7 @@ class UserController extends Controller
                 'access_id' => $accessID,
                 'email' => $email,
                 'assigned' => time(),
-                'ip'=>getHostByName(getHostName()) 
+                'ip' => getHostByName(getHostName())
             ]
         );
         // encoding the token
@@ -126,29 +126,29 @@ class UserController extends Controller
         }
 
         if ($loginFails >= 5) {
-            throw new HttpForbiddenException($request, "Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator");
+            throw new HttpForbiddenException($request, 'Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator');
         }
 
         if (password_verify($password, $userPassword)) {
             $Access = $this->DIcontainer->get(Access::class);
             $data = array(
-                "jwt" => $this->generateToken($userID, $accessID, $email),
+                'jwt' => $this->generateToken($userID, $accessID, $email),
                 'userID' => $userID,
-                "access" => $Access->read(['id' => $accessID])
+                'access' => $Access->read(['id' => $accessID])
             );
             $this->User->update($userID, array('login_fails' => 0));
             $this->Log->create(array(
                 'user_id' => $userID,
-                'message' => "User $email succesfully veryfied"
+                'message' => 'USER ' . $email . ' VERYFIED'
             ));
         } else {
             $loginFails += 1;
-            $this->User->update($userID, array('login_fails' => $loginFails));
+            $this->User->update($userID, ['login_fails' => $loginFails]);
             $this->Log->create(array(
                 'user_id' => $userID,
-                'message' => "User $email veryfing failed count:$loginFails"
+                'message' => 'USER ' . $email . ' NOT VERYFIED DATA ' . json_encode(['login_fails' => $loginFails])
             ));
-            throw new HttpBadRequestException($request, "Authentication failed (count:$loginFails). Password is not correct.");
+            throw new HttpBadRequestException($request, 'Authentication failed (count:$loginFails). Password is not correct.');
         }
 
         $response->getBody()->write(json_encode($data));
@@ -196,23 +196,22 @@ class UserController extends Controller
             'surname' => $surname,
             'password' => $password,
             'email' => $email,
-            'access_id'=>$this->DIcontainer->get('settings')['default_params']['access'],
+            'access_id' => $this->DIcontainer->get('settings')['default_params']['access'],
             'action_key' => $this->getRandomKey(6)
         ];
 
         $this->validateUser($request, $userData);
-
 
         $MailSender = $this->DIcontainer->get(MailSender::class);
         $MailSender->setUser($userData);
         $MailSender->setMailSubject('User Activation');
         $MailSender->send();
 
-        $userID = $this->User->create($userData);
+        $userData['id'] = $this->User->create($userData);
         unset($userData['password']);
         $this->Log->create(array(
-            'user_id' => $userID,
-            'message' => "User $email has been registered data:" . json_encode($userData)
+            'user_id' => $userData['id'],
+            'message' => "USER " . $email . " CREATE user DATA " . json_encode($userData)
         ));
 
         return $response->withStatus(201, "Created");
@@ -237,7 +236,12 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        ['password' => $password, 'email' => $email, 'key' => $key, 'action' => $action] = $this->getFrom($request, [
+        [
+            'password' => $password,
+            'email' => $email,
+            'key' => $key,
+            'action' => $action
+        ] = $this->getFrom($request, [
             'password' => 'string',
             'email' => 'string',
             'key' => 'string',
@@ -276,7 +280,7 @@ class UserController extends Controller
 
                 $this->Log->create([
                     'user_id' => $user['id'],
-                    'message' => 'Account user ' . $user['email'] . 'was requested new activation email'
+                    'message' => 'USER ' . $user['email'] . ' RESEND ACTIVATION DATA '
                 ]);
 
                 $response->getBody()->write(json_encode('Your Code has been resended'));
@@ -286,10 +290,10 @@ class UserController extends Controller
                 if ($user['action_key'] !== $key) {
                     throw new HttpBadRequestException($request, 'Your activation key is not correct');
                 }
-                $this->User->update($user['id'], ['activated' => 1, 'action_key' => '1']);
+                $this->User->update($user['id'], ['activated' => 1, 'action_key' => '']);
                 $this->Log->create([
                     'user_id' => $user['id'],
-                    'message' => 'Account user ' . $user['email'] . 'was activated'
+                    'message' => 'USER ' . $user['email'] . ' ACTIVATED DATA ' . json_encode(['activated' => true])
                 ]);
 
                 $response->getBody()->write(json_encode('User succesfully activated'));
@@ -299,16 +303,15 @@ class UserController extends Controller
                 /* given email is new user email - it's not set yet*/
                 $editedEmail = ['email' => $email];
                 if ($this->User->exist($editedEmail)) {
-                    // throw new HttpConflictException('Given email ' . $email . ' already exist. Someone activated the same email before You.');
                     throw new HttpConflictException('Given email ' . $email . ' already exist. Someone activated the same email before You.');
                 }
                 $this->validateUser($request, $editedEmail);
-                $editedEmail['action_key'] = 'NONE_NONE';
+                $editedEmail['action_key'] = '';
                 // setting new email
                 $this->User->update($user['id'], $editedEmail);
                 $this->Log->create([
                     'user_id' => $user['id'],
-                    'message' => 'User ' . $user['email'] . 'changed his email to ' . $email
+                    'message' => 'USER ' . $user['email'] . ' UPDATE user DATA ' . json_encode($editedEmail)
                 ]);
                 $response->getBody()->write(json_encode('Email changed to ' . $email));
                 break;
@@ -316,12 +319,6 @@ class UserController extends Controller
                 break;
         }
         return $response->withStatus(200);
-    }
-
-    public function resendActivationEmail(Request $request, Response $response, $args): Response
-    {
-        throw new HttpNotImplementedException($request, "UserController::resendActivationEmail not implemented");
-        return $response;
     }
 
     // GET /users?ext=<acces_id>
@@ -414,7 +411,7 @@ class UserController extends Controller
 
         // Changing email
         if (isset($data['email'])) {
-            if ($data['email'] === $editedUser['email']) throw new HttpBadRequestException($request, "Your new email have to be diffrent than Your current email");
+            if ($data['email'] === $editedUser['email']) throw new HttpBadRequestException($request, 'Your new email have to be diffrent than Your current email');
 
             if ($this->User->exist(['email' => $data['email']])) {
                 throw new HttpConflictException('Given mail ' . $data['email'] . ' already exist.');
@@ -431,8 +428,9 @@ class UserController extends Controller
             $this->User->update($editedUser['id'], ['action_key' => $editedUser['action_key']]);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => "User $userEmail (id=" . $editedUser['id'] . ") want to change mail - updated with data:" . json_encode($data)
+                'message' => 'User $userEmail (id=' . $editedUser['id'] . ') want to change mail - updated with data:' . json_encode($data)
             ]);
+            $data['new_email'] = $data['email'];
             unset($data['email']);
         }
 
@@ -440,11 +438,11 @@ class UserController extends Controller
             $this->User->update($editedUser['id'], $data);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => "Updated User $userEmail (id=" . $editedUser['id'] . ") with data:" . json_encode($data)
+                'message' => 'USER ' . $userEmail . ' UPDATE user ' . $editedUser['email'] . ' DATA ' . json_encode($data)
             ]);
         }
 
-        return $response->withStatus(204, "Updated");
+        return $response->withStatus(204, 'Updated');
     }
 
     // DELETE /users/{user_id}
@@ -460,15 +458,13 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $deletedUser = (int) $args['userID'];
-        $userEmail = $request->getAttribute('email');
+        $deletedUser = $this->User->read(['id' => $args['userID']])[0];
+        unset($deletedUser['password']);
 
-        list('email' => $deletedUserEmail) = $this->User->read(['id' => $deletedUser])[0];
-
-        $this->User->delete($deletedUser);
+        $this->User->delete((int) $args['userID']);
         $this->Log->create([
-            'user_id' => $deletedUser,
-            "message" => "User $userEmail deleted $deletedUserEmail"
+            'user_id' => $args['userID'],
+            "message" => 'USER ' . $request->getAttribute('email') . ' DELETE user DATA ' . json_encode($deletedUser)
         ]);
 
         return $response->withStatus(204, "Deleted");

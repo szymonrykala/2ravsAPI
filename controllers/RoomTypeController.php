@@ -1,5 +1,7 @@
 <?php
+
 namespace controllers;
+
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
@@ -82,10 +84,10 @@ class RoomTypeController extends Controller
 
         $this->validateRoomType($request, $data);
 
-        $lastIndex = $this->Type->create($data);
+        $data['id'] = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " created new room type id=$lastIndex; data:" . json_encode($data)
+            'message' => "USER " . $request->getAttribute('email') . " CREATE room_type DATA " . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -103,17 +105,15 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $typeID = (int)$args['room_type_id'];
-
         $data = $this->getFrom($request, ["name" => "string"], false);
 
         $this->validateRoomType($request, $data);
 
-        $this->Type->update($typeID, $data);
+        $this->Type->update((int)$args['room_type_id'], $data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID . " data:" . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room_type DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -131,12 +131,13 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $typeID = (int)$args['room_type_id'];
-        $this->Type->delete($typeID);
+        $type = $this->Type->read(['id' => $args['room_type_id']])[0];
+
+        $this->Type->delete((int)$args['room_type_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room_type DATA ' . json_encode($type)
         ]);
-        return $response->withStatus(204, "Deleted");
+        return $response->withStatus(204, 'Deleted');
     }
 }

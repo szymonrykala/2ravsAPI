@@ -69,7 +69,7 @@ class RoomController extends Controller
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $room['id'],
-            'message' => 'User ' . $request->getAttribute('email') . ' toggled to ' . (!$room['state'] ? 'true' : 'false') . ' state of room with rfid: ' . $rfid
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['state' => !$room['state']])
         ]);
 
         $response->getBody()->write('toggled to ' . (!$room['state'] ? 'true' : 'false'));
@@ -127,7 +127,6 @@ class RoomController extends Controller
          * @return Response 
          */
 
-        $buildingID = (int) $args['building_id'];
         $data = $this->getFrom($request, [
             'name' => "string",
             'room_type_id' => 'integer',
@@ -137,17 +136,16 @@ class RoomController extends Controller
             'equipment' => 'string'
         ], true);
         $data['blockade'] = $this->DIcontainer->get('settings')['default_params']['room_blockade'];
+
         $this->validateRoom($request, $data);
 
-        if ($this->Room->exist(['rfid' => $data['rfid']])) throw new HttpConflictException("Room with given `rfid` already exist. RFID identificator have to be unique");
-
-        $data['building_id'] = $buildingID;
+        $data['building_id'] = (int) $args['building_id'];
         $lastIndex = $this->Room->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'building_id' => $buildingID,
+            'building_id' => $args['building_id'],
             'room_id' => $lastIndex,
-            'message' => "User " . $request->getAttribute('email') . " created new room in building id=$buildingID; data:" . json_encode($data)
+            'message' => "USER " . $request->getAttribute('email') . " CREATE room DATA " . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -186,13 +184,12 @@ class RoomController extends Controller
 
         $this->validateRoom($request, $data);
 
-        if ($this->Room->exist(['rfid' => $data['rfid']])) throw new HttpConflictException("Room with given `rfid` already exist. RFID identificator have to be unique");
         $this->Room->update($args['room_id'], $data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $args['room_id'],
-            'message' => "User " . $request->getAttribute('email') . " updated room data:" . json_encode($data)
+            'message' => "USER " . $request->getAttribute('email') . " UPDATE room DATA " . json_encode($data)
         ]);
 
         return $response->withStatus(204, "Updated");
@@ -208,11 +205,13 @@ class RoomController extends Controller
          * 
          */
 
+        $room = $this->Room->read(['id' => $args['room_id']])[0];
+
         $this->Room->delete($args['room_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $args['room_id'],
-            'message' => "User " . $request->getAttribute('email') . " deleted room"
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room DATA ' . json_encode($room)
         ]);
         return $response->withStatus(204, "Deleted");
     }

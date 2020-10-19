@@ -79,25 +79,23 @@ return function (App $app, Container $DIcontainer) {
             });
         });
 
+        $v1->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
+            $rooms->get('', RoomController::class . ':getRooms');
+            $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
+                $room->get('', RoomController::class . ':getRooms');
+                $room->patch('', RoomController::class . ':updateRoom');
+                $room->delete('', RoomController::class . ':deleteRoom');
+            });
+
+            $rooms->get('/types', RoomTypeController::class . ':getTypes');
+            $rooms->post('/types', RoomTypeController::class . ':createType');
+            $rooms->patch('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':updateType');
+            $rooms->delete('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':deleteType');
+        });
+
         $v1->group('/buildings', function (\Slim\Routing\RouteCollectorProxy $buildings) {
             $buildings->get('', BuildingController::class . ':getBuildings');
             $buildings->post('', BuildingController::class . ':createBuilding');
-
-            $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
-                $rooms->get('/types', RoomTypeController::class . ':getTypes');
-                $rooms->post('/types', RoomTypeController::class . ':createType');
-                $rooms->patch('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':updateType');
-                $rooms->delete('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':deleteType');
-
-                $rooms->get('', RoomController::class . ':getRooms');
-                $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
-                    $room->get('', RoomController::class . ':getRooms');
-                    $room->patch('', RoomController::class . ':updateRoom');
-                    $room->delete('', RoomController::class . ':deleteRoom');
-                });
-            });
-
-
             $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
                 $specBuilding->get('', BuildingController::class . ':getBuildings');
                 $specBuilding->patch('', BuildingController::class . ':updateBuilding');

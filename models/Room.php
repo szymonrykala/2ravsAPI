@@ -45,14 +45,6 @@ class Room extends Model
 
     public function create(array $data): int
     {
-        if ($this->exist([
-            "name" => $data["name"],
-            "floor" => $data["floor"],
-            "building_id" => $data["building_id"]
-        ])) {
-            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
-        }
-
         $this->DB->query(
             "INSERT INTO $this->tableName(building_id,name,state,floor,room_type_id,seats_count,equipment,rfid,blockade)
                          VALUES(:building_id,:name,0,:floor,:room_type_id,:seats_count,:equipment,:rfid,:blockade)",
