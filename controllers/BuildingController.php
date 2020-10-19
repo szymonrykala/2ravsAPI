@@ -1,10 +1,12 @@
 <?php
 namespace controllers;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
-
+use models\Building;
+use models\Address;
+use utils\Validator;
 
 class BuildingController extends Controller
 {
@@ -17,7 +19,7 @@ class BuildingController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Building = $this->DIcontainer->get('Building');
+        $this->Building = $this->DIcontainer->get(Building::class);
     }
 
     public function validateBuilding(Request $request, array &$data): void
@@ -28,7 +30,7 @@ class BuildingController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
         if (isset($data['name'])) {
             if (!$Validator->validateClearString($data['name'])) {
                 throw new HttpBadRequestException($request, 'Incorrect building name value; pattern: ' . $Validator->clearString);
@@ -89,7 +91,7 @@ class BuildingController extends Controller
 
         $this->validateBuilding($request, $data);
 
-        $Address = $this->DIcontainer->get("Address");
+        $Address = $this->DIcontainer->get(Address::class);
         if (!$Address->exist(['id' => $data['address_id']])) {
             throw new HttpBadRequestException($request, "Address with id=" . $data['address_id'] . " do not exist. You cannot create building with data:" . json_encode($data));
         }

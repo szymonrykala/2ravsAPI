@@ -1,11 +1,14 @@
 <?php
 namespace controllers;
 
-use App\Models\HttpConflictException;
+use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
+use models\Access;
+use models\User;
+use utils\Validator;
 
 
 class AccessController extends Controller
@@ -15,7 +18,7 @@ class AccessController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Access = $DIcontainer->get('Access');
+        $this->Access = $DIcontainer->get(Access::class);
     }
 
     public function validateAccess(Request $request, array &$data): void
@@ -26,7 +29,7 @@ class AccessController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
         if (isset($data['name'])) {
             if (!$Validator->validateString($data['name'])) {
                 throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: '.$Validator->clearString);
@@ -184,7 +187,7 @@ class AccessController extends Controller
          * @return Response $response
          */
         // each user with current access have to 
-        $User = $this->DIcontainer->get('User');
+        $User = $this->DIcontainer->get(User::class);
         if ($User->exist(['access_id' => $args['access_id']])) {
             throw new HttpConflictException("Some Users stil have this access class. You can't delete it", 409); //conflict
         } else {

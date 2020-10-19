@@ -1,11 +1,10 @@
 <?php
 
+use Psr\Container\ContainerInterface;
+use Slim\Factory\AppFactory;
 use middleware\AuthorizationMiddleware;
 use middleware\JSONMiddleware;
 use middleware\JWTMiddleware;
-use Psr\Container\ContainerInterface;
-use Slim\Factory\AppFactory;
-
 use models\Access;
 use models\Address;
 use models\Building;
@@ -17,6 +16,7 @@ use models\User;
 use utils\Validator;
 use utils\Database;
 use utils\MailSender;
+
 
 return [
     App::class => function (ContainerInterface $container) {
@@ -44,35 +44,35 @@ return [
     AuthorizationMiddleware::class => function (ContainerInterface $container) {
         return new AuthorizationMiddleware($container);
     },
-    'Building' => function (ContainerInterface $container) {
+    Building::class => function (ContainerInterface $container) {
         return new Building($container->get(Database::class));
     },
-    'Access' => function (ContainerInterface $container) {
+    Access::class => function (ContainerInterface $container) {
         return new Access($container->get(Database::class));
     },
-    'Log' => function (ContainerInterface $container) {
+    Log::class => function (ContainerInterface $container) {
         return new Log($container->get(Database::class));
     },
-    'Reservation' => function (ContainerInterface $container) {
+    Reservation::class => function (ContainerInterface $container) {
         return new Reservation($container->get(Database::class));
     },
-    'Room' => function (ContainerInterface $container) {
+    Room::class => function (ContainerInterface $container) {
         return new Room($container->get(Database::class));
     },
-    'User' => function (ContainerInterface $container) {
+    User::class => function (ContainerInterface $container) {
         return new User($container->get(Database::class));
     },
-    'Address' => function (ContainerInterface $container) {
+    Address::class => function (ContainerInterface $container) {
         return new Address($container->get(Database::class));
     },
-    'RoomType' => function (ContainerInterface $container) {
+    RoomType::class => function (ContainerInterface $container) {
         return new RoomType($container->get(Database::class));
     },
-    'Validator' => function (ContainerInterface $container) {
+    Validator::class => function (ContainerInterface $container) {
         return new Validator();
     },
-    'MailSender' => function (ContainerInterface $container) {
+    MailSender::class => function (ContainerInterface $container) {
         return new MailSender();
     },
-    'settings' => (require __DIR__ . '/defaults.php')
+    'settings' => (require_once __DIR__ . '/defaults.php')
 ];

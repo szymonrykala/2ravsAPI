@@ -1,11 +1,14 @@
 <?php
 namespace controllers;
+
+use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\RequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
-
+use models\Reservation;
+use utils\Validator;
 
 class ReservationController extends Controller
 {
@@ -17,7 +20,7 @@ class ReservationController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Reservation = $this->DIcontainer->get('Reservation');
+        $this->Reservation = $this->DIcontainer->get(Reservation::class);
     }
 
     public function validateReservation(Request &$request, array &$data): void
@@ -28,7 +31,7 @@ class ReservationController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
 
         if (isset($data['subtitle'])) {
             if (!$Validator->validateString($data['subtitle'], 3)) {

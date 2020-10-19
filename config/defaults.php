@@ -1,6 +1,4 @@
 <?php
-// Configure defaults for the whole application.
-
 // Error reporting
 error_reporting(1);
 ini_set('display_errors', '1');

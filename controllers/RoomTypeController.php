@@ -4,7 +4,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
-
+use models\RoomType;
+use utils\Validator;
 
 class RoomTypeController extends Controller
 {
@@ -17,7 +18,7 @@ class RoomTypeController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Type = $this->DIcontainer->get('RoomType');
+        $this->Type = $this->DIcontainer->get(RoomType::class);
     }
 
     public function validateRoomType(Request $request, array &$data): void
@@ -28,7 +29,7 @@ class RoomTypeController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
         foreach (['name'] as $item) {
             if (isset($data[$item])) {
                 if (!$Validator->validateClearString($data[$item])) {

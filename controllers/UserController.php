@@ -14,7 +14,10 @@ use Slim\Exception\HttpException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotImplementedException;
 use Slim\Exception\HttpUnauthorizedException;
-
+use models\Access;
+use models\User;
+use utils\MailSender;
+use utils\Validator;
 
 class UserController extends Controller
 {
@@ -23,7 +26,7 @@ class UserController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->User = $this->DIcontainer->get('User');
+        $this->User = $this->DIcontainer->get(User::class);
     }
 
     private function generateToken(int $userID, int $accessID, string $email): string
@@ -57,7 +60,7 @@ class UserController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
         foreach (['name', 'surname'] as $item) {
             if (isset($data[$item])) {
                 if (!$Validator->validateClearString($data[$item])) {
@@ -127,7 +130,7 @@ class UserController extends Controller
         }
 
         if (password_verify($password, $userPassword)) {
-            $Access = $this->DIcontainer->get('Access');
+            $Access = $this->DIcontainer->get(Access::class);
             $data = array(
                 "jwt" => $this->generateToken($userID, $accessID, $email),
                 'userID' => $userID,
@@ -200,10 +203,10 @@ class UserController extends Controller
         $this->validateUser($request, $userData);
 
 
-        $MailSender = $this->DIcontainer->get('MailSender');
+        $MailSender = $this->DIcontainer->get(MailSender::class);
         $MailSender->setUser($userData);
         $MailSender->setMailSubject('User Activation');
-        // $MailSender->send();
+        $MailSender->send();
 
         $userID = $this->User->create($userData);
         unset($userData['password']);
@@ -266,7 +269,7 @@ class UserController extends Controller
                 $user['action_key'] = $this->getRandomKey(6);
                 $this->User->update($user['id'], ['action_key' => $user['action_key']]);
 
-                $MailSender = $this->DIcontainer->get('MailSender');
+                $MailSender = $this->DIcontainer->get(MailSender::class);
                 $MailSender->setUser($user);
                 $MailSender->setMailSubject('User Activation');
                 $MailSender->send();
@@ -390,7 +393,7 @@ class UserController extends Controller
 
         // checking if user can change acces
         if (isset($data['access_id'])) {
-            $Access = $this->DIcontainer->get("Access");
+            $Access = $this->DIcontainer->get(Access::class);
             if (
                 (bool)$Access->read(['id' => $accessID])[0]['access_edit'] === false
             ) throw new HttpUnauthorizedException($request, 'You do not have acces to edit user access_id');
@@ -420,7 +423,7 @@ class UserController extends Controller
 
             $editedUser['action_key'] = $this->getRandomKey(6);
 
-            $MailSender = $this->DIcontainer->get('MailSender');
+            $MailSender = $this->DIcontainer->get(MailSender::class);
             $MailSender->setUser($editedUser);
             $MailSender->setMailSubject('User Activation');
             $MailSender->send();

@@ -4,7 +4,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
-
+use models\Room;
+use utils\Validator;
 
 class RoomController extends Controller
 {
@@ -16,7 +17,7 @@ class RoomController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Room = $this->DIcontainer->get('Room');
+        $this->Room = $this->DIcontainer->get(Room::class);
     }
 
     public function validateRoom(Request $request, array &$data): void
@@ -27,7 +28,7 @@ class RoomController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
         if (isset($data['name'])) {
             if (!$Validator->validateClearString($data['name'])) {
                 throw new HttpBadRequestException($request, 'Incorrect room name value; pattern: ' . $Validator->clearString);

@@ -1,10 +1,11 @@
 <?php
 namespace controllers;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
-
+use models\Address;
+use utils\Validator;
 
 class AddressController extends Controller
 {
@@ -17,7 +18,7 @@ class AddressController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Address = $this->DIcontainer->get('Address');
+        $this->Address = $this->DIcontainer->get(Address::class);
     }
 
     public function validateAddress(Request $request, array &$data): void
@@ -28,7 +29,7 @@ class AddressController extends Controller
          * @param array $data
          * @throws HttpBadRequestException
          */
-        $Validator = $this->DIcontainer->get('Validator');
+        $Validator = $this->DIcontainer->get(Validator::class);
         foreach (['country', 'town', 'street'] as $item) {
             if (isset($data[$item])) {
                 if (

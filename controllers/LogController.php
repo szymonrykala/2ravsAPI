@@ -1,9 +1,10 @@
 <?php
 namespace controllers;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\RequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
+use models\Log;
 
 class LogController extends Controller
 {
@@ -16,7 +17,7 @@ class LogController extends Controller
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Log = $this->DIcontainer->get('Log');
+        $this->Log = $this->DIcontainer->get(Log::class);
     }
 
     // GET /logs
