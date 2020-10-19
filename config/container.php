@@ -35,8 +35,8 @@ return [
         );
     },
     JWTMiddleware::class => function (ContainerInterface $container) {
-        $JWTsignature = $container->get('settings')['jwt']['signature'];
-        return new JWTMiddleware($JWTsignature);
+        $JWTsettings = $container->get('settings')['jwt'];
+        return new JWTMiddleware($JWTsettings);
     },
     JSONMiddleware::class => function (ContainerInterface $container) {
         return new JSONMiddleware();
@@ -72,7 +72,7 @@ return [
         return new Validator();
     },
     MailSender::class => function (ContainerInterface $container) {
-        return new MailSender();
+        return new MailSender($container->get('settings')['mail']);
     },
     'settings' => (require_once __DIR__ . '/defaults.php')
 ];

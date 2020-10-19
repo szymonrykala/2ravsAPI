@@ -32,18 +32,18 @@ class UserController extends Controller
     private function generateToken(int $userID, int $accessID, string $email): string
     {
         //creating new token
-        $time = time();
         $tokenDecoded = new TokenDecoded(
-            ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS384],
-            array(
+            ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS512],
+            [
                 'user_id' => $userID,
                 'access_id' => $accessID,
                 'email' => $email,
-                'ex' => $time + (60 * 60) * 48 //valid 48h
-            )
+                'assigned' => time(),
+                'ip'=>getHostByName(getHostName()) 
+            ]
         );
         // encoding the token
-        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['signature'], JWT::ALGORITHM_HS384);
+        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['signature'], JWT::ALGORITHM_HS512);
         return $tokenEncoded->__toString();
     }
 

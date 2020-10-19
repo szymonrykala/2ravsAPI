@@ -2,13 +2,13 @@
 
 Reservation and Visualisation System API
 
--   [x] po zmianie emaila, wymagana aktywacja użytkownika
--   [ ] zatwierdzanie rezerwacji
--   [ ] usunąć rooms_count z tworzenia budynku
-
 ## Shortcuts:
 
 1. [Features](#Features)
+    - [Sorting](#Sorting)
+    - [Paging](#Paging)
+    - [Search](#Search)
+    - [Tokens_controll](#Tokens_controll)
 2. [Responses](#Responses)
 3. [Endpoints](Endpoints)
     - [RFID](#RFID)
@@ -21,7 +21,6 @@ Reservation and Visualisation System API
     - [Room_types](#Room_types)
     - [Rooms](#Rooms)
 4. [Catalog structure](#Catalog_structure)
-5. [Changelog](#Changelog)
 
 ---
 
@@ -35,13 +34,13 @@ Dodatkowo istnieje możliwość wskazania klucza, według którego sortowanie je
 > `GET /resource?sort=ASC&sort_key=created_at` zwróci listę posortowaną według podanego klucza oraz wskazanego porządku.
 > Jeśli wskazany klucz nie jest obecny w pobieranym zasobie, nie brany jest on pod uwagę i następuje sortowanie według domyślnego klucza-`id`.
 
-### Paging
+### #Paging
 
 Możliwe jest stronicowanie otrzymanych wyników poprzez podanie wartości `page` - numer strony oraz `on_page` - ilość elementów na stronie.
 
 > `GET /resource?page=0&on_page=10` zwróci pierwszą stronę z dziesięcioma wynikami.
 
-### Search
+### #Search
 
 Wszędzie gdzie używana jest metoda `GET`, możliwe jest zastosowanie trybu wyszukiwania. Zostaje on aktywowany, gdy w ciele wiadomości w formacie JSON umieścimy następującą strukturę:
 
@@ -63,6 +62,15 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
 -   `=` - równe podanej wartości
 -   `LIKE` - działa jak `LIKE` w języku SQL
 -   `REGEXP` - wyszukuje według wyrażeń regularnych
+
+### #Tokens_controll
+
+By easy changing default settings for JWT authorization You can disable or enable expiration of tokens, or force all users to log in again. All settings for JWT are in file `/config/defaults.php`. Algorithm used for coding tokens is HMAC with SHA-2 - HS512
+
+-   `signature` - Jest to podpis każdego tokenu. Poprzez jego zmianę możena zmusić wszystkich użytkowników to zalogowania się jeszcze raz.
+-   `is_expire` - Definiuje czy tokeny sprawdzane są pod kontem terminu ważności - czy wygasają.
+-   `valid_time` - Jeśli `is_expire=> true`, określa liczbę sekund przez ile token jest dostępny
+-   `ip_controll` - Włącza kontrolę lokalnego adresu ip użytkownika. Jeśli ip ulegnie zmianie względem użytego podcas pobierania tokenu, zostanie zwrócony status `HTTP 401`
 
 ---
 
@@ -247,7 +255,7 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
         "password": "myPassS144$"
     }
     ```
-    > W odpowiedzi zwracany jest token, ID użytkownika oraz klasa dostępu.
+    > W odpowiedzi zwracany jest token, ID użytkownika oraz klasa dostępu. Czas ważności dostępu możliwy jest do ustawienia w pliku /`config/defaults.php` zmienna
     ```json
     {
         "items": {
@@ -450,117 +458,3 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
 ```
 
 ---
-
-## Changelog
-
-[16.10.2020]
-
-### Added
-
--   rfid in accesses and rooms
--   PATCH /rfid is toggling state of room with given rfid
-
-[14.10.2020]
-
-### Added
-
--   .hatacces
--   sending emails to new users with activation code
-
-### Changed
-
--   activation process to POST method and key is passed in `activation_key` with password and email
-
-[06-10-2020]
-
-### Added
-
--   Validator::class utility
--   Validation in Controllers
-
-[05-10-2020]
-
-### Added
-
--   searching utilities in Model and Controller abstract classes
--   Controller:switchKey(array &$array,string $oldKeym, string \$newKey)
-
-### Changed
-
--   switching keys ex. `log_id` -> `id` with Controller:switchKey() func.
--   controlling types and variables geted form body in Controller:getFrom
-
-### Removed
-
--   searching paths in router
--   Model.\*:search()
-
-[04-10-2020]
-
-### Added
-
--   Operations on results Sorting (sort, sort_key):
-    -   limiting (limit)
-    -   paging (page, on_page)
--   Controller: parsedQueryString(Request $request, string $key=null):array
-
-### Changed
-
--   way to get resources parameters from URI
--   now one method menage diffrent read paths in controllers
-
-### Removed
-
--   methods from controllers - one method to menage diffrent read paths
--   Controller:deleted(Request \$request):bool
-
-[22-09-2020]
-
-### Changed
-
--   displaying data in errors with json_encode()
--   Exception fix in User::verify
-
-[17-09-2020]
-
-### Added
-
--   filtering unexpected variables in model layer
--   protected column property in models
--   refactor Model::exist(array $params,bool $reverse) reverse field reverse working of function if true throws when already exist
-
-[13-09-2020]
-
--   added /buildings/rooms/types get,post,patch,delete and get /buildings/rooms
--   implemented RoomController
--   added roomTypeController
--   implemented ToomTypeController
-
-[11-09-2020]
-
--   BuildingsController ready
--   addressController ready
--   fixed auth middleware
-
-[09-09-2020]
-
--   cathing integrity error in db interface [23000 state]
--   accesController ready
--   controllers inheritance
--   Controller::deleted() method true when delete is `true` or `1`
-
-[27-08-2020]
-
--   getting deleted reservations by ?deleted=true
--   on hard delete reservation - logs are deleted
-
-[25-08-2020]
-
--   user controller finished
--   checking same user in auth middleware
-
-[24-08-2020]
-
--   change endpoint /activate --> /users/activate
--   Added ActivationException - 3007
--   done activation
