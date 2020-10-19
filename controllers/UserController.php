@@ -271,7 +271,7 @@ class UserController extends Controller
 
                 $MailSender = $this->DIcontainer->get(MailSender::class);
                 $MailSender->setUser($user);
-                $MailSender->setMailSubject('User Activation');
+                $MailSender->setMailSubject('Resend User Activation');
                 $MailSender->send();
 
                 $this->Log->create([
@@ -425,7 +425,7 @@ class UserController extends Controller
 
             $MailSender = $this->DIcontainer->get(MailSender::class);
             $MailSender->setUser($editedUser);
-            $MailSender->setMailSubject('User Activation');
+            $MailSender->setMailSubject('Change email');
             $MailSender->send();
 
             $this->User->update($editedUser['id'], ['action_key' => $editedUser['action_key']]);

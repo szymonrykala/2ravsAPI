@@ -22,7 +22,7 @@ $settings['Database'] = [
 ];
 
 $settings['mail']=[
-
+    'send_from'=>'noreply@maciejkossowski.com'
 ];
 
 $settings['jwt'] = [
