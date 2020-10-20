@@ -1,12 +1,13 @@
 # 2ravsAPI
 
 Reservation and Visualisation System API
-
+##### **Use example-domain/v1 as root path to all paths in endpoints**
 ## Shortcuts:
 
 1. [Features](#Features)
     - [Sorting](#Sorting)
     - [Paging](#Paging)
+    - [Resource_extensions](#Resource_extensions)
     - [Search](#Search)
     - [Tokens_controll](#Tokens_controll)
 2. [Responses](#Responses)
@@ -35,11 +36,59 @@ Dodatkowo istnieje możliwość wskazania klucza, według którego sortowanie je
 > Jeśli wskazany klucz nie jest obecny w pobieranym zasobie, nie brany jest on pod uwagę i następuje sortowanie według domyślnego klucza-`id`.
 
 ### #Paging
-
 Możliwe jest stronicowanie otrzymanych wyników poprzez podanie wartości `page` - numer strony oraz `on_page` - ilość elementów na stronie.
 
 > `GET /resource?page=0&on_page=10` zwróci pierwszą stronę z dziesięcioma wynikami.
 
+### #Resource_extensions
+
+Każdy zwracany zasób posiadający `id` innego zasobu, może zostać o niego rozszerzony. Oznacza to, że jeśli pobierzemy rekord, lub klika rekordów z `rooms`. Jako wynik otrzymamy następującą odpowiedź:
+`GET /buildings/2/rooms/5`
+```json
+{
+    "items": [
+        {
+            "id": 5,
+            "name": "A001",
+            "rfid": "ytfjhyd",
+            "building_id": 2,
+            "room_type_id": 1,
+            "seats_count": 30,
+            "floor": 0,
+            "equipment": "tablica,rzutnik,kreda",
+            "blockade": false,
+            "state": false
+        }
+    ]
+}
+```
+Jak widać, powyższy wynik ma pola `building_id` oraz `room_type_id`. Mogą one zostać zastąpione zasobami na które wskazują. Aby tego dokonać, należy o które zasoby chcemy rekord rozbudować. Dokonujemy tego przed dodanie zmiennej `ext` w query string przyjmującej listę pól oddzielonych przecinkami. Tak więc `GET /buildings/2/rooms/5?ext=building_id,room_type_id` zwróci nam:
+```json
+{
+    "items": [
+        {
+            "id": 5,
+            "name": "A001",
+            "rfid": "ytfjhyd",
+            "seats_count": 30,
+            "floor": 0,
+            "equipment": "tablica,rzutnik,kreda",
+            "blockade": false,
+            "state": false,
+            "room_type": {
+                "id": 1,
+                "name": "laboratory"
+            },
+            "building": {
+                "id": 2,
+                "name": "Budynek A",
+                "rooms_count": 5,
+                "address_id": 1
+            }
+        }
+    ]
+}
+```
 ### #Search
 
 Wszędzie gdzie używana jest metoda `GET`, możliwe jest zastosowanie trybu wyszukiwania. Zostaje on aktywowany, gdy w ciele wiadomości w formacie JSON umieścimy następującą strukturę:
@@ -61,7 +110,7 @@ Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania (
 -   `>` - większe od podanej wartości
 -   `=` - równe podanej wartości
 -   `LIKE` - działa jak `LIKE` w języku SQL
--   `REGEXP` - wyszukuje według wyrażeń regularnych
+-   `REGEXP` - wyszukuje według wyrażeń regularnych obsługiwanych przez MySQL
 
 ### #Tokens_controll
 
@@ -323,8 +372,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
     }
     ```
 -   DELETE /users/{id}
-    > Usuwanie użytkownika o danym `id`. Dokonać może tego albo usuwany użytkownik, albo użytkownik do tego upoważniony przez odpowiednią klasę dostępu. 
-    Usunięcie użytkownika spowoduje usunięcie wszystkich jego rezerwacji.
+    > Usuwanie użytkownika o danym `id`. Dokonać może tego albo usuwany użytkownik, albo użytkownik do tego upoważniony przez odpowiednią klasę dostępu.
+    > Usunięcie użytkownika spowoduje usunięcie wszystkich jego rezerwacji.
 
 ### #Buildings:
 
@@ -351,8 +400,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
     ```
 -   DELETE /buildings/{id}
     > Jako `id` podajemy id budynku który chcemy usunąć - powiedzie się jęsli nie ma w nim pokoji.
-    Usuwanie budynku; spowoduje:
-     - usunięcie rezerwacji pokoji w tym budynku 
+    > Usuwanie budynku; spowoduje:
+    -   usunięcie rezerwacji pokoji w tym budynku
 
 ### #Room_types:
 
@@ -410,8 +459,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
     }
     ```
 -   DELETE /buildings/rooms/{room_id}
-    > Usuwanie pokoju o danym `room_id`. 
-    Usunięcie spowoduje usunięcie wszystkich rezerwacji tego pokoju.
+    > Usuwanie pokoju o danym `room_id`.
+    > Usunięcie spowoduje usunięcie wszystkich rezerwacji tego pokoju.
 
 ---
 
