@@ -323,7 +323,7 @@ INSERT INTO `room_types` (`id`, `name`) VALUES
 
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
-  `access_id` int(11) DEFAULT 1,
+  `access_id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
   `surname` tinytext NOT NULL,
   `password` text NOT NULL,
@@ -344,7 +344,7 @@ INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_log
 (8, 3, 'Weronika', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-10-07 17:43:42', 'weronika1212@gmail.com', '2020-10-07 17:43:42', 1, 0, '2020-10-07 17:43:42', '1'),
 (10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-14 22:02:20', 'szymonrykala1214@gmail.com', '2020-10-14 22:02:20', 1, 0, '2020-10-14 22:02:20', '1'),
 (11, 1, 'test name ', 'testSurname', '$2y$12$FXd5UMeI5hpVTUyTUjqRyOCYUNYRdgdMxzw1tC/dNwB.2ecaKgP.K', '2020-10-20 00:37:51', 'testupdate@gmail.com', '2020-10-20 00:37:51', 0, 1, '2020-10-18 13:15:53', 'NONE_NONE'),
-(12, NULL, 'testName', 'testSurname', '$2y$12$bXhBq9HzVmwWXd76dLee4uddfCQWnqbwm3zDMvOxrtopQjDDCWasW', '2020-10-19 19:39:15', 'test@gmail.com', '2020-10-19 19:39:15', 0, 0, '2020-10-18 22:56:46', '1ePjDzo9');
+(12, 3, 'testName', 'testSurname', '$2y$12$bXhBq9HzVmwWXd76dLee4uddfCQWnqbwm3zDMvOxrtopQjDDCWasW', '2020-10-19 19:39:15', 'test@gmail.com', '2020-10-19 19:39:15', 0, 0, '2020-10-18 22:56:46', '1ePjDzo9');
 
 --
 -- Indeksy dla zrzutów tabel
