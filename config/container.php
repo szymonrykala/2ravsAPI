@@ -45,28 +45,36 @@ return [
         return new AuthorizationMiddleware($container);
     },
     Building::class => function (ContainerInterface $container) {
-        return new Building($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/Building.php';
+        return new Building($container->get(Database::class),$schema);
     },
     Access::class => function (ContainerInterface $container) {
-        return new Access($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/Access.php';
+        return new Access($container->get(Database::class),$schema);
     },
     Log::class => function (ContainerInterface $container) {
-        return new Log($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/Log.php';
+        return new Log($container->get(Database::class),$schema);
     },
     Reservation::class => function (ContainerInterface $container) {
-        return new Reservation($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/Reservation.php';
+        return new Reservation($container->get(Database::class),$schema);
     },
     Room::class => function (ContainerInterface $container) {
-        return new Room($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/Room.php';
+        return new Room($container->get(Database::class),$schema);
     },
     User::class => function (ContainerInterface $container) {
-        return new User($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/User.php';
+        return new User($container->get(Database::class),$schema);
     },
     Address::class => function (ContainerInterface $container) {
-        return new Address($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/Address.php';
+        return new Address($container->get(Database::class),$schema);
     },
     RoomType::class => function (ContainerInterface $container) {
-        return new RoomType($container->get(Database::class));
+        $schema = require __DIR__ .'/../models/schemas/RoomType.php';
+        return new RoomType($container->get(Database::class),$schema);
     },
     Validator::class => function (ContainerInterface $container) {
         return new Validator();
