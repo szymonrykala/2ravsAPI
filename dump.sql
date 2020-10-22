@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Czas generowania: 20 Paź 2020, 00:39
+-- Czas generowania: 22 Paź 2020, 23:13
 -- Wersja serwera: 10.4.14-MariaDB
 -- Wersja PHP: 7.4.10
 
@@ -42,17 +42,19 @@ CREATE TABLE `accesses` (
   `reservations_confirm` tinyint(1) NOT NULL DEFAULT 0,
   `reservations_edit` tinyint(1) NOT NULL DEFAULT 0,
   `users_edit` tinyint(1) NOT NULL DEFAULT 0,
-  `statistics_view` tinyint(1) NOT NULL DEFAULT 0
+  `statistics_view` tinyint(1) NOT NULL DEFAULT 0,
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Zrzut danych tabeli `accesses`
 --
 
-INSERT INTO `accesses` (`id`, `name`, `rfid_action`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`) VALUES
-(1, 'admin', 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-(3, 'demo', 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0),
-(4, 'test', 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO `accesses` (`id`, `name`, `rfid_action`, `access_edit`, `buildings_view`, `buildings_edit`, `logs_view`, `logs_edit`, `rooms_view`, `rooms_edit`, `reservations_access`, `reservations_confirm`, `reservations_edit`, `users_edit`, `statistics_view`, `created`, `updated`) VALUES
+(1, 'admin', 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, '2020-10-22 22:07:22', '2020-10-22 22:07:22'),
+(3, 'demo', 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, '2020-10-22 22:07:22', '2020-10-22 22:07:22'),
+(4, 'test', 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, '2020-10-22 22:07:22', '2020-10-22 22:07:22');
 
 -- --------------------------------------------------------
 
@@ -66,16 +68,18 @@ CREATE TABLE `addresses` (
   `town` tinytext NOT NULL,
   `postal_code` tinytext NOT NULL,
   `street` tinytext NOT NULL,
-  `number` tinytext NOT NULL
+  `number` tinytext NOT NULL,
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Zrzut danych tabeli `addresses`
 --
 
-INSERT INTO `addresses` (`id`, `country`, `town`, `postal_code`, `street`, `number`) VALUES
-(1, 'Poland', 'Bydgoszcz', '85-791', 'Kaliskiego', '41'),
-(2, 'Poland', 'Kowal', '87-820', 'Grabkowska', '7');
+INSERT INTO `addresses` (`id`, `country`, `town`, `postal_code`, `street`, `number`, `created`, `updated`) VALUES
+(1, 'Poland', 'Bydgoszcz', '85-791', 'Kaliskiego', '41', '2020-10-22 21:40:10', '2020-10-22 21:40:10'),
+(2, 'Poland', 'Kowal', '87-820', 'Grabkowska', '7', '2020-10-22 21:40:10', '2020-10-22 21:40:10');
 
 -- --------------------------------------------------------
 
@@ -87,21 +91,23 @@ CREATE TABLE `buildings` (
   `id` int(11) NOT NULL,
   `name` tinytext NOT NULL,
   `rooms_count` int(11) NOT NULL DEFAULT 0,
-  `address_id` int(11) NOT NULL
+  `address_id` int(11) NOT NULL,
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Zrzut danych tabeli `buildings`
 --
 
-INSERT INTO `buildings` (`id`, `name`, `rooms_count`, `address_id`) VALUES
-(2, 'Budynek A', 5, 1),
-(3, 'Budynek B', 3, 2),
-(4, 'Budynek C', 1, 1),
-(6, 'Budynek D', 3, 2),
-(7, 'Budynek E', 4, 1),
-(8, 'Budynek F', 1, 2),
-(11, 'Budynek testowy', 0, 1);
+INSERT INTO `buildings` (`id`, `name`, `rooms_count`, `address_id`, `created`, `updated`) VALUES
+(2, 'Budynek A', 5, 1, '2020-10-22 19:44:39', '2020-10-22 19:44:39'),
+(3, 'Budynek B', 3, 2, '2020-10-22 19:44:39', '2020-10-22 19:44:39'),
+(4, 'Budynek C', 1, 1, '2020-10-22 19:44:39', '2020-10-22 19:44:39'),
+(6, 'Budynek D', 3, 2, '2020-10-22 19:44:39', '2020-10-22 19:44:39'),
+(7, 'Budynek E', 4, 1, '2020-10-22 19:44:39', '2020-10-22 19:44:39'),
+(8, 'Budynek F', 1, 2, '2020-10-22 19:44:39', '2020-10-22 19:44:39'),
+(11, 'Budynek testowy', 0, 1, '2020-10-22 19:44:39', '2020-10-22 19:44:39');
 
 -- --------------------------------------------------------
 
@@ -116,14 +122,14 @@ CREATE TABLE `logs` (
   `reservation_id` int(11) DEFAULT NULL,
   `building_id` int(1) DEFAULT NULL,
   `room_id` int(11) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Zrzut danych tabeli `logs`
 --
 
-INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`, `room_id`, `created_at`) VALUES
+INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`, `room_id`, `created`) VALUES
 (1, 'User szymonrykala1214@gmail.com created new room in building id=9; data:{\"name\":\"super pok\\u00f3j testowy\",\"room_type_id\":5,\"seats_count\":350,\"floor\":2,\"rfid\":\"ksjdfhi73t48i3\",\"equipment\":\"umywalka,kreda,tablica\",\"blockade\":true,\"building_id\":9}', 10, NULL, 9, 0, '2020-10-19 22:50:53'),
 (386, 'User weronika1212@gmail.com toggled to trueroom with rfid: d', 8, NULL, NULL, 12, '2020-10-16 17:48:11'),
 (387, 'User weronika1212@gmail.com toggled to falseroom with rfid: d', 8, NULL, NULL, 12, '2020-10-16 17:48:39'),
@@ -182,7 +188,9 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 (440, 'USER szymonrykala1214@gmail.com UPDATE user testupdate@gmail.com DATA {\"access_id\":4}', 10, NULL, NULL, NULL, '2020-10-20 00:37:19'),
 (441, 'USER szymonrykala1214@gmail.com UPDATE user testupdate@gmail.com DATA {\"access_id\":4}', 10, NULL, NULL, NULL, '2020-10-20 00:37:21'),
 (442, 'USER szymonrykala1214@gmail.com UPDATE user testupdate@gmail.com DATA {\"access_id\":1}', 10, NULL, NULL, NULL, '2020-10-20 00:37:51'),
-(443, 'USER szymonrykala1214@gmail.com UPDATE user testupdate@gmail.com DATA {\"access_id\":1}', 10, NULL, NULL, NULL, '2020-10-20 00:37:59');
+(443, 'USER szymonrykala1214@gmail.com UPDATE user testupdate@gmail.com DATA {\"access_id\":1}', 10, NULL, NULL, NULL, '2020-10-20 00:37:59'),
+(444, 'USER szymonrykala1214@gmail.com VERYFIED', 10, NULL, NULL, NULL, '2020-10-21 00:48:50'),
+(445, 'USER szymonrykala1214@gmail.com UPDATE user testupdate@gmail.com DATA {\"name\":\"updated test\"}', 10, NULL, NULL, NULL, '2020-10-21 01:02:18');
 
 -- --------------------------------------------------------
 
@@ -193,15 +201,15 @@ INSERT INTO `logs` (`id`, `message`, `user_id`, `reservation_id`, `building_id`,
 CREATE TABLE `reservations` (
   `id` int(11) NOT NULL,
   `title` tinytext NOT NULL,
-  `subtitle` text NOT NULL,
+  `describtion` text NOT NULL,
   `room_id` int(11) NOT NULL,
   `building_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
   `date` date NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated` datetime NOT NULL DEFAULT current_timestamp(),
   `confirmed` tinyint(1) NOT NULL DEFAULT 0,
   `confirming_user_id` int(11) DEFAULT NULL,
   `confirmed_at` datetime DEFAULT NULL
@@ -211,7 +219,7 @@ CREATE TABLE `reservations` (
 -- Zrzut danych tabeli `reservations`
 --
 
-INSERT INTO `reservations` (`id`, `title`, `subtitle`, `room_id`, `building_id`, `user_id`, `start_time`, `end_time`, `date`, `created_at`, `updated_at`, `confirmed`, `confirming_user_id`, `confirmed_at`) VALUES
+INSERT INTO `reservations` (`id`, `title`, `describtion`, `room_id`, `building_id`, `user_id`, `start_time`, `end_time`, `date`, `created`, `updated`, `confirmed`, `confirming_user_id`, `confirmed_at`) VALUES
 (4, 'rezerwacja próbna', 'test - próbna rezerwacja', 2, 2, 10, '12:00:00', '21:30:00', '2020-10-19', '2020-08-24 22:11:19', '2020-10-19 20:09:51', 1, NULL, NULL),
 (7, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-12', '2020-08-24 22:11:30', '2020-08-24 22:11:30', 0, NULL, NULL),
 (10, 'rezerwacja próbna', 'test - próbna rezerwacja', 3, 3, 8, '12:00:00', '13:30:00', '2020-08-14', '2020-08-24 22:11:26', '2020-08-24 22:11:26', 0, NULL, NULL),
@@ -257,31 +265,33 @@ CREATE TABLE `rooms` (
   `floor` int(11) NOT NULL,
   `equipment` text NOT NULL,
   `blockade` tinyint(1) NOT NULL DEFAULT 1,
-  `state` tinyint(1) NOT NULL DEFAULT 0
+  `occupied` tinyint(1) NOT NULL DEFAULT 0,
+  `updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Zrzut danych tabeli `rooms`
 --
 
-INSERT INTO `rooms` (`id`, `name`, `rfid`, `building_id`, `room_type_id`, `seats_count`, `floor`, `equipment`, `blockade`, `state`) VALUES
-(2, 'B001', 'erkjn495gnsdhyn345', 3, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(3, 'B201', 'r', 3, 5, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(4, 'B101', 't', 3, 2, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(5, 'A001', 'y', 2, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(6, 'A201', 'ksjdfhi7ifhfje3', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 0, 0),
-(7, 'A101', 'i', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(8, 'C001', 'erkjn495gn', 4, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(9, 'C201', 'p', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(10, 'C101', 'a', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(11, 'D001', 's', 6, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(12, 'D101', 'erkjn495gnddd', 6, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 1),
-(13, 'D201', 'f', 6, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(14, 'E001', 'g', 7, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0),
-(15, 'E101', 'h', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0),
-(16, 'E201', 'j', 7, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0),
-(41, 'test integralności 2', 'ksjdfhi7ifhfe3', 8, 5, 350, 1, 'umywalka,kreda,tablica', 1, 0),
-(49, 'test integralności 2', 'ksjdfhi7ifhfj53', 7, 5, 350, 1, 'umywalka,kreda,tablica', 1, 0);
+INSERT INTO `rooms` (`id`, `name`, `rfid`, `building_id`, `room_type_id`, `seats_count`, `floor`, `equipment`, `blockade`, `occupied`, `updated`, `created`) VALUES
+(2, 'B001', 'erkjn495gnsdhyn345', 3, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(3, 'B201', 'r', 3, 5, 60, 2, 'rzutnik,kreda,tablica', 1, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(4, 'B101', 't', 3, 2, 60, 1, 'rzutnik,kreda,tablica', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(5, 'A001', 'y', 2, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(6, 'A201', 'ksjdfhi7ifhfje3', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(7, 'A101', 'i', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(8, 'C001', 'erkjn495gn', 4, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(9, 'C201', 'p', 2, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(10, 'C101', 'a', 2, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(11, 'D001', 's', 6, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(12, 'D101', 'erkjn495gnddd', 6, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 1, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(13, 'D201', 'f', 6, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(14, 'E001', 'g', 7, 1, 30, 0, 'tablica,rzutnik,kreda', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(15, 'E101', 'h', 7, 5, 60, 1, 'rzutnik,kreda,tablica', 0, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(16, 'E201', 'j', 7, 2, 60, 2, 'rzutnik,kreda,tablica', 1, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(41, 'test integralności 2', 'ksjdfhi7ifhfe3', 8, 5, 350, 1, 'umywalka,kreda,tablica', 1, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10'),
+(49, 'test integralności 2', 'ksjdfhi7ifhfj53', 7, 5, 350, 1, 'umywalka,kreda,tablica', 1, 0, '2020-10-22 21:35:10', '2020-10-22 21:35:10');
 
 --
 -- Wyzwalacze `rooms`
@@ -303,17 +313,19 @@ DELIMITER ;
 
 CREATE TABLE `room_types` (
   `id` int(11) NOT NULL,
-  `name` text NOT NULL
+  `name` text NOT NULL,
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Zrzut danych tabeli `room_types`
 --
 
-INSERT INTO `room_types` (`id`, `name`) VALUES
-(1, 'laboratory'),
-(2, 'sala wykładowa'),
-(5, 'aula');
+INSERT INTO `room_types` (`id`, `name`, `created`, `updated`) VALUES
+(1, 'laboratory', '2020-10-22 21:38:05', '2020-10-22 21:38:05'),
+(2, 'sala wykładowa', '2020-10-22 21:38:05', '2020-10-22 21:38:05'),
+(5, 'aula', '2020-10-22 21:38:05', '2020-10-22 21:38:05');
 
 -- --------------------------------------------------------
 
@@ -323,16 +335,16 @@ INSERT INTO `room_types` (`id`, `name`) VALUES
 
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
-  `access_id` int(11) NOT NULL,
+  `access_id` int(11) DEFAULT 1,
   `name` tinytext NOT NULL,
   `surname` tinytext NOT NULL,
   `password` text NOT NULL,
   `last_login` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `email` text NOT NULL,
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated` datetime NOT NULL DEFAULT current_timestamp(),
   `activated` tinyint(1) NOT NULL DEFAULT 0,
   `login_fails` int(11) NOT NULL DEFAULT 0,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
   `action_key` tinytext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -340,11 +352,11 @@ CREATE TABLE `users` (
 -- Zrzut danych tabeli `users`
 --
 
-INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated_at`, `activated`, `login_fails`, `created_at`, `action_key`) VALUES
+INSERT INTO `users` (`id`, `access_id`, `name`, `surname`, `password`, `last_login`, `email`, `updated`, `activated`, `login_fails`, `created`, `action_key`) VALUES
 (8, 3, 'Weronika', 'Urbańska|T', '$2y$12$mLMGKbiLWDMoOxkeyxnX6OEguoUFS.WyAAFOxA1GL14ESMp.MCxWi', '2020-10-07 17:43:42', 'weronika1212@gmail.com', '2020-10-07 17:43:42', 1, 0, '2020-10-07 17:43:42', '1'),
 (10, 1, 'Szymon', 'Rykała', '$2y$12$efkNjWJHZwkgSnWs4ExVdON47kma2OAw0q/2E7ivTf9qIVvNAN.HO', '2020-10-14 22:02:20', 'szymonrykala1214@gmail.com', '2020-10-14 22:02:20', 1, 0, '2020-10-14 22:02:20', '1'),
-(11, 1, 'test name ', 'testSurname', '$2y$12$FXd5UMeI5hpVTUyTUjqRyOCYUNYRdgdMxzw1tC/dNwB.2ecaKgP.K', '2020-10-20 00:37:51', 'testupdate@gmail.com', '2020-10-20 00:37:51', 0, 1, '2020-10-18 13:15:53', 'NONE_NONE'),
-(12, 3, 'testName', 'testSurname', '$2y$12$bXhBq9HzVmwWXd76dLee4uddfCQWnqbwm3zDMvOxrtopQjDDCWasW', '2020-10-19 19:39:15', 'test@gmail.com', '2020-10-19 19:39:15', 0, 0, '2020-10-18 22:56:46', '1ePjDzo9');
+(11, 1, 'updated test', 'testSurname', '$2y$12$FXd5UMeI5hpVTUyTUjqRyOCYUNYRdgdMxzw1tC/dNwB.2ecaKgP.K', '2020-10-21 01:02:18', 'testupdate@gmail.com', '2020-10-21 01:02:18', 0, 1, '2020-10-18 13:15:53', 'NONE_NONE'),
+(12, NULL, 'testName', 'testSurname', '$2y$12$bXhBq9HzVmwWXd76dLee4uddfCQWnqbwm3zDMvOxrtopQjDDCWasW', '2020-10-19 19:39:15', 'test@gmail.com', '2020-10-19 19:39:15', 0, 0, '2020-10-18 22:56:46', '1ePjDzo9');
 
 --
 -- Indeksy dla zrzutów tabel
@@ -439,7 +451,7 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT dla tabeli `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=444;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=446;
 
 --
 -- AUTO_INCREMENT dla tabeli `reservations`
