@@ -12,11 +12,6 @@ class Room extends Model
         'equipment', 'blockade', 'state'
     ];
 
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
     public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {

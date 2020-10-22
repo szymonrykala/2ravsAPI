@@ -11,11 +11,6 @@ class User extends Model
         'activated', 'login_fails', 'created_at', 'action_key'
     ];
 
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
     public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {

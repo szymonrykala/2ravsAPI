@@ -1,5 +1,7 @@
 <?php
+
 namespace models;
+
 use utils\DBInterface;
 
 abstract class Model
@@ -10,11 +12,13 @@ abstract class Model
     protected array $queryStringParams = [];
     protected array $searchParams;
     protected string $searchMode = "=";
+    public array $schema;
 
-    public function __construct(DBInterface $DBInterface)
+    public function __construct(DBInterface $DBInterface, array $schema)
     {
         $this->DB = $DBInterface;
         $this->DB->connect();
+        $this->schema = $schema;
     }
 
     public function setQueryStringParams(array $params): void

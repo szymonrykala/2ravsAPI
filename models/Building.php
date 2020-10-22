@@ -10,11 +10,6 @@ class Building extends Model
     protected string $tableName = 'buildings';
     public array $columns = ['id', 'name', 'rooms_count', 'address_id'];
 
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
     public function parseData(array &$data): void
     {
         /**

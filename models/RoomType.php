@@ -10,11 +10,6 @@ class RoomType extends Model
     protected string $tableName = 'room_types';
     public array $columns = ['id', 'name'];
 
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
     public function parseData(array &$data): void
     {
         /**

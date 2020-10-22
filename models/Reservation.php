@@ -11,11 +11,6 @@ class Reservation extends Model
         'confirmed', 'confirming_user_id', 'confirmed_at', 'deleted'
     ];
 
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
     public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {

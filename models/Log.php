@@ -7,11 +7,6 @@ class Log extends Model
     protected string $tableName = 'logs';
     public array $columns = ['id', 'message', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id'];
 
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
     public function parseData(array &$data): void
     {
         foreach ($data as $key => &$value) {
