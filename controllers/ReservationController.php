@@ -23,48 +23,6 @@ class ReservationController extends Controller
         $this->Reservation = $this->DIcontainer->get(Reservation::class);
     }
 
-    public function validateReservation(Request &$request, array &$data): void
-    {
-        /**
-         * Validate Reservation
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get(Validator::class);
-
-        if (isset($data['subtitle'])) {
-            if (!$Validator->validateString($data['subtitle'], 3)) {
-                throw new HttpBadRequestException($request, 'Incorrect reservation subtitle value (min 3 char. length).');
-            } else {
-                $data['subtitle'] = $Validator->sanitizeString($data['subtitle']);
-            }
-        }
-
-        if (
-            isset($data['title']) &&
-            !$Validator->validateClearString($data['title'])
-        ) throw new HttpBadRequestException($request, 'Incorrect reservation title format; pattern: ' . $Validator->clearString);
-
-        foreach (['end_time', 'start_time'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateTime($data[$item])) {
-                    throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' format; pattern: hh:mm:ss.');
-                }
-            }
-        }
-        if (isset($data['date'])) {
-            if (!$Validator->validateDate($data['date'])) {
-                throw new HttpBadRequestException($request, 'Incorrect date format; pattern: yyyy-mm-dd.');
-            }
-        }
-    }
-
-    // GET /reservations
-    // GET /reservations/{reservation_id}
-    // GET /users/{userID}/reservations
-    // GET building/{building_id}/reservations
-    // GET building/{building_id}/rooms/{room_id}/reservations
     public function getReservations(Request $request, Response $response, $args): Response
     {
         /**
@@ -111,9 +69,9 @@ class ReservationController extends Controller
          */
         $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
-        if ((bool)$reservation['confirmed'] === true) throw new HttpConflictException('Reservation is already confirmed');
+        if ($reservation['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
 
-        $this->Reservation->update($reservation['id'], ['confirmed' => true]);
+        $this->Reservation->update(['confirmed' => true], $reservation['id'],);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
@@ -144,15 +102,7 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getFrom($request, [
-            'title' => 'string',
-            'subtitle' => 'string',
-            'start_time' => 'string',
-            'end_time' => 'string',
-            'date' => 'string'
-        ], true);
-
-        $this->validateReservation($request, $data);
+        $data = $this->getParsedData($request);
 
         $reservationData = array_merge($data, [
             'room_id' => (int)$args['room_id'],
@@ -197,17 +147,9 @@ class ReservationController extends Controller
         $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
         if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can not update confirmed Reservation');
 
-        $data = $this->getFrom($request, [
-            'title' => 'string',
-            'subtitle' => 'string',
-            'start_time' => 'string',
-            'end_time' => 'string',
-            'date' => 'string'
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateReservation($request, $data);
-
-        $this->Reservation->update($args['reservation_id'], $data);
+        $this->Reservation->update($data, $args['reservation_id']);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),

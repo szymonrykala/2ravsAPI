@@ -10,7 +10,7 @@ abstract class Model
     protected string $tableName;
     protected array $queryStringParams = [];
     protected array $searchParams;
-    protected string $searchMode = "=";
+    protected string $searchMode = '=';
 
     private int $id;
     public array $data;
@@ -57,7 +57,7 @@ abstract class Model
         }
     }
 
-    public function setSearch(string $mode = "=", array $params = []): void
+    public function setSearch(string $mode = '=', array $params = []): void
     {
         $regex = strtoupper($mode) === 'REGEXP' ? '/[\w\s%-:\.\*\|\{\}\[\]\(\)\?\+\\\,]*/' : '/[\w\s:%-]*/';
 
@@ -81,7 +81,7 @@ abstract class Model
          */
         if (!isset($connector)) $connector = $this->searchMode; // by default: '='
         $queryParams = [];
-        $sql = "";
+        $sql = '';
         foreach ($params as $key => $value) {
             $sql .= " AND `$this->tableName`.`$key` $connector :$key";
             $queryParams[":$key"] = $value;
@@ -97,7 +97,7 @@ abstract class Model
          * @param array $params
          * @return bool
          */
-        $sql = "SELECT id FROM $this->tableName WHERE 1=1 ";
+        $sql = 'SELECT id FROM '.$this->tableName.' WHERE 1=1 ';
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, "=");
         $sql .= $sqlData;
 
@@ -147,7 +147,7 @@ abstract class Model
         // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
-        if (isset($sort_key, $sort))   $sql .= " ORDER BY $sort_key $sort";
+        if (isset($sort_key, $sort))   $sql .= ' ORDER BY '.$sort_key.' '.$sort;
         elseif (isset($sort_key))               $sql .= ' ORDER BY ' . $sort_key;
         elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
 
@@ -158,7 +158,7 @@ abstract class Model
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new HttpNotFoundException("Nothing was found in $this->tableName with parameters:" . json_encode($queryParams));
+            throw new HttpNotFoundException('Nothing was found in '.$this->tableName.' with parameters:' . json_encode($queryParams));
         }
 
         //parsing types
@@ -223,7 +223,7 @@ abstract class Model
         return $this->DB->lastInsertID();
     }
 
-    public function update(array $updateData): void
+    public function update(array $updateData, int $id = null): void
     {
         /**
          * Updating item with seted Model::id by Model::setID(int $id):void
@@ -231,7 +231,7 @@ abstract class Model
          * @param array $updateData is assoc array [field => updateValue,...]
          * 
          */
-        $sql = "UPDATE $this->tableName SET";
+        $sql = 'UPDATE '.$this->tableName .' SET';
         $SQLqueryData = [];
 
         //loop through data
@@ -258,14 +258,14 @@ abstract class Model
                     // $propperValue = 0;
                 }
 
-                count($SQLqueryData) >= 1 ? $sql .= "," : null;
+                count($SQLqueryData) >= 1 ? $sql .= ',' : null;
                 $SQLqueryData[":$field"] = $propperValue;
                 $sql .= " $field=:$field";
             }
         }
         if (!empty($SQLqueryData)) {
-            $sql .= " WHERE id=:id";
-            $SQLqueryData[':id'] = $this->id;
+            $sql .= ' WHERE `id`=:id';
+            $SQLqueryData[':id'] = $id ?? $this->id;
             $this->DB->query($sql, $SQLqueryData);
         }
     }
@@ -278,7 +278,7 @@ abstract class Model
          * @param int $id is optional - if not passed, the Model::id is used
          */
         $this->DB->query(
-            "DELETE FROM $this->tableName WHERE id=:id",
+            'DELETE FROM `'.$this->tableName.'` WHERE `id`=:id',
             [':id' => $id ?? $this->id]
         );
     }
