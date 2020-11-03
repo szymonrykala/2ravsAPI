@@ -15,13 +15,14 @@ return [
         'type' => MyString::class,
         'create' => true,
         'update' => true,
-        'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u'
+        // 'pattern' => '/^[\.\s0-9\wa-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/u'
+        'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
     ],
     'rfid' => [
         'type' => MyString::class,
         'create' => true,
         'update' => true,
-        'pattern' => '/[\w\.-\s]+/u'
+        'pattern' => '/[\w]+/u'
     ],
     'building_id' => [
         'type' => MyInt::class,

@@ -13,7 +13,8 @@ return [
         'type' => MyString::class,
         'create' => true,
         'update' => true,
-        'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u'
+        'pattern' => '/^[0-9A-z\.\-\s\p{L}]{3,}$/u',
+        'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
     ],
     'rooms_count' => [
         'type' => MyInt::class

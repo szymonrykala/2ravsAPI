@@ -13,21 +13,28 @@ return [
         'type' => MyString::class,
         'create' => true,
         'update' => true,
-        'pattern' => '/^[A-z\.\-\s\p{L}]+$/u'
+        'pattern' => '/.*/'
     ],
     'user_id' => [
-        'type' => MyInt::class
+        'type' => MyInt::class,
+        'create' => true,
     ],
     'building_id' => [
         'type' => MyInt::class,
+        'default' => Null,
+        'create' => true,
         'nullable' => true
     ],
     'room_id' => [
         'type' => MyInt::class,
+        'default' => Null,
+        'create' => true,
         'nullable' => true
     ],
     'reservation_id' => [
         'type' => MyInt::class,
+        'default' => Null,
+        'create' => true,
         'nullable' => true
     ],
     'created' => [

@@ -14,7 +14,8 @@ return [
         'type' => MyString::class,
         'create' => true,
         'update' => true,
-        'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u'
+        'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
+        'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
     ],
     'rfid_action' => [
         'type' => MyBool::class,
@@ -27,6 +28,11 @@ return [
         'update' => true,
     ],
     'buildings_view' => [
+        'type' => MyBool::class,
+        'create' => true,
+        'update' => true,
+    ],
+    'buildings_edit' => [
         'type' => MyBool::class,
         'create' => true,
         'update' => true,
