@@ -1,5 +1,7 @@
 <?php
+
 namespace utils;
+
 use utils\DBInterface;
 
 class Database implements DBInterface
@@ -39,7 +41,7 @@ class Database implements DBInterface
                 // preg_match('/\.`([\w]+)`.*REFERENCES `(\w+)`/', $e->getMessage(), $output_array);
                 // throw new \Exception("Database model integrity error. You can't delete " . $output_array[2].' becouse it still contains '.$output_array[1]
                 // .'. First You have to delete all '.$output_array[1].' containing this '.$output_array[2], 409);
-                throw new \models\HttpConflictException('Database model: '.substr($e->getMessage(), 17));
+                throw new \models\HttpConflictException('Database model: ' . substr($e->getMessage(), 17));
                 break;
             case 42000:
                 throw new \Exception("SQL Syntax error:" . substr($e->getMessage(), 17), 500);
@@ -60,8 +62,7 @@ class Database implements DBInterface
             $this->handleException($e);
         }
 
-        $keyWord = strtoupper(explode(' ', $sql)[0]);
-        if ($keyWord === "SELECT") {
+        if (strtoupper(explode(' ', $sql)[0]) === "SELECT") {
             $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } else {
             $results = array();

@@ -17,8 +17,8 @@ $settings['default_params'] = [
 $settings['Database'] = [
     'user' => 'root',
     'password' => '',
-    'host' => 'localhost',
-    'name' => 'ravs_dev',
+    'host' => '127.0.0.1',
+    'name' => 'ravs_test',
     'charset' => 'utf8mb4'
 ];
 
