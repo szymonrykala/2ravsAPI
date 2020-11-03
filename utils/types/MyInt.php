@@ -5,12 +5,23 @@ namespace utils\types;
 class MyInt
 {
     public int $value;
-    function __construct($int = '')
+    private string $name;
+
+    function __construct(string $name, $int)
     {
-        $this->value = filter_var($int, FILTER_SANITIZE_NUMBER_INT);
+        $this->name = $name;
+        $this->value = $int;
     }
-    function __invoke():int
+
+    function getValue(): int
     {
-        return $this->value;
+        return (int)$this->value;
+    }
+
+    function validate(): void
+    {
+        if (
+            !filter_var($this->value, FILTER_VALIDATE_INT)
+        ) throw new \models\HttpBadRequestException('Value `' . $this->name . '` have to be a integer type.');
     }
 }

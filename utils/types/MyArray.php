@@ -4,12 +4,17 @@ namespace utils\types;
 
 class MyArray
 {
-    public array $array;
+    public $array;
+    private string $name;
 
-    function __construct(array $array = [])
+    function __construct(string $name, $array)
     {
+        if (
+            gettype($array) === 'int' || gettype($array) === 'boolean'
+        ) throw new \models\HttpBadRequestException('Value `' . $name . '` have to be a integer type.');
+
         $this->array = $array;
-        return $array;
+        $this->name = $name;
     }
 
     function __toString(): string
@@ -21,16 +26,22 @@ class MyArray
         return $string;
     }
 
-    static function toArray(string $separatedString)
+    function getValue()
     {
-        $items = explode(';', $separatedString);
-        unset($items[0]);
-        return $items;
+        if (gettype($this->array) === 'string') {
+            return $this->toArray();
+        } else return $this->__toString();
     }
 
-    function __invoke(): string
+    public function toArray()
     {
-        // return $this->value;
-        return $this->__toString();
+        $items = explode(';', $this->array);
+        unset($items[0]);
+        return array_values($items);
+    }
+
+    function validate():void
+    {
+
     }
 }

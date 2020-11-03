@@ -2,25 +2,48 @@
 
 namespace utils\types;
 
+use Exception;
 use UnexpectedValueException;
 
 class MyString
 {
     public string $value;
-    function __construct($string = '')
+    private string $name;
+
+    function __construct(string $name, string $string)
     {
-        $this->value = filter_var($string, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $this->name = $name;
+        $this->value = $string;
     }
-    function __invoke(string $pattern = ''): string
+
+    function getValue(): string
     {
-        if (
-            $pattern == '' ||
-            !filter_var($this->value, FILTER_VALIDATE_REGEXP, [
-                'options' => [
-                    'regexp' => $this->$pattern
-                ]
-            ])
-        ) throw new UnexpectedValueException('Value do not match the pattern: ' . $pattern);
-        return $this->value;
+        return (string)$this->value;
+    }
+
+    function validate(array $schemaField = []): void
+    {
+        //regex
+        if (isset($schemaField['pattern'])) {
+            if (
+                !filter_var($this->value, FILTER_VALIDATE_REGEXP, [
+                    'options' => [
+                        'regexp' => $schemaField['pattern']
+                    ]
+                ])
+            ) throw new UnexpectedValueException('Value `' . $this->name . '` do not match the pattern: ' . $schemaField['pattern'], 400);
+        }
+
+        // applying filter
+        if (isset($schemaField['filter'])) {
+            $this->value = filter_var($this->value, $schemaField['filter']);
+        }
+
+        //aplying validation
+        if (isset($schemaField['validate'])) {
+            if (
+                !filter_var($this->value, $schemaField['validate'])
+            ) throw new UnexpectedValueException('Value `' . $this->name . '` do not pass applied validation:' . $schemaField['validate'], 400);
+        }
     }
 }
