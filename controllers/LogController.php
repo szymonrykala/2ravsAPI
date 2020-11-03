@@ -66,14 +66,16 @@ class LogController extends Controller
         if ($logID < 0) {
             $data = $request->getParsedBody();
 
-            if ($data == null || !isset($data['IDs'])) {
-                throw new HttpBadRequestException($request,"No data has been passed - 'IDs' param is required when 'log_id' in query string is below 0.");
+            if ($data == null || !isset($data['ids'])) {
+                throw new HttpBadRequestException($request,"No data has been passed - 'ids' param is required when 'log_id' in query string is below 0.");
             }
-            foreach ($data['IDs'] as $logID) {
-                $this->Log->delete($logID);
+            foreach ($data['ids'] as $logID) {
+                $this->Log->setID($logID);
+                $this->Log->delete();
             }
         } else {
-            $this->Log->delete($logID);
+            $this->Log->setID($logID);
+            $this->Log->delete();
         }
 
         return $response->withStatus(204, "Deleted");

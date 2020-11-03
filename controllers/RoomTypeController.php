@@ -23,24 +23,6 @@ class RoomTypeController extends Controller
         $this->Type = $this->DIcontainer->get(RoomType::class);
     }
 
-    public function validateRoomType(Request $request, array &$data): void
-    {
-        /**
-         * Validate Room type
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get(Validator::class);
-        foreach (['name'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateClearString($data[$item])) {
-                    throw new HttpBadRequestException($request, 'Incorrect room type' . $item . ' value; pattern: ' . $Validator->clearString);
-                }
-            }
-        }
-    }
-
     // GET /buildings/rooms/types
     public function getTypes(Request $request, Response $response, $args): Response
     {
@@ -80,9 +62,7 @@ class RoomTypeController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, ["name" => "string"], true);
-
-        $this->validateRoomType($request, $data);
+        $data = $this->getParsedData($request);
 
         $data['id'] = $this->Type->create($data);
         $this->Log->create([
@@ -105,11 +85,10 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getFrom($request, ["name" => "string"], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateRoomType($request, $data);
-
-        $this->Type->update((int)$args['room_type_id'], $data);
+        $this->Type->setID($args['room_type_id']);
+        $this->Type->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),

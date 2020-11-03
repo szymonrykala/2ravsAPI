@@ -22,23 +22,6 @@ class AccessController extends Controller
         $this->Access = $DIcontainer->get(Access::class);
     }
 
-    public function validateAccess(Request $request, array &$data): void
-    {
-        /**
-         * Validate Access
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get(Validator::class);
-        if (isset($data['name'])) {
-            if (!$Validator->validateString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: ' . $Validator->clearString);
-            }
-            $data['name'] = $Validator->sanitizeString($data['name']);
-        }
-    }
-
     // GET /access
     // GET /access/{id}
     public function getAccessTypes(Request $request, Response $response, $args): Response
@@ -95,23 +78,7 @@ class AccessController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, [
-            "name" => 'string',
-            "access_edit" => 'boolean',
-            "buildings_view" => 'boolean',
-            "buildings_edit" => 'boolean',
-            "logs_view" => 'boolean',
-            "logs_edit" => 'boolean',
-            "rooms_view" => 'boolean',
-            "rooms_edit" => 'boolean',
-            "reservations_access" => 'boolean',
-            "reservations_confirm" => 'boolean',
-            "reservations_edit" => 'boolean',
-            "users_edit" => 'boolean',
-            "statistics_view" => 'boolean',
-        ], true);
-
-        $this->validateAccess($request, $data);
+        $data = $this->getParsedData($request);
 
         $data['id'] = $this->Access->create($data);
         $this->Log->create([
@@ -149,25 +116,10 @@ class AccessController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, [
-            'name' => 'string',
-            'access_edit' => 'boolean',
-            'buildings_view' => 'boolean',
-            'buildings_edit' => 'boolean',
-            'logs_view' => 'boolean',
-            'logs_edit' => 'boolean',
-            'rooms_view' => 'boolean',
-            'rooms_edit' => 'boolean',
-            'reservations_access' => 'boolean',
-            'reservations_confirm' => 'boolean',
-            'reservations_edit' => 'boolean',
-            'users_edit' => 'boolean',
-            'statistics_view' => 'boolean',
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateAccess($request, $data);
-
-        $this->Access->update($args['access_id'], $data);
+        $this->Access->setID($args['access_id']);
+        $this->Access->update($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE access DATA ' . json_encode($data)
@@ -188,7 +140,6 @@ class AccessController extends Controller
          * @return Response $response
          */
         $access = $this->Access->read(['id' => $args['access_id']])[0];
-
         $this->Access->delete($args['access_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),

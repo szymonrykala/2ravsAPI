@@ -24,29 +24,6 @@ class RoomController extends Controller
         $this->Room = $this->DIcontainer->get(Room::class);
     }
 
-    public function validateRoom(Request $request, array &$data): void
-    {
-        /**
-         * Validate Room
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get(Validator::class);
-        if (isset($data['name'])) {
-            if (!$Validator->validateClearString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect room name value; pattern: ' . $Validator->clearString);
-            }
-        }
-
-        if (isset($data['equipment'])) {
-            if (!$Validator->validateString($data['equipment'], 1)) {
-                throw new HttpBadRequestException($request, 'Incorrect room equipment value (min 1 char. length).');
-            }
-            $data['equipment'] = $Validator->sanitizeString($data['equipment']);
-        }
-    }
-
     // PATCH /rfid
     public function rfidAction(Request $request, Response $response, $args): Response
     {
@@ -56,7 +33,7 @@ class RoomController extends Controller
          *      "rfid" : ""
          * }
          */
-        $rfid = $this->getFrom($request, ['rfid' => 'string'], true)['rfid'];
+        $rfid = $this->getParsedData($request)['rfid'];
         $rfid = str_replace(' ', '', $rfid);
         if (empty($rfid)) {
             throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
@@ -64,7 +41,8 @@ class RoomController extends Controller
 
         $room = $this->Room->read(['rfid' => $rfid])[0];
 
-        $this->Room->update($room['id'], ['state' => (bool)!$room['state']]);
+        $this->Room->setID($room['id']);
+        $this->Room->update(['state' => (bool)!$room['state']]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -127,17 +105,8 @@ class RoomController extends Controller
          * @return Response 
          */
 
-        $data = $this->getFrom($request, [
-            'name' => "string",
-            'room_type_id' => 'integer',
-            'seats_count' => 'integer',
-            'floor' => 'integer',
-            'rfid' => 'string',
-            'equipment' => 'string'
-        ], true);
+        $data = $this->getParsedData($request);
         $data['blockade'] = $this->DIcontainer->get('settings')['default_params']['room_blockade'];
-
-        $this->validateRoom($request, $data);
 
         $data['building_id'] = (int) $args['building_id'];
         $lastIndex = $this->Room->create($data);
@@ -172,19 +141,10 @@ class RoomController extends Controller
          * @return Response 
          */
 
-        $data = $this->getFrom($request, [
-            'name' => "string",
-            'room_type_id' => 'integer',
-            'seats_count' => 'integer',
-            'floor' => 'integer',
-            'rfid' => 'string',
-            'blockade' => 'boolean',
-            'equipment' => 'string'
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateRoom($request, $data);
-
-        $this->Room->update($args['room_id'], $data);
+        $this->Room->setID($args['room_id']);
+        $this->Room->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -207,6 +167,7 @@ class RoomController extends Controller
 
         $room = $this->Room->read(['id' => $args['room_id']])[0];
 
+        $this->Room->setID($args['room_id']);
         $this->Room->delete($args['room_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),

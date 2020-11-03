@@ -24,22 +24,6 @@ class BuildingController extends Controller
         $this->Building = $this->DIcontainer->get(Building::class);
     }
 
-    public function validateBuilding(Request $request, array &$data): void
-    {
-        /**
-         * Validate Building
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get(Validator::class);
-        if (isset($data['name'])) {
-            if (!$Validator->validateClearString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect building name value; pattern: ' . $Validator->clearString);
-            }
-        }
-    }
-
     // GET /buildings | {id}
     public function getBuildings(Request $request, Response $response, $args): Response
     {
@@ -84,16 +68,9 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-
-        $data = $this->getFrom(
-            $request,
-            ['name' => 'string', 'address_id' => 'integer'],
-            true
-        );
-
-        $this->validateBuilding($request, $data);
-
+        $data = $this->getParsedData($request);
         $data['id'] = $this->Building->create($data);
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'building_id' => $data['id'],
@@ -120,20 +97,9 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-
-        $data = $this->getFrom(
-            $request,
-            [
-                'name' => 'string',
-                'rooms_count' => 'integer',
-                'address_id' => 'integer'
-            ],
-            false
-        );
-
-        $this->validateBuilding($request, $data);
-
-        $this->Building->update((int)$args['building_id'], $data);
+        $this->Building->setID($args['building_id']);
+        $data = $this->getParsedData($request);
+        $this->Building->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -157,7 +123,8 @@ class BuildingController extends Controller
          * @return Response 
          */
         $building = $this->Building->read(['id' => $args['building_id']])[0];
-        $this->Building->delete((int)$args['building_id']);
+        $this->Building->setID($args['building_id']);
+        $this->Building->delete();
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'building_id' => $args['building_id'],

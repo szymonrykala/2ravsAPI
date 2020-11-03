@@ -60,41 +60,13 @@ abstract class Controller
         return $result;
     }
 
-    protected function getFrom(Request $request, array $parameters, bool $required = false): array
+    protected function getParsedData(Request $request): array
     {
-        /**
-         * Getting data defined in $parameters with given type
-         * 
-         * @param Request $request
-         * @param array $parameters param => type, ...
-         * 
-         * @return array $data - requested parameters with requested type
-         */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new \models\HttpBadRequestException("Request body is empty or is not in right format", 400);
+            throw new HttpBadRequestException($request, "Request body is empty or is not in right format");
         }
-
-        //skipping unnessesry values
-        $outputData = [];
-        foreach ($data as $key => $value) {
-            if (!in_array($key, array_keys($parameters))) continue;
-            if (gettype($value) !== $parameters[$key]) {
-                throw new HttpBadRequestException($request, "Bad variable type passed. Variable '$key' need to be a type of " . $parameters[$key]);
-            }
-
-            $outputData[$key] = $value;
-        }
-        if ($required) {
-            //checking required parameters
-            foreach ($parameters as $param => $type) {
-                if (!isset($outputData[$param])) {
-                    throw new NotEnoughParametersException("Parameter '$param' with typeof '$type' is required to perform this action", 400);
-                }
-            }
-        }
-        if (empty($outputData)) throw new HttpBadRequestException($request, "No valid data has been passed");
-        return $outputData;
+        return $data;
     }
 
     protected function getSearchParams(Request $request): array
