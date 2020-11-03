@@ -354,7 +354,7 @@ By easy changing default settings for JWT authorization You can disable or enabl
     {
         "email": "my.email@exemail.com",
         "password": "myPassS144$",
-        "activation_key": "9t85v",
+        "key": "9t85v",
         "action": "resend | activate | change_email"
     }
     ```
@@ -385,7 +385,6 @@ By easy changing default settings for JWT authorization You can disable or enabl
     ```json
     {
         "name": "example name",
-        "rooms_count": 20,
         "address_id": 2
     }
     ```
