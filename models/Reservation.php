@@ -5,43 +5,6 @@ use utils\DBInterface;
 class Reservation extends Model
 {
     protected string $tableName = 'reservations';
-    protected array $columns = [
-        'id', 'title', 'subtitle', 'room_id', 'building_id', 'user_id',
-        'start_time', 'end_time', 'date', 'created_at', 'updated_at',
-        'confirmed', 'confirming_user_id', 'confirmed_at', 'deleted'
-    ];
-
-    public function parseData(array &$data): void
-    {
-        foreach ($data as $key => &$value) {
-            switch ($key) {
-                case 'id':
-                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-                case 'room_id':
-                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-                case 'building_id':
-                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-                case 'user_id':
-                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-                case 'confirming_user_id':
-                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-                case 'confirmed':
-                    $value = (bool) $value;
-                    break;
-                case 'deleted':
-                    $value = (bool) $value;
-                    break;
-                default:
-                    $value = (string) filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-            }
-        }
-    }
 
     private function checkTimeSlot(string $startTime, string $endTime, string $date, int $roomID)
     {
