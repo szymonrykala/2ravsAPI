@@ -9,7 +9,6 @@ use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\Room;
 use Slim\Exception\HttpNotFoundException;
-use utils\Validator;
 
 class RoomController extends Controller
 {

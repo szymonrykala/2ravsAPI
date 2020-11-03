@@ -9,7 +9,6 @@ use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use models\Reservation;
-use utils\Validator;
 
 class ReservationController extends Controller
 {

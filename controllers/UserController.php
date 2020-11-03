@@ -17,7 +17,6 @@ use Slim\Exception\HttpUnauthorizedException;
 use models\Access;
 use models\User;
 use utils\MailSender;
-use utils\Validator;
 
 class UserController extends Controller
 {

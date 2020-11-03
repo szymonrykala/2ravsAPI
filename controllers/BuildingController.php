@@ -8,7 +8,6 @@ use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\Building;
 use models\Address;
-use utils\Validator;
 
 class BuildingController extends Controller
 {

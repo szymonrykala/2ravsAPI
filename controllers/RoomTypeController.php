@@ -7,7 +7,6 @@ use Slim\Psr7\Response;
 use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\RoomType;
-use utils\Validator;
 
 class RoomTypeController extends Controller
 {

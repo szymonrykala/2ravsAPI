@@ -13,7 +13,6 @@ use models\Reservation;
 use models\Room;
 use models\RoomType;
 use models\User;
-use utils\Validator;
 use utils\Database;
 use utils\MailSender;
 
@@ -67,9 +66,6 @@ return [
     },
     RoomType::class => function (ContainerInterface $container) {
         return new RoomType($container->get(Database::class));
-    },
-    Validator::class => function (ContainerInterface $container) {
-        return new Validator();
     },
     MailSender::class => function (ContainerInterface $container) {
         return new MailSender($container->get('settings')['mail']);

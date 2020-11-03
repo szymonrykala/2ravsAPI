@@ -9,7 +9,6 @@ use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\Access;
 use models\User;
-use utils\Validator;
 
 
 class AccessController extends Controller
