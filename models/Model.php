@@ -2,7 +2,6 @@
 
 namespace models;
 
-use Exception;
 use utils\DBInterface;
 
 abstract class Model
@@ -15,13 +14,12 @@ abstract class Model
 
     private int $id;
     public array $data;
-    public array $schema;
+    protected array $SCHEMA;
 
-    public function __construct(DBInterface $DBInterface, array $schema)
+    public function __construct(DBInterface $DBInterface)
     {
         $this->DB = $DBInterface;
         $this->DB->connect();
-        $this->schema = $schema;
     }
 
     public function setQueryStringParams(array $params): void
@@ -37,7 +35,7 @@ abstract class Model
         if (isset($params['limit'])     && !is_numeric($params['limit']))                           unset($params['limit']);
         if (isset($params['on_page'])   && !is_numeric($params['on_page']))                         unset($params['on_page']);
         if (isset($params['page'])      && ($params['page'] < 0 || !is_numeric($params['page'])))   unset($params['page']);
-        if (isset($params['sort_key'])  && !in_array($params['sort_key'], array_keys($this->schema)))          unset($params['sort_key']);
+        if (isset($params['sort_key'])  && !in_array($params['sort_key'], array_keys($this->SCHEMA)))          unset($params['sort_key']);
         if (isset($params['sort'])      && !in_array(strtoupper($params['sort']), ['DESC', 'ASC'])) unset($params['sort']);
 
         $this->queryStringParams = $params;
@@ -48,12 +46,12 @@ abstract class Model
         foreach ($readData as $key => &$value) {
             if (
                 $value === Null &&
-                isset($this->schema[$key]['nullable']) &&
-                $this->schema[$key]['nullable'] === True
+                isset($this->SCHEMA[$key]['nullable']) &&
+                $this->SCHEMA[$key]['nullable'] === True
             ) {
                 $value = Null;
             } else {
-                $typedParam = new $this->schema[$key]['type']($key, $value);
+                $typedParam = new $this->SCHEMA[$key]['type']($key, $value);
                 $value = $typedParam->value;
             }
         }
@@ -130,7 +128,7 @@ abstract class Model
          * @return array $result
          */
         foreach ($params as $key => $value) {
-            if (!isset($this->schema[$key])) unset($params[$key]);
+            if (!isset($this->SCHEMA[$key])) unset($params[$key]);
         }
 
         // =========MENAGE SEARCHING=========
@@ -176,8 +174,8 @@ abstract class Model
         $SQLvalues = ' VALUES(';
         $SQLqueryData = [];
 
-        // loop through model schema
-        foreach ($this->schema as $field => $params) {
+        // loop through model SCHEMA
+        foreach ($this->SCHEMA as $field => $params) {
 
             // if field isn't required to create
             if (
@@ -212,7 +210,7 @@ abstract class Model
             $SQLvalues .= ':' . $field;
 
             if ($createData[$field] !== null) {
-                $propperType = new $this->schema[$field]['type']($field, $createData[$field]);
+                $propperType = new $this->SCHEMA[$field]['type']($field, $createData[$field]);
                 $propperType->validate($params);
                 $createData[$field] = $propperType->getValue();
             }
@@ -237,7 +235,7 @@ abstract class Model
         $SQLqueryData = [];
 
         //loop through data
-        foreach ($this->schema as $field => $params) {
+        foreach ($this->SCHEMA as $field => $params) {
 
             //if field is not updateable
             if (
@@ -254,7 +252,7 @@ abstract class Model
                         $propperValue = null;
                     } else throw new HttpBadRequestException('Variable `' . $field . '` can not be null');
                 } else { // if is not null
-                    $propperType = new $this->schema[$field]['type']($field, $updateData[$field]);
+                    $propperType = new $this->SCHEMA[$field]['type']($field, $updateData[$field]);
                     $propperType->validate($params);
                     $propperValue = $propperType->getValue();
                     // $propperValue = 0;
