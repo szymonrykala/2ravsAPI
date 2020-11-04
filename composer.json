@@ -1,8 +1,11 @@
 {
-    "require": {
-        "slim/slim": "4.*",
-        "slim/psr7": "^1.1",
-        "php-di/php-di": "^6.2",
-        "nowakowskir/php-jwt": "^1.1"
-    }
+  "name": "ravs/api",
+  "description": "REST api for RAVS system",
+  "require": {
+    "slim/slim": "4.*",
+    "slim/psr7": "^1.1",
+    "php-di/php-di": "^6.2",
+    "nowakowskir/php-jwt": "^1.1"
+  },
+  "license": "proprietary"
 }
