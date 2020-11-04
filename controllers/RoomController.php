@@ -147,7 +147,7 @@ class RoomController extends Controller
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $args['room_id'],
+            'room_id' => (int) $args['room_id'],
             'message' => "USER " . $request->getAttribute('email') . " UPDATE room DATA " . json_encode($data)
         ]);
 
