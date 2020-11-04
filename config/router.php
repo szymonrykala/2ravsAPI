@@ -20,6 +20,11 @@ use controllers\LogController;
 
 return function (App $app, Container $DIcontainer) {
 
+    $app->get('/v1/info', function (Request $request, Response $response): Response {
+        $response->getBody()->write(require './info.json');
+        return $response->withHeader('content-type','application/json');
+    });
+
     $app->post('/v1/auth', UserController::class . ':verifyUser'); //open endpoint
     $app->post('/v1/users', UserController::class . ':registerNewUser'); // open endpoint
     $app->patch('/v1/users/action', UserController::class . ':userAction'); // open endpoint
