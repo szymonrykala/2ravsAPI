@@ -4,7 +4,7 @@ namespace models;
 
 use utils\DBInterface;
 
-abstract class Model
+abstract class GenericModel
 {
     protected DBInterface $DB;
     protected string $tableName;

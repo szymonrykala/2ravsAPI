@@ -5,7 +5,7 @@ use utils\types\MyBool;
 use utils\types\MyString;
 use utils\types\MyInt;
 
-class Access extends Model
+final class Access extends GenericModel
 {
     protected string $tableName = 'accesses';
     protected array $SCHEMA= [

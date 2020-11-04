@@ -5,7 +5,7 @@ namespace models;
 use utils\types\MyInt;
 use utils\types\MyString;
 
-class Log extends Model
+final class Log extends GenericModel
 {
     protected string $tableName = 'logs';
     protected array $SCHEMA= [

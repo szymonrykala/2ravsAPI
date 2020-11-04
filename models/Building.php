@@ -5,7 +5,7 @@ namespace models;
 use utils\types\MyInt;
 use utils\types\MyString;
 
-class Building extends Model
+final class Building extends GenericModel
 {
     /**
      * Responsible for operation with buildings table in database

@@ -5,7 +5,7 @@ namespace models;
 use utils\types\MyInt;
 use utils\types\MyString;
 
-class Address extends Model
+final class Address extends GenericModel
 {
     protected string $tableName = 'addresses';
     protected array $SCHEMA= [

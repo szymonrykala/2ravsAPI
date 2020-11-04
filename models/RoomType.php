@@ -5,7 +5,7 @@ namespace models;
 use utils\types\MyInt;
 use utils\types\MyString;
 
-class RoomType extends Model
+final class RoomType extends GenericModel
 {
     /**
      * Responsible for operation with room_types table in database

@@ -6,7 +6,7 @@ use utils\types\MyBool;
 use utils\types\MyString;
 use utils\types\MyInt;
 
-class Reservation extends Model
+final class Reservation extends GenericModel
 {
     protected string $tableName = 'reservations';
     protected array $SCHEMA = [

@@ -6,7 +6,7 @@ use utils\types\MyString;
 use utils\types\MyInt;
 use utils\types\MyBool;
 
-class User extends Model
+final class User extends GenericModel
 {
     protected string $tableName = 'users';
     protected array $SCHEMA = [
