@@ -6,8 +6,6 @@ use Slim\Psr7\Response;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpUnauthorizedException;
-use models\Access;
-use models\User;
 
 /* 
 checking if authenticated user have access to resources he want to perform
@@ -22,8 +20,8 @@ class AuthorizationMiddleware
 
     public function __construct(\DI\Container $container)
     {
-        $this->Access = $container->get(Access::class);
-        $this->User = $container->get(User::class);
+        $this->Access = $container->get("Access");
+        $this->User = $container->get("User");
     }
 
     public function __invoke(Request $request, RequestHandler $handler): Response

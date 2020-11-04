@@ -1,48 +1,69 @@
 <?php
-
 namespace models;
+use utils\DBInterface;
 
-use utils\types\MyInt;
-use utils\types\MyString;
-
-final class Log extends GenericModel
+class Log extends Model
 {
     protected string $tableName = 'logs';
-    protected array $SCHEMA= [
-        'id' => [
-            'type' => MyInt::class,
-        ],
-        'message' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/.*/'
-        ],
-        'user_id' => [
-            'type' => MyInt::class,
-            'create' => true,
-        ],
-        'building_id' => [
-            'type' => MyInt::class,
-            'default' => Null,
-            'create' => true,
-            'nullable' => true
-        ],
-        'room_id' => [
-            'type' => MyInt::class,
-            'default' => Null,
-            'create' => true,
-            'nullable' => true
-        ],
-        'reservation_id' => [
-            'type' => MyInt::class,
-            'default' => Null,
-            'create' => true,
-            'nullable' => true
-        ],
-        'created' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
-        ]
-    ];
+    public array $columns = ['id', 'message', 'created_at', 'user_id', 'building_id', 'room_id', 'reservation_id'];
+
+    public function __construct(DBInterface $db)
+    {
+        parent::__construct($db);
+    }
+
+    public function parseData(array &$data): void
+    {
+        foreach ($data as $key => &$value) {
+            if ($value === null) {
+                continue;
+            }
+            switch ($key) {
+                case "message":
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    break;
+                case "created_at":
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    break;
+                default:
+                    $value = (int) $value;
+                    break;
+            }
+        }
+    }
+
+    public function create(array $data): int
+    {
+        foreach ($this->columns as $key) {
+            if (!isset($data[$key])) {
+                $data[$key] = Null;
+            }
+        }
+
+        $this->DB->query(
+            "INSERT INTO $this->tableName(
+                message,
+                user_id,
+                room_id,
+                building_id,
+                reservation_id
+            ) 
+            VALUES(
+                :message,
+                :user_id,
+                :room_id,
+                :building_id,
+                :reservation_id
+            )",
+            array(
+                ':message' => $data['message'],
+                ':user_id' => $data['user_id'],
+                ':room_id' => $data['room_id'],
+                ':building_id' => $data['building_id'],
+                ':reservation_id' => $data['reservation_id']
+            )
+        );
+
+        return $this->DB->lastInsertID();
+    }
 }

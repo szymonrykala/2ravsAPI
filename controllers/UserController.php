@@ -7,48 +7,76 @@ use models\HttpNotFoundException;
 use Nowakowskir\JWT\JWT;
 use Nowakowskir\JWT\TokenDecoded;
 use Psr\Container\ContainerInterface;
-use Slim\Psr7\Response;
-use Slim\Psr7\Request;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotImplementedException;
 use Slim\Exception\HttpUnauthorizedException;
-use models\Access;
-use models\User;
-use utils\MailSender;
+
 
 class UserController extends Controller
 {
-    private User $User;
+    private $User;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->User = $this->DIcontainer->get(User::class);
+        $this->User = $this->DIcontainer->get('User');
     }
 
     private function generateToken(int $userID, int $accessID, string $email): string
     {
         //creating new token
+        $time = time();
         $tokenDecoded = new TokenDecoded(
-            ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS512],
-            [
+            ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS384],
+            array(
                 'user_id' => $userID,
                 'access_id' => $accessID,
                 'email' => $email,
-                'assigned' => time(),
-                'ip' => getHostByName(getHostName())
-            ]
+                'ex' => $time + (60 * 60) * 48 //valid 48h
+            )
         );
         // encoding the token
-        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['signature'], JWT::ALGORITHM_HS512);
+        $tokenEncoded = $tokenDecoded->encode($this->DIcontainer->get('settings')['jwt']['signature'], JWT::ALGORITHM_HS384);
         return $tokenEncoded->__toString();
     }
 
     private function getRandomKey(int $len): string
     {
         return base64_encode(random_bytes($len));
+    }
+
+    public function validateUser(Request $request, array &$data): void
+    {
+        /**
+         * Validate User
+         * 
+         * @param array $data
+         * @throws HttpBadRequestException
+         */
+        $Validator = $this->DIcontainer->get('Validator');
+        foreach (['name', 'surname'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validateClearString($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect user ' . $item . ' value; pattern: ' . $Validator->clearString);
+                }
+            }
+        }
+
+        foreach (['password', 'old_password', 'repeat_password'] as $item) {
+            if (isset($data[$item])) {
+                if (!$Validator->validatePassword($data[$item])) {
+                    throw new HttpBadRequestException($request, 'Incorrect user ' . $item . ' format; pattern: ' . $Validator->password);
+                }
+            }
+        }
+
+        if (isset($data['email']) && !$Validator->validateEmail($data['email'])) {
+            throw new HttpBadRequestException($request, 'Incorrect user email format');
+        }
     }
 
     // POST /auth
@@ -71,36 +99,54 @@ class UserController extends Controller
         list(
             'email' => $email,
             'password' => $password
-        ) = $this->getParsedData($request);
+        ) = $this->getFrom($request, [
+            'email' => 'string',
+            'password' => 'string'
+        ]);
 
-        if(!isset($email,$password)) throw new HttpBadRequestException($request,'Fields `email` and `passowrd` are required');
-        
-        $this->User->setEmail($email);
+        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
 
-        try{
-            $this->User->login($password);
-        }catch(\models\HttpBadRequestException $e){
-            
-            throw $e;
-        }catch(\Throwable $e){
-            $this->Log->create(array(
-                'user_id' => $this->User->getID(),
-                'message' => 'USER ' . $email . ' NOT VERYFIED DATA '.$e->getMessage()
-            ));
-            throw $e;
+        try {
+            list(
+                'password' => $userPassword,
+                'id' => $userID,
+                'access_id' => $accessID,
+                'login_fails' => $loginFails,
+                'activated' => $activated
+            ) = $this->User->read(['email' => $email])[0];
+        } catch (HttpNotFoundException $e) {
+            throw new HttpBadRequestException($request, "Can not login. Given email '$email' is not exist");
         }
-        
-        $Access = $this->DIcontainer->get(Access::class);
-        $data = [
-            'jwt' => $this->generateToken($this->User->getID(), $this->User->data['access_id'], $email),
-            'userID' => $this->User->getID(),
-            'access' => $Access->read(['id' => $this->User->data['access_id']])
-        ];
-        $this->User->update(array('login_fails' => 0));
-        $this->Log->create(array(
-            'user_id' => $this->User->getID(),
-            'message' => 'USER ' . $email . ' VERIFIED'
-        ));
+
+        if ((bool)$activated === false) {
+            throw new HttpForbiddenException($request, "Can not authenticate because user is not activated"); //confilct
+        }
+
+        if ($loginFails >= 5) {
+            throw new HttpForbiddenException($request, "Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator");
+        }
+
+        if (password_verify($password, $userPassword)) {
+            $Access = $this->DIcontainer->get('Access');
+            $data = array(
+                "jwt" => $this->generateToken($userID, $accessID, $email),
+                'userID' => $userID,
+                "access" => $Access->read(['id' => $accessID])
+            );
+            $this->User->update($userID, array('login_fails' => 0));
+            $this->Log->create(array(
+                'user_id' => $userID,
+                'message' => "User $email succesfully veryfied"
+            ));
+        } else {
+            $loginFails += 1;
+            $this->User->update($userID, array('login_fails' => $loginFails));
+            $this->Log->create(array(
+                'user_id' => $userID,
+                'message' => "User $email veryfing failed count:$loginFails"
+            ));
+            throw new HttpBadRequestException($request, "Authentication failed (count:$loginFails). Password is not correct.");
+        }
 
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
@@ -126,35 +172,45 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        // list(
-            // 'name' => $name,
-            // 'surname' => $surname,
-            // 'email' => $email,
-            // 'password' => $password,
-            // 'repeat_password' => $repeat_password
-        // )
-        $data = $this->getParsedData($request);
+        list(
+            'name' => $name,
+            'surname' => $surname,
+            'email' => $email,
+            'password' => $password,
+            'repeat_password' => $repeat_password
+        ) = $this->getFrom($request, array(
+            'email' => 'string',
+            'password' => 'string',
+            'repeat_password' => 'string',
+            'name' => 'string',
+            'surname' => 'string'
+        ), true);
 
-        if ($data['password'] !== $data['repeat_password']) throw new HttpBadRequestException($request, 'Given fields `password` and `repeat_password` are required to have the same value');
-        unset($data['repeat_password']);
+        if ($password !== $repeat_password) throw new HttpBadRequestException($request, 'Given password and repeat_password are not the same');
 
-        $data['access_id'] = $this->DIcontainer->get('settings')['default_params']['access'];
-        $data['action_key'] = $this->getRandomKey(6);
+        $userData = [
+            'name' => $name,
+            'surname' => $surname,
+            'password' => $password,
+            'email' => $email,
+            'access_id'=>$this->DIcontainer->get('settings')['default_params']['access'],
+            'action_key' => $this->getRandomKey(6)
+        ];
 
-        $this->User->register($data);
+        $this->validateUser($request, $userData);
 
-        $data['id'] = $this->User->create($data);
-        unset($data['password']);
-        $this->Log->create(array(
-            'user_id' => $data['id'],
-            'message' => "USER " . $data['email'] . " CREATE user DATA " . json_encode($data)
-        ));
 
-        $MailSender = $this->DIcontainer->get(MailSender::class);
-        $MailSender->setUser($data);
+        $MailSender = $this->DIcontainer->get('MailSender');
+        $MailSender->setUser($userData);
         $MailSender->setMailSubject('User Activation');
-        $MailSender->send();
+        // $MailSender->send();
 
+        $userID = $this->User->create($userData);
+        unset($userData['password']);
+        $this->Log->create(array(
+            'user_id' => $userID,
+            'message' => "User $email has been registered data:" . json_encode($userData)
+        ));
 
         return $response->withStatus(201, "Created");
     }
@@ -168,7 +224,7 @@ class UserController extends Controller
          * {
          *      "password" : "",
          *      "email" : "",
-         *      "key" : "",
+         *      "activation_key" : "",
          *      "action" : "resend" | "activate | change_email"
          * }
          * 
@@ -178,18 +234,12 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        [
-            'password' => $password,
-            'email' => $email,
-            'key' => $key,
-            'action' => $action
-        ] = $this->getParsedData($request);
-        
-        if(
-            !isset($password,$email,$key,$action)
-        ) throw new HttpBadRequestException($request,'Fileds `password`, `email`, `key` and `action` are required');
-
-        if($key === 'NONE_NONE')throw new HttpBadRequestException($request,'Given `key` is not valid');
+        ['password' => $password, 'email' => $email, 'key' => $key, 'action' => $action] = $this->getFrom($request, [
+            'password' => 'string',
+            'email' => 'string',
+            'key' => 'string',
+            'action' => 'string'
+        ], true);
 
         if (
             !in_array($action, ['activate', 'resend', 'change_email'])
@@ -211,21 +261,19 @@ class UserController extends Controller
             throw new HttpBadRequestException($request, "Given password is not correct");
         }
 
-        $this->User->setID($user['id']);
         switch ($action) {
-            //send activation mail again
             case 'resend':
                 $user['action_key'] = $this->getRandomKey(6);
-                $this->User->update(['action_key' => $user['action_key']]);
+                $this->User->update($user['id'], ['action_key' => $user['action_key']]);
 
-                $MailSender = $this->DIcontainer->get(MailSender::class);
+                $MailSender = $this->DIcontainer->get('MailSender');
                 $MailSender->setUser($user);
-                $MailSender->setMailSubject('Resend User Activation');
+                $MailSender->setMailSubject('User Activation');
                 $MailSender->send();
 
                 $this->Log->create([
                     'user_id' => $user['id'],
-                    'message' => 'USER ' . $user['email'] . ' RESEND ACTIVATION DATA '
+                    'message' => 'Account user ' . $user['email'] . 'was requested new activation email'
                 ]);
 
                 $response->getBody()->write(json_encode('Your Code has been resended'));
@@ -235,11 +283,10 @@ class UserController extends Controller
                 if ($user['action_key'] !== $key) {
                     throw new HttpBadRequestException($request, 'Your activation key is not correct');
                 }
-                $this->User->setID($user['id']);
-                $this->User->update(['activated' => 1, 'action_key' => 'NONE_NONE']);
+                $this->User->update($user['id'], ['activated' => 1, 'action_key' => '1']);
                 $this->Log->create([
                     'user_id' => $user['id'],
-                    'message' => 'USER ' . $user['email'] . ' ACTIVATED DATA ' . json_encode(['activated' => true])
+                    'message' => 'Account user ' . $user['email'] . 'was activated'
                 ]);
 
                 $response->getBody()->write(json_encode('User succesfully activated'));
@@ -249,14 +296,16 @@ class UserController extends Controller
                 /* given email is new user email - it's not set yet*/
                 $editedEmail = ['email' => $email];
                 if ($this->User->exist($editedEmail)) {
+                    // throw new HttpConflictException('Given email ' . $email . ' already exist. Someone activated the same email before You.');
                     throw new HttpConflictException('Given email ' . $email . ' already exist. Someone activated the same email before You.');
                 }
+                $this->validateUser($request, $editedEmail);
                 $editedEmail['action_key'] = 'NONE_NONE';
                 // setting new email
-                $this->User->update($editedEmail);
+                $this->User->update($user['id'], $editedEmail);
                 $this->Log->create([
                     'user_id' => $user['id'],
-                    'message' => 'USER ' . $user['email'] . ' UPDATE user DATA ' . json_encode($editedEmail)
+                    'message' => 'User ' . $user['email'] . 'changed his email to ' . $email
                 ]);
                 $response->getBody()->write(json_encode('Email changed to ' . $email));
                 break;
@@ -264,6 +313,12 @@ class UserController extends Controller
                 break;
         }
         return $response->withStatus(200);
+    }
+
+    public function resendActivationEmail(Request $request, Response $response, $args): Response
+    {
+        throw new HttpNotImplementedException($request, "UserController::resendActivationEmail not implemented");
+        return $response;
     }
 
     // GET /users?ext=<acces_id>
@@ -318,7 +373,16 @@ class UserController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getParsedData($request);
+        $data = $this->getFrom($request, [
+            'email' => 'string',
+            'old_password' => 'string',
+            'new_password' => 'string',
+            'name' => 'string',
+            'surname' => 'string',
+            'access_id' => 'integer'
+        ], false);
+
+        $this->validateUser($request, $data);
 
         $currentUser = (int) $request->getAttribute('user_id');
         $accessID = $request->getAttribute('access_id');
@@ -326,15 +390,14 @@ class UserController extends Controller
 
         // checking if user can change acces
         if (isset($data['access_id'])) {
-            $Access = $this->DIcontainer->get(Access::class);
+            $Access = $this->DIcontainer->get("Access");
             if (
                 (bool)$Access->read(['id' => $accessID])[0]['access_edit'] === false
             ) throw new HttpUnauthorizedException($request, 'You do not have acces to edit user access_id');
         }
 
         $editedUser = $this->User->read(['id' => $args['userID']])[0];
-        $this->User->setID($editedUser['id']);
-        
+
         // Changing Password
         if (isset($data['old_password'], $data['new_password'])) {
             if ($data['old_password'] === $data['new_password']) {
@@ -348,7 +411,7 @@ class UserController extends Controller
 
         // Changing email
         if (isset($data['email'])) {
-            if ($data['email'] === $editedUser['email']) throw new HttpBadRequestException($request, 'Your new email have to be diffrent than Your current email');
+            if ($data['email'] === $editedUser['email']) throw new HttpBadRequestException($request, "Your new email have to be diffrent than Your current email");
 
             if ($this->User->exist(['email' => $data['email']])) {
                 throw new HttpConflictException('Given mail ' . $data['email'] . ' already exist.');
@@ -357,29 +420,28 @@ class UserController extends Controller
 
             $editedUser['action_key'] = $this->getRandomKey(6);
 
-            $MailSender = $this->DIcontainer->get(MailSender::class);
+            $MailSender = $this->DIcontainer->get('MailSender');
             $MailSender->setUser($editedUser);
-            $MailSender->setMailSubject('Change email');
+            $MailSender->setMailSubject('User Activation');
             $MailSender->send();
-            
-            $this->User->update(['action_key' => $editedUser['action_key']]);
+
+            $this->User->update($editedUser['id'], ['action_key' => $editedUser['action_key']]);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => 'User $userEmail (id=' . $editedUser['id'] . ') want to change mail - updated with data:' . json_encode($data)
+                'message' => "User $userEmail (id=" . $editedUser['id'] . ") want to change mail - updated with data:" . json_encode($data)
             ]);
-            $data['new_email'] = $data['email'];
             unset($data['email']);
         }
 
         if (!empty($data)) {
-            $this->User->update($data);
+            $this->User->update($editedUser['id'], $data);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => 'USER ' . $userEmail . ' UPDATE user ' . $editedUser['email'] . ' DATA ' . json_encode($data)
+                'message' => "Updated User $userEmail (id=" . $editedUser['id'] . ") with data:" . json_encode($data)
             ]);
         }
 
-        return $response->withStatus(204, 'Updated');
+        return $response->withStatus(204, "Updated");
     }
 
     // DELETE /users/{user_id}
@@ -395,13 +457,15 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $deletedUser = $this->User->read(['id' => $args['userID']])[0];
-        unset($deletedUser['password']);
+        $deletedUser = (int) $args['userID'];
+        $userEmail = $request->getAttribute('email');
 
-        $this->User->delete((int) $args['userID']);
+        list('email' => $deletedUserEmail) = $this->User->read(['id' => $deletedUser])[0];
+
+        $this->User->delete($deletedUser);
         $this->Log->create([
-            'user_id' => $args['userID'],
-            "message" => 'USER ' . $request->getAttribute('email') . ' DELETE user DATA ' . json_encode($deletedUser)
+            'user_id' => $deletedUser,
+            "message" => "User $userEmail deleted $deletedUserEmail"
         ]);
 
         return $response->withStatus(204, "Deleted");

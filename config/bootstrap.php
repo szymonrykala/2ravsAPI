@@ -5,7 +5,7 @@ use DI\ContainerBuilder;
 require __DIR__ . '/../vendor/autoload.php';
 
 // namespaces loading
-spl_autoload_register(require __DIR__ . '/../utils/autoloader.php');
+spl_autoload_register(require __DIR__ . '/../config/autoloader.php');
 
 // setting error handler
 set_exception_handler(require __DIR__.'/../utils/error_handler.php');

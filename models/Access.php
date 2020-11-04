@@ -1,97 +1,80 @@
 <?php
 namespace models;
+use utils\DBInterface;
 
-use utils\types\MyBool;
-use utils\types\MyString;
-use utils\types\MyInt;
-
-final class Access extends GenericModel
+class Access extends Model
 {
     protected string $tableName = 'accesses';
-    protected array $SCHEMA= [
-        'id' => [
-            'type' => MyInt::class,
-        ],
-        'name' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
-        ],
-        'rfid_action' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'access_edit' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'buildings_view' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'buildings_edit' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'logs_view' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'logs_edit' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'rooms_view' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'rooms_edit' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'reservations_access' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'reservations_confirm' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'reservations_edit' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'users_edit' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'statistics_view' => [
-            'type' => MyBool::class,
-            'create' => true,
-            'update' => true,
-        ],
-        'created' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
-        ],
-        'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
-        ]
+    protected array $columns = [
+        'id', 'name','rfid_action', 'access_edit', 'buildings_view',
+        'buildings_edit', 'logs_view', 'logs_edit', 'rooms_view', 'rooms_edit',
+        'reservations_access', 'reservations_confirm', 'reservations_edit',
+        'users_edit', 'statistics_view'
     ];
 
+    public function __construct(DBInterface $db)
+    {
+        parent::__construct($db);
+    }
+
+    public function parseData(array &$data):void
+    {
+        foreach ($data as $key => &$value) {
+            switch ($key) {
+                case 'name':
+                    $value = (string) filter_var($value, FILTER_SANITIZE_STRING);
+                    break;
+                case 'id':
+                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                    break;
+                default:
+                    $value = (bool) $value;
+                    break;
+            }
+        }
+    }
+
+    public function create(array $data): int
+    {
+        if ($this->exist($data)) throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
+    
+        $this->DB->query(
+            "INSERT INTO $this->tableName(
+                  name,
+                  acces_edit,
+                  logs_edit, logs_view,
+                  reservations_confirm, reservations_acces,reservations_edit,
+                  rooms_edit,rooms_view,
+                  buildings_edit,buildings_view,
+                  statistics_view,
+                  users_edit
+             )
+             VALUES(
+                  :name,
+                  :acces_edit,
+                  :logs_edit, :logs_view,
+                  :reservations_confirm, :reservations_acces,:reservations_edit,
+                  :rooms_edit,:rooms_view,
+                  :buildings_edit,:buildings_view,
+                  :statistics_view,
+                  :users_edit
+             )",
+            array(
+                ':name' => $data['name'],
+                ':acces_edit' => $data['acces_edit'],
+                ':logs_edit' => $data['logs_edit'],
+                ':logs_view' => $data['logs_view'],
+                ':reservations_confirm' => $data['reservations_confirm'],
+                ':reservations_acces' => $data['reservations_acces'],
+                ':reservations_edit' => $data['reservations_edit'],
+                ':rooms_edit' => $data['rooms_edit'],
+                ':rooms_view' => $data['rooms_view'],
+                ':buildings_edit' => $data['buildings_edit'],
+                ':buildings_view' => $data['buildings_view'],
+                ':statistics_view' => $data['statistics_view'],
+                ':users_edit' => $data['users_edit']
+            )
+        );
+        return $this->DB->lastInsertID();
+    }
 }

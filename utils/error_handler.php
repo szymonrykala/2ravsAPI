@@ -1,8 +1,7 @@
 <?php
 
 return function (Throwable $e) {
-    $respCode = $e->getCode();
-    http_response_code($respCode == 0 ? 500 : $respCode);
+    http_response_code($e->getCode());
     header('content-type:application/json');
     echo json_encode([
         'error' => [
@@ -10,7 +9,7 @@ return function (Throwable $e) {
             'file' => $e->getFile(),
             'line' => $e->getLine(),
             // 'trace' => $e->getTrace(),
-            'code' => $respCode
+            'code' => $e->getCode()
         ]
     ]);
     return true;

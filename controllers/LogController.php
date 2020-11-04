@@ -1,10 +1,9 @@
 <?php
 namespace controllers;
 use Psr\Container\ContainerInterface;
-use Slim\Psr7\Response;
-use Slim\Psr7\Request;
+use Psr\Http\Message\RequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Exception\HttpBadRequestException;
-use models\Log;
 
 class LogController extends Controller
 {
@@ -12,12 +11,12 @@ class LogController extends Controller
      * Implement endpoints related with logs routs
      * 
      */
-    public Log $Log;
+    public $Log = null;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Log = $this->DIcontainer->get(Log::class);
+        $this->Log = $this->DIcontainer->get('Log');
     }
 
     // GET /logs
@@ -66,16 +65,14 @@ class LogController extends Controller
         if ($logID < 0) {
             $data = $request->getParsedBody();
 
-            if ($data == null || !isset($data['ids'])) {
-                throw new HttpBadRequestException($request,"No data has been passed - 'ids' param is required when 'log_id' in query string is below 0.");
+            if ($data == null || !isset($data['IDs'])) {
+                throw new HttpBadRequestException($request,"No data has been passed - 'IDs' param is required when 'log_id' in query string is below 0.");
             }
-            foreach ($data['ids'] as $logID) {
-                $this->Log->setID($logID);
-                $this->Log->delete();
+            foreach ($data['IDs'] as $logID) {
+                $this->Log->delete($logID);
             }
         } else {
-            $this->Log->setID($logID);
-            $this->Log->delete();
+            $this->Log->delete($logID);
         }
 
         return $response->withStatus(204, "Deleted");

@@ -1,120 +1,68 @@
 <?php
-
 namespace models;
+use utils\DBInterface;
 
-use utils\types\MyString;
-use utils\types\MyInt;
-use utils\types\MyBool;
-
-final class User extends GenericModel
+class User extends Model
 {
     protected string $tableName = 'users';
-    protected array $SCHEMA = [
-        'id' => [
-            'type' => MyInt::class,
-        ],
-        'access_id' => [
-            'type' => MyInt::class,
-        ],
-        'name' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
-        ],
-        'surname' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
-        ],
-        'password' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/(?=.{8,})(?=.*[!@#$%^&*])(?=.*[0-9]{2,})(?=.*[A-Z])/'
-        ],
-        'last_login' => [
-            'type' => MyString::class,
-        ],
-        'email' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/.+{5,}/',
-            'filter' => FILTER_SANITIZE_EMAIL,
-            'validate' => FILTER_VALIDATE_EMAIL
-        ],
-        'activated' => [
-            'type' => MyBool::class,
-            'update' => true,
-        ],
-        'login_fails' => [
-            'type' => MyInt::class,
-            'update' => true,
-        ],
-        'action_key' => [
-            'type' => MyString::class,
-            'create' => true,
-            'update' => true,
-            'pattern' => '/\w+/'
-        ],
-        'created' => [
-            'type' => MyString::class,
-            // 'pattern' => '/.+/'
-        ],
-        'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
-        ]
+    protected array $columns = [
+        'id', 'access_id', 'name', 'surname', 'password',
+        'last_login', 'email', 'updated_at',
+        'activated', 'login_fails', 'created_at', 'action_key'
     ];
 
-    private string $email;
-    public array $data;
-
-    public function setEmail(string $email): void
+    public function __construct(DBInterface $db)
     {
-        $this->email = filter_var($email, FILTER_SANITIZE_EMAIL);
-        $this->data = $this->read(['email' => $this->email])[0];
+        parent::__construct($db);
     }
 
-
-    public function login($password): void
+    public function parseData(array &$data): void
     {
-        /**
-         * Login the user
-         */
-        // list(
-        // 'password' => $userPassword,
-        // 'id' => $userID,
-        // 'access_id' => $accessID,
-        // 'login_fails' => $loginFails,
-        // 'activated' => $activated
-        // )
-        $this->setID($this->data['id']);
-
-        if ($this->data['login_fails'] >= 5) {
-            throw new HttpForbiddenException('Can not login. Login failed to many times and Your account is locked. Please contact with Your administrator');
-        }
-
-        if ((bool)$this->data['activated'] === false) {
-            throw new HttpConflictException("Can not authenticate because user is not activated");
-        }
-
-        if (!password_verify($password, $this->data['password'])) {
-            $this->data['login_fails'] += 1;
-            $this->update(['login_fails' => $this->data['login_fails']]);
-            throw new HttpBadRequestException('Authentication failed (count:' . $this->data['login_fails'] . '). Password is not correct.');
+        foreach ($data as $key => &$value) {
+            switch ($key) {
+                case 'id':
+                    $value = (int) $value;
+                    break;
+                case 'access_id':
+                    $value = (int) $value;
+                    break;
+                case 'login_fails':
+                    $value = (int) $value;
+                    break;
+                case 'activated':
+                    $value = (bool) $value;
+                    break;
+                default:
+                    $value = filter_var($value, FILTER_SANITIZE_STRING);
+                    break;
+            }
         }
     }
 
-    public function register(array $data): int
+    public function create(array $data): int
     {
+        $data['name'] = preg_replace('/\s/', '', $data['name']);
+        $data['surname'] = preg_replace('/\s/', '', $data['surname']);
+
+        if ($this->exist(['email' => $data['email']])) {
+            throw new HttpConflictException("$this->tableName with given email already exist.");
+        }
 
         $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
-        $this->create($data);
+
+        $this->DB->query(
+            "INSERT INTO 
+                $this->tableName(name,surname,password,email,action_key,access_id)
+               VALUES(:name,:surname,:password,:email,:action_key,:access_id)",
+            array(
+                ':name' => $data['name'],
+                ':surname' => $data['surname'],
+                ':password' => $data['password'],
+                ':email' => $data['email'],
+                ':action_key' => $data['action_key'],
+                ':access_id' => $data['access_id']
+            )
+        );
         return $this->DB->lastInsertID();
     }
 }
