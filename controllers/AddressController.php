@@ -1,10 +1,12 @@
 <?php
-namespace controllers;
-use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpBadRequestException;
 
+namespace controllers;
+
+use Psr\Container\ContainerInterface;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
+use Slim\Exception\HttpBadRequestException;
+use models\Address;
 
 class AddressController extends Controller
 {
@@ -12,35 +14,14 @@ class AddressController extends Controller
      * Implement endpoints related with saddresses paths
      * 
      */
-    private $Address = null;
+    private Address $Address;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Address = $this->DIcontainer->get('Address');
+        $this->Address = $this->DIcontainer->get(Address::class);
     }
 
-    public function validateAddress(Request $request, array &$data): void
-    {
-        /**
-         * Validate Address
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-        foreach (['country', 'town', 'street'] as $item) {
-            if (isset($data[$item])) {
-                if (
-                    !$Validator->validateClearString($data[$item])
-                ) throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' value; patern: ' . $Validator->clearString);
-                $data[$item] = $Validator->sanitizeString($data[$item]);
-            }
-        }
-        if (isset($data['postal_code']) && !$Validator->validatePostalCode($data['postal_code'])) {
-            throw new HttpBadRequestException($request, 'Incorrect postal code value- example format; pattern: ' . $Validator->postalCode);
-        }
-    }
 
     // GET /addresses
     // GET /addresses/{id}
@@ -89,20 +70,12 @@ class AddressController extends Controller
          * @return Response 
          */
 
-        $data = $this->getFrom($request, [
-            'country' => 'string',
-            'town' => 'string',
-            'postal_code' => 'string',
-            'street' => 'string',
-            'number' => 'string'
-        ], true);
+        $data = $this->getParsedData($request);
 
-        $this->validateAddress($request, $data);
-
-        $lastIndex = $this->Address->create($data);
+        $data['id'] = $this->Address->create($data);
         $this->Log->create([
-            "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('user_id') . " created address id=$lastIndex; data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('user_id') . ' CREATE address DATA ' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -121,22 +94,14 @@ class AddressController extends Controller
          * @return Response 
          */
 
-        $data = $this->getFrom($request, [
-            'country' => 'string',
-            'town' => 'string',
-            'postal_code' => 'string',
-            'street' => 'string',
-            'number' => 'string'
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateAddress($request, $data);
-
-        $addressID = $args['address_id'];
-        $this->Address->update($addressID, $data);
+        $this->Address->setID($args['address_id']);
+        $this->Address->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated address id=$addressID data:" . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE address DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -152,12 +117,14 @@ class AddressController extends Controller
          * @param Response $response 
          * @param $args
          * 
-         * @return Response 
+         * @return Response
          */
-        $this->Address->delete((int)$args['address_id']);
+        $address = $this->Address->read(['id' => $args['address_id']])[0];
+
+        $this->Address->delete($args['address_id']);
         $this->Log->create([
             'user_id' => (int)$request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " deleted Address id=" . $args['address_id']
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE address DATA ' . json_encode($address)
         ]);
         return $response->withStatus(204, "Deleted");
     }

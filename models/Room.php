@@ -1,68 +1,73 @@
 <?php
-namespace models;
-use utils\DBInterface;
 
-class Room extends Model
+namespace models;
+
+use utils\types\MyArray;
+use utils\types\MyString;
+use utils\types\MyInt;
+use utils\types\MyBool;
+
+final class Room extends GenericModel
 {
     protected string $tableName = 'rooms';
-    public array $columns = [
-        'id', 'name','rfid', 'building_id', 'room_type_id', 'seats_count', 'floor',
-        'equipment', 'blockade', 'state'
+    protected array $SCHEMA= [
+        'id' => [
+            'type' => MyInt::class,
+        ],
+        'name' => [
+            'type' => MyString::class,
+            'create' => true,
+            'update' => true,
+            // 'pattern' => '/^[\.\s0-9\wa-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/u'
+            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
+        ],
+        'rfid' => [
+            'type' => MyString::class,
+            'create' => true,
+            'update' => true,
+            'pattern' => '/[\w]+/u'
+        ],
+        'building_id' => [
+            'type' => MyInt::class,
+            'create' => true,
+            'update' => true,
+        ],
+        'room_type_id' => [
+            'type' => MyInt::class,
+            'create' => true,
+            'update' => true,
+        ],
+        'seats_count' => [
+            'type' => MyInt::class,
+            'create' => true,
+            'update' => true,
+        ],
+        'floor' => [
+            'type' => MyInt::class,
+            'create' => true,
+            'update' => true,
+        ],
+        'equipment' => [
+            'type' => MyArray::class,
+            'create' => true,
+            'update' => true,
+            'nullable' => true
+        ],
+        'blockade' => [
+            'type' => MyBool::class,
+            'update' => true,
+        ],
+        'occupied' => [
+            'type' => MyBool::class,
+            'update' => true,
+        ],
+        'created' => [
+            'type' => MyString::class,
+            'pattern' => '/.+/'
+        ],
+        'updated' => [
+            'type' => MyString::class,
+            'pattern' => '/.+/'
+        ]
     ];
-
-    public function __construct(DBInterface $db)
-    {
-        parent::__construct($db);
-    }
-
-    public function parseData(array &$data): void
-    {
-        foreach ($data as $key => &$value) {
-            switch ($key) {
-                case 'name':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'rfid':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'equipment':
-                    $value = filter_var($value, FILTER_SANITIZE_STRING);
-                    break;
-                case 'blockade':
-                    $value = (bool) $value;
-                    break;
-                case 'state':
-                    $value = (bool) $value;
-                    break;
-                default:
-                    $value = (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-                    break;
-            }
-        }
-    }
-
-    public function create(array $data): int
-    {
-        if ($this->exist([
-            "name" => $data["name"],
-            "floor" => $data["floor"],
-            "building_id" => $data["building_id"]
-        ])) {
-            throw new HttpConflictException("$this->tableName with given data already exist. Data:" . json_encode($data));
-        }
-
-        $this->DB->query(
-            "INSERT INTO $this->tableName(building_id,name,state,floor,room_type_id,seats_count,equipment)
-                         VALUES(:building_id,:name,0,:floor,:room_type_id,:seats_count,:equipment)",
-            array(
-                ':name' => $data['name'],
-                ':floor' => $data['floor'],
-                ':room_type_id' => $data['room_type_id'],
-                ':seats_count' => $data['seats_count'],
-                ':equipment' => $data['equipment'],
-                ':building_id' => $data['building_id']
-            )
-        );
-        return $this->DB->lastInsertID();
-    }
 }

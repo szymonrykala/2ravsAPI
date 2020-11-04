@@ -1,5 +1,7 @@
 <?php
+
 namespace utils;
+
 class MailSender
 {
     private $userName = '';
@@ -7,10 +9,12 @@ class MailSender
     private $userMail = '';
     private $mailContent = '';
     private $mailSubject = '';
+    private $send_from = '';
 
-    public function __construct()
+    public function __construct(array $mail_settings)
     {
-        // ini_set("sendmail_from", SENDER_MAIL);
+        ini_set("sendmail_from", $mail_settings['send_from']);
+        $this->send_from = $mail_settings['send_from'];
     }
 
     public function setUser(array $user): void
@@ -27,14 +31,14 @@ class MailSender
     {
         $this->mailSubject = $subject;
         switch ($this->mailSubject) {
-            case 'User Activation';
-                $this->mailContent = "
+            case 'User Activation':
+                $this->mailContent = `
             <!DOCTYPE html>
-            <html lang='en'>
+            <html lang="en">
                 <head>
-                    <meta http-equiv='Content-Type' content='text/html charset=UTF-8' />
-                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                    <title>$this->mailSubject</title>
+                    <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Activation code</title>
                 </head>
                 <body>
                     <h1>Hi $this->userName !</h1>
@@ -42,7 +46,41 @@ class MailSender
                     <p>Your activation key is: <b>$this->userKey</b></p>
                 </body>
             </html>
-            ";
+            `;
+                break;
+            case 'Resend User Activation':
+                $this->mailContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                    <head>
+                        <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Activation code</title>
+                    </head>
+                    <body>
+                        <h1>Hi $this->userName !</h1>
+                        <h3>I heard that You didn't get Your activation key.</h3>
+                        <p>Here is another one: <b>$this->userKey</b></p>
+                    </body>
+                </html>
+                `;
+                break;
+            case 'Change email':
+                $this->mailContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                        <head>
+                            <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>Change email</title>
+                        </head>
+                        <body>
+                            <h1>Hi $this->userName !</h1>
+                            <h3>I heard that You didn't want to change Your email.</h3>
+                            <p>Here is Your action code: <b>$this->userKey</b></p>
+                        </body>
+                    </html>
+                    `;
                 break;
             default:
                 throw new NoSuchMailSubjectimplementedException();
@@ -52,7 +90,7 @@ class MailSender
 
     public function send(): void
     {
-        if (!mail($this->userMail, $this->mailSubject, $this->mailContent, SENDER_MAIL)) {
+        if (!mail($this->userMail, $this->mailSubject, $this->mailContent, $this->send_from)) {
             throw new MailServiceNotAvaliableException();
         }
     }

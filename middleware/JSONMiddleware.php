@@ -24,7 +24,7 @@ class JSONMiddleware
 
         $response = new Response();
         $response->getBody()->write(json_encode($responseData));
-        $response = $response->withHeader('content-type', 'application/json');
+        $response = $response->withHeader('content-type', 'application/json')->withHeader('Access-Control-Allow-Origin','*');
         return $response->withStatus($code, $reason);
     }
 }

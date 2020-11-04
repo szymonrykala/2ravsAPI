@@ -1,38 +1,24 @@
 <?php
+
 namespace controllers;
 
-use App\Models\HttpConflictException;
+use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
+use models\Access;
+use models\User;
 
 
 class AccessController extends Controller
 {
-    private $Access;
+    private Access $Access;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Access = $DIcontainer->get('Access');
-    }
-
-    public function validateAccess(Request $request, array &$data): void
-    {
-        /**
-         * Validate Access
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-        if (isset($data['name'])) {
-            if (!$Validator->validateString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: '.$Validator->clearString);
-            }
-            $data['name'] = $Validator->sanitizeString($data['name']);
-        }
+        $this->Access = $DIcontainer->get(Access::class);
     }
 
     // GET /access
@@ -91,28 +77,12 @@ class AccessController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, [
-            "name" => 'string',
-            "access_edit" => 'boolean',
-            "buildings_view" => 'boolean',
-            "buildings_edit" => 'boolean',
-            "logs_view" => 'boolean',
-            "logs_edit" => 'boolean',
-            "rooms_view" => 'boolean',
-            "rooms_edit" => 'boolean',
-            "reservations_access" => 'boolean',
-            "reservations_confirm" => 'boolean',
-            "reservations_edit" => 'boolean',
-            "users_edit" => 'boolean',
-            "statistics_view" => 'boolean',
-        ], true);
+        $data = $this->getParsedData($request);
 
-        $this->validateAccess($request, $data);
-
-        $newID = $this->Access->create($data);
+        $data['id'] = $this->Access->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => 'User ' . $request->getAttribute('email') . ' created new access class id=' . $newID . ' data:' . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' CREATE access DATA ' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -145,28 +115,13 @@ class AccessController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, [
-            "name" => 'string',
-            "access_edit" => 'boolean',
-            "buildings_view" => 'boolean',
-            "buildings_edit" => 'boolean',
-            "logs_view" => 'boolean',
-            "logs_edit" => 'boolean',
-            "rooms_view" => 'boolean',
-            "rooms_edit" => 'boolean',
-            "reservations_access" => 'boolean',
-            "reservations_confirm" => 'boolean',
-            "reservations_edit" => 'boolean',
-            "users_edit" => 'boolean',
-            "statistics_view" => 'boolean',
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateAccess($request, $data);
-
-        $this->Access->update($args['access_id'], $data);
+        $this->Access->setID($args['access_id']);
+        $this->Access->update($data);
         $this->Log->create([
-            "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " updated data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE access DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -183,17 +138,12 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        // each user with current access have to 
-        $User = $this->DIcontainer->get('User');
-        if ($User->exist(['access_id' => $args['access_id']])) {
-            throw new HttpConflictException("Some Users stil have this access class. You can't delete it", 409); //conflict
-        } else {
-            $this->Access->delete($args['access_id']);
-            $this->Log->create([
-                "user_id" => $request->getAttribute('user_id'),
-                "message" => "User " . $request->getAttribute('email') . " deleted access id=" . $args['access_id']
-            ]);
-        }
+        $access = $this->Access->read(['id' => $args['access_id']])[0];
+        $this->Access->delete($args['access_id']);
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE access DATA ' . json_encode($access)
+        ]);
         return $response->withStatus(204, "Deleted");
     }
 }

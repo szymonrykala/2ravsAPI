@@ -1,4 +1,5 @@
 <?php
+
 namespace controllers;
 
 use Invoker\Exception\NotEnoughParametersException;
@@ -6,15 +7,23 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 use Psr\Container\ContainerInterface;
 use Slim\Exception\HttpBadRequestException;
+use models\Log;
+use models\Room;
+use models\RoomType;
+use models\Reservation;
+use models\Building;
+use models\User;
+use models\Access;
+use models\Address;
 
 abstract class Controller
 {
-    protected $DIcontainer = null;
+    protected ContainerInterface $DIcontainer;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         $this->DIcontainer = $DIcontainer;
-        $this->Log = $this->DIcontainer->get("Log");
+        $this->Log = $this->DIcontainer->get(Log::class);
     }
 
     protected function parsedQueryString(Request $request, string $queryKey = null): array
@@ -51,40 +60,13 @@ abstract class Controller
         return $result;
     }
 
-    protected function getFrom(Request $request, array $parameters, bool $required = false): array
+    protected function getParsedData(Request $request): array
     {
-        /**
-         * Getting data defined in $parameters with given type
-         * 
-         * @param Request $request
-         * @param array $parameters param => type, ...
-         * 
-         * @return array $data - requested parameters with requested type
-         */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new \models\HttpBadRequestException("Request body is empty or is not in right format", 400);
+            throw new HttpBadRequestException($request, "Request body is empty or is not in right format");
         }
-
-        //skipping unnessesry values
-        $outputData = [];
-        foreach ($data as $key => $value) {
-            if (!in_array($key, array_keys($parameters))) continue;
-            if (gettype($value) !== $parameters[$key]) {
-                throw new HttpBadRequestException($request, "Bad variable type passed. Variable '$key' need to be a type of " . $parameters[$key]);
-            }
-
-            $outputData[$key] = $value;
-        }
-        if ($required) {
-            //checking required parameters
-            foreach ($parameters as $param => $type) {
-                if (!isset($outputData[$param])) {
-                    throw new NotEnoughParametersException("Parameter '$param' with typeof '$type' is required to perform this action", 400);
-                }
-            }
-        }
-        return $outputData;
+        return $data;
     }
 
     protected function getSearchParams(Request $request): array
@@ -142,13 +124,13 @@ abstract class Controller
         $accessMark = in_array('access_id', $extensions);
         $roomTypeMark = in_array('room_type_id', $extensions);
 
-        if ($roomMark) $Room = $this->DIcontainer->get('Room');
-        if ($roomTypeMark) $RoomType = $this->DIcontainer->get('RoomType');
-        if ($buildingMark) $Building = $this->DIcontainer->get('Building');
-        if ($addressMark) $Address = $this->DIcontainer->get('Address');
-        if ($reservationMark) $Reservation = $this->DIcontainer->get('Reservation');
-        if ($userMark || $confirmedMark) $User = $this->DIcontainer->get('User');
-        if ($accessMark) $Access = $this->DIcontainer->get('Access');
+        if ($roomMark) $Room = $this->DIcontainer->get(Room::class);
+        if ($roomTypeMark) $RoomType = $this->DIcontainer->get(RoomType::class);
+        if ($buildingMark) $Building = $this->DIcontainer->get(Building::class);
+        if ($addressMark) $Address = $this->DIcontainer->get(Address::class);
+        if ($reservationMark) $Reservation = $this->DIcontainer->get(Reservation::class);
+        if ($userMark || $confirmedMark) $User = $this->DIcontainer->get(User::class);
+        if ($accessMark) $Access = $this->DIcontainer->get(Access::class);
 
         foreach ($dataArray as &$dataEntry) {
             if ($roomMark && $dataEntry['room_id'] !== null) {

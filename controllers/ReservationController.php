@@ -1,67 +1,28 @@
 <?php
+
 namespace controllers;
+
+use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\RequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
-
+use models\Reservation;
 
 class ReservationController extends Controller
 {
     /**
      * Implement endpoints related with reservations
      */
-    private $Reservation;
+    private Reservation $Reservation;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Reservation = $this->DIcontainer->get('Reservation');
+        $this->Reservation = $this->DIcontainer->get(Reservation::class);
     }
 
-    public function validateReservation(Request &$request, array &$data): void
-    {
-        /**
-         * Validate Reservation
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-
-        if (isset($data['subtitle'])) {
-            if (!$Validator->validateString($data['subtitle'], 3)) {
-                throw new HttpBadRequestException($request, 'Incorrect reservation ' . 'subtitle' . ' value (min 3 char. length).');
-            } else {
-                $data['subtitle'] = $Validator->sanitizeString($data['subtitle']);
-            }
-        }
-
-        if (
-            isset($data['title']) &&
-            !$Validator->validateClearString($data['title'])
-        ) throw new HttpBadRequestException($request, 'Incorrect reservation title format; pattern: ' . $Validator->clearString);
-
-        foreach (['end_time', 'start_time'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateTime($data[$item])) {
-                    throw new HttpBadRequestException($request, 'Incorrect ' . $item . ' format; pattern: hh:mm:ss.');
-                }
-            }
-        }
-        if (isset($data['date'])) {
-            if (!$Validator->validateDate($data['date'])) {
-                throw new HttpBadRequestException($request, 'Incorrect date format; pattern: yyyy-mm-dd.');
-            }
-        }
-    }
-
-    // GET /reservations
-    // GET /reservations/{reservation_id}
-    // GET /users/{userID}/reservations
-    // GET building/{building_id}/reservations
-    // GET building/{building_id}/rooms/{room_id}/reservations
     public function getReservations(Request $request, Response $response, $args): Response
     {
         /**
@@ -108,13 +69,13 @@ class ReservationController extends Controller
          */
         $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
-        if ((bool)$reservation['confirmed'] === true) throw new HttpConflictException('Reservation is already confirmed');
+        if ($reservation['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
 
-        $this->Reservation->update($reservation['id'], ['confirmed' => true]);
+        $this->Reservation->update(['confirmed' => true], $reservation['id'],);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
-            'message' => 'User ' . $request->getAttribute('email') . ' confirmed reservation',
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE reservation DATA ' . json_encode(['confirmed' => true])
         ]);
         $response->getBody()->write("Reservation confirmed");
         return $response;
@@ -141,38 +102,24 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-
-        $currentUser = $request->getAttribute('user_id');
-        $currentUserMail = $request->getAttribute('email');
-        $buildingID = (int)$args['building_id'];
-        $roomID = (int)$args['room_id'];
-
-        $data = $this->getFrom($request, [
-            "title" => 'string',
-            "subtitle" => "string",
-            "start_time" => "string",
-            "end_time" => "string",
-            "date" => "string"
-        ], true);
-
-        $this->validateReservation($request, $data);
+        $data = $this->getParsedData($request);
 
         $reservationData = array_merge($data, [
-            "room_id" => $roomID,
-            "building_id" => $buildingID,
-            "user_id" => $currentUser
+            'room_id' => (int)$args['room_id'],
+            'building_id' => (int)$args['building_id'],
+            'user_id' => $request->getAttribute('user_id')
         ]);
 
-        $reservationID = $this->Reservation->create($reservationData);
+        $reservationData['id'] = $this->Reservation->create($reservationData);
         $this->Log->create([
-            'user_id' => $currentUser,
-            'reservation_id' => $reservationID,
-            'room_id' => $roomID,
-            'building_id' => $buildingID,
-            'message' => "User $currentUserMail created reservation data:" . json_encode($reservationData)
+            'user_id' => $request->getAttribute('user_id'),
+            'reservation_id' => $reservationData['id'],
+            'room_id' => $args['room_id'],
+            'building_id' => $args['building_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' CREATE reservation DATA ' . json_encode($reservationData)
         ]);
 
-        return $response->withStatus(201, "Created");
+        return $response->withStatus(201, 'Created');
     }
 
     // PATCH /reservations/{reservation_id}
@@ -198,28 +145,18 @@ class ReservationController extends Controller
          */
 
         $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
-        if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can ot update confirmed Reservation');
+        if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can not update confirmed Reservation');
 
-        $data = $this->getFrom($request, [
-            "title" => 'string',
-            "subtitle" => "string",
-            "start_time" => "string",
-            "end_time" => "string",
-            "date" => "string"
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateReservation($request, $data);
-
-        $currentUserMail = $request->getAttribute('email');
-
-        $this->Reservation->update($args['reservation_id'], $data);
+        $this->Reservation->update($data, $args['reservation_id']);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
-            'message' => "User $currentUserMail updated reservation data:" . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE reservation DATA ' . json_encode($data)
         ]);
-        return $response->withStatus(204, "Updated");
+        return $response->withStatus(204, 'Updated');
     }
 
     // DELETE /reservations/{reservation_id}
@@ -236,28 +173,16 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $currentUser = $request->getAttribute('user_id');
-        $currentUserMail = $request->getAttribute('email');
-        $reservationID = (int)$args['reservation_id'];
 
-        $reservation = $this->Reservation->read(['id' => $reservationID])[0];
+        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
-        if ($reservation['deleted'] === false) {
-            $this->Reservation->update($reservationID, ['deleted' => true]);
-            $this->Log->create([
-                'user_id' => (int)$currentUser,
-                'reservation_id' => $reservationID,
-                'message' => "User $currentUserMail moved reservation to trash"
-            ]);
-        } else {
-            $this->Reservation->delete((int) $args['reservation_id']);
-            $this->Log->create([
-                'user_id' => (int)$currentUser,
-                'reservation_id' => $reservationID,
-                'message' => "User $currentUserMail hard deleted reservation"
-            ]);
-        }
+        $this->Reservation->delete((int) $args['reservation_id']);
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'reservation_id' => $args['reservation_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE reservation DATA ' . json_encode($reservation)
+        ]);
 
-        return $response->withStatus(204, "Deleted");
+        return $response->withStatus(204, 'Deleted');
     }
 }

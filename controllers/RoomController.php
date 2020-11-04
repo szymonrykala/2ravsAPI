@@ -1,45 +1,26 @@
 <?php
-namespace controllers;
-use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpBadRequestException;
 
+namespace controllers;
+
+use models\HttpConflictException;
+use Psr\Container\ContainerInterface;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
+use Slim\Exception\HttpBadRequestException;
+use models\Room;
+use Slim\Exception\HttpNotFoundException;
 
 class RoomController extends Controller
 {
     /**
      * Responsible for operation with /rooms table in database
      */
-    private $Room = null;
+    private Room $Room;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Room = $this->DIcontainer->get('Room');
-    }
-
-    public function validateRoom(Request $request, array &$data): void
-    {
-        /**
-         * Validate Room
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-        if (isset($data['name'])) {
-            if (!$Validator->validateClearString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect room name value; pattern: ' . $Validator->clearString);
-            }
-        }
-
-        if (isset($data['equipment'])) {
-            if (!$Validator->validateString($data['equipment'], 1)) {
-                throw new HttpBadRequestException($request, 'Incorrect room equipment value (min 1 char. length).');
-            }
-            $data['equipment'] = $Validator->sanitizeString($data['equipment']);
-        }
+        $this->Room = $this->DIcontainer->get(Room::class);
     }
 
     // PATCH /rfid
@@ -51,7 +32,7 @@ class RoomController extends Controller
          *      "rfid" : ""
          * }
          */
-        $rfid = $this->getFrom($request, ['rfid' => 'string'],true)['rfid'];
+        $rfid = $this->getParsedData($request)['rfid'];
         $rfid = str_replace(' ', '', $rfid);
         if (empty($rfid)) {
             throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
@@ -59,15 +40,16 @@ class RoomController extends Controller
 
         $room = $this->Room->read(['rfid' => $rfid])[0];
 
-        $this->Room->update($room['id'], ['state' => (bool)!$room['state']]);
+        $this->Room->setID($room['id']);
+        $this->Room->update(['state' => (bool)!$room['state']]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $room['id'],
-            'message' => 'User ' . $request->getAttribute('email') . ' toggled to ' . (!$room['state'] ? 'true' : 'false') . ' state of room with rfid: ' . $rfid
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['state' => !$room['state']])
         ]);
 
-        $response->getBody()->write('toggled to '.(!$room['state'] ? 'true' : 'false'));
+        $response->getBody()->write('toggled to ' . (!$room['state'] ? 'true' : 'false'));
         return $response->withStatus(200);
     }
 
@@ -122,30 +104,22 @@ class RoomController extends Controller
          * @return Response 
          */
 
-        $buildingID = (int) $args['building_id'];
-        $data = $this->getFrom($request, [
-            'name' => "string",
-            'room_type_id' => 'integer',
-            'seats_count' => 'integer',
-            'floor' => 'integer',
-            'equipment' => 'string'
-        ], true);
+        $data = $this->getParsedData($request);
+        $data['blockade'] = $this->DIcontainer->get('settings')['default_params']['room_blockade'];
 
-        $this->validateRoom($request, $data);
-
-        $data['building_id'] = $buildingID;
+        $data['building_id'] = (int) $args['building_id'];
         $lastIndex = $this->Room->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'building_id' => $buildingID,
+            'building_id' => $args['building_id'],
             'room_id' => $lastIndex,
-            'message' => "User " . $request->getAttribute('email') . " created new room in building id=$buildingID; data:" . json_encode($data)
+            'message' => "USER " . $request->getAttribute('email') . " CREATE room DATA " . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
 
-    // PATCH /buildings/{building_id}/rooms/{room_id}
-    public function updateRoomByID(Request $request, Response $response, $args): Response
+    // PATCH /buildings/rooms/{room_id}
+    public function updateRoom(Request $request, Response $response, $args): Response
     {
         /**
          * creating room in specified building
@@ -166,50 +140,38 @@ class RoomController extends Controller
          * @return Response 
          */
 
-        $roomID = (int) $args['room_id'];
-        $buildingID = (int) $args['building_id'];
+        $data = $this->getParsedData($request);
 
-        $data = $this->getFrom($request, [
-            'name' => "string",
-            'room_type_id' => 'integer',
-            'seats_count' => 'integer',
-            'floor' => 'integer',
-            'blockade' => 'bool',
-            'equipment' => 'string'
-        ], false);
-
-        $this->validateRoom($request, $data);
-
-        $this->Room->update($roomID, $data);
+        $this->Room->setID($args['room_id']);
+        $this->Room->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $roomID,
-            'building_id' => $buildingID,
-            'message' => "User " . $request->getAttribute('email') . " updated room data:" . json_encode($data)
+            'room_id' => $args['room_id'],
+            'message' => "USER " . $request->getAttribute('email') . " UPDATE room DATA " . json_encode($data)
         ]);
 
         return $response->withStatus(204, "Updated");
     }
 
-    // DELETE /building/{building_id}/rooms/{room_id}
-    public function deleteRoomByID(Request $request, Response $response, $args): Response
+    // DELETE /building/rooms/{room_id}
+    public function deleteRoom(Request $request, Response $response, $args): Response
     {
         /**
          * Deleting room from building
          * returning 204
-         * DELETE /building/{building_id}/rooms/{room_id}
+         * DELETE /building/rooms/{room_id}
          * 
          */
-        $roomID = (int) $args['room_id'];
-        $buildingID = (int) $args['building_id'];
 
-        $this->Room->delete($roomID);
+        $room = $this->Room->read(['id' => $args['room_id']])[0];
+
+        $this->Room->setID($args['room_id']);
+        $this->Room->delete($args['room_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $roomID,
-            'building_id' => $buildingID,
-            'message' => "User " . $request->getAttribute('email') . " deleted room"
+            'room_id' => $args['room_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room DATA ' . json_encode($room)
         ]);
         return $response->withStatus(204, "Deleted");
     }
