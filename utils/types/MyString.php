@@ -2,48 +2,24 @@
 
 namespace utils\types;
 
-use Exception;
-use UnexpectedValueException;
+use utils\types\TypeValidator;
 
-class MyString
+final class MyString extends TypeValidator
 {
-    public string $value;
-    private string $name;
+    public $type = 'string';
 
-    function __construct(string $name, string $string)
+    public function __construct(string $name, $value)
     {
-        $this->name = $name;
-        $this->value = $string;
+        parent::__construct($name, $value);
     }
 
-    function getValue(): string
+    public function getValue()
     {
-        return (string)$this->value;
+        return (string) $this->value;
     }
 
-    function validate(array $schemaField = []): void
+    public static function parseType(string $value): string
     {
-        //regex
-        if (isset($schemaField['pattern'])) {
-            if (
-                !filter_var($this->value, FILTER_VALIDATE_REGEXP, [
-                    'options' => [
-                        'regexp' => $schemaField['pattern']
-                    ]
-                ])
-            ) throw new UnexpectedValueException('Value `' . $this->name . '` do not match the pattern: ' . $schemaField['pattern'], 400);
-        }
-
-        // applying filter
-        if (isset($schemaField['filter'])) {
-            $this->value = filter_var($this->value, $schemaField['filter']);
-        }
-
-        //aplying validation
-        if (isset($schemaField['validate'])) {
-            if (
-                !filter_var($this->value, $schemaField['validate'])
-            ) throw new UnexpectedValueException('Value `' . $this->name . '` do not pass applied validation:' . $schemaField['validate'], 400);
-        }
+        return $value;
     }
 }

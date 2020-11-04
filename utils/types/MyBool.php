@@ -4,38 +4,24 @@ namespace utils\types;
 
 use UnexpectedValueException;
 
-class MyBool
+use utils\types\TypeValidator;
+
+final class MyBool extends TypeValidator
 {
-    public bool $value;
-    private string $name;
-    function __construct(string $name, $bool)
+    public $type = 'boolean';
+
+    public function __construct(string $name, $value)
     {
-        $this->name = $name;
-        $this->value = $bool;
+        parent::__construct($name, $value);
     }
 
-    function getValue(): int
+    public function getValue()
     {
-        /**
-         * Get value to database
-         * 
-         * Must to return int, becouse of MySQL database type parsing.
-         * When passing false, the value is '' (empty) and type error is returned
-         * 
-         * @return int
-         */ 
-        return (int)$this->value;
+        return (int) $this->value;
     }
 
-    function validate(): void
+    public static function parseType(bool $value): bool
     {
-        /**
-         * Validating the passed in constructor value
-         * 
-         * @return void
-         */
-        if (
-            gettype($this->value)!=='boolean'
-        ) throw new UnexpectedValueException('Value `' . $this->name . '` have to be a boolean type.',400);
+        return $value;
     }
 }

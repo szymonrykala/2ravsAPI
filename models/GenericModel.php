@@ -51,8 +51,7 @@ abstract class GenericModel
             ) {
                 $value = Null;
             } else {
-                $typedParam = new $this->SCHEMA[$key]['type']($key, $value);
-                $value = $typedParam->value;
+                $value = $this->SCHEMA[$key]['type']::parseType($value);
             }
         }
     }
@@ -97,7 +96,7 @@ abstract class GenericModel
          * @param array $params
          * @return bool
          */
-        $sql = 'SELECT id FROM '.$this->tableName.' WHERE 1=1 ';
+        $sql = 'SELECT id FROM ' . $this->tableName . ' WHERE 1=1 ';
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, "=");
         $sql .= $sqlData;
 
@@ -147,7 +146,7 @@ abstract class GenericModel
         // =======PARSING SORTING, PAGING AND LIMIT=======
         extract($this->queryStringParams); //extracting variables
 
-        if (isset($sort_key, $sort))   $sql .= ' ORDER BY '.$sort_key.' '.$sort;
+        if (isset($sort_key, $sort))   $sql .= ' ORDER BY ' . $sort_key . ' ' . $sort;
         elseif (isset($sort_key))               $sql .= ' ORDER BY ' . $sort_key;
         elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
 
@@ -158,7 +157,7 @@ abstract class GenericModel
 
         $result = $this->DB->query($sql, $queryParams);
         if (empty($result)) {
-            throw new HttpNotFoundException('Nothing was found in '.$this->tableName.' with parameters:' . json_encode($queryParams));
+            throw new HttpNotFoundException('Nothing was found in ' . $this->tableName . ' with parameters:' . json_encode($queryParams));
         }
 
         //parsing types
@@ -211,7 +210,7 @@ abstract class GenericModel
 
             if ($createData[$field] !== null) {
                 $propperType = new $this->SCHEMA[$field]['type']($field, $createData[$field]);
-                $propperType->validate($params);
+                $propperType->applyRules($params);
                 $createData[$field] = $propperType->getValue();
             }
             $SQLqueryData[':' . $field] = $createData[$field];
@@ -231,7 +230,7 @@ abstract class GenericModel
          * @param array $updateData is assoc array [field => updateValue,...]
          * 
          */
-        $sql = 'UPDATE '.$this->tableName .' SET';
+        $sql = 'UPDATE ' . $this->tableName . ' SET';
         $SQLqueryData = [];
 
         //loop through data
@@ -253,7 +252,7 @@ abstract class GenericModel
                     } else throw new HttpBadRequestException('Variable `' . $field . '` can not be null');
                 } else { // if is not null
                     $propperType = new $this->SCHEMA[$field]['type']($field, $updateData[$field]);
-                    $propperType->validate($params);
+                    $propperType->applyRules($params);
                     $propperValue = $propperType->getValue();
                     // $propperValue = 0;
                 }
@@ -278,7 +277,7 @@ abstract class GenericModel
          * @param int $id is optional - if not passed, the Model::id is used
          */
         $this->DB->query(
-            'DELETE FROM `'.$this->tableName.'` WHERE `id`=:id',
+            'DELETE FROM `' . $this->tableName . '` WHERE `id`=:id',
             [':id' => $id ?? $this->id]
         );
     }

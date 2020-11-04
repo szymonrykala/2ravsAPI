@@ -2,46 +2,75 @@
 
 namespace utils\types;
 
-class MyArray
+use utils\types\TypeValidator;
+
+class MyArray extends TypeValidator
 {
-    public $array;
-    private string $name;
+    public $type = 'array';
 
-    function __construct(string $name, $array)
+    public function __construct(string $name, $value)
     {
-        if (
-            gettype($array) === 'int' || gettype($array) === 'boolean'
-        ) throw new \models\HttpBadRequestException('Value `' . $name . '` have to be a integer type.');
-
-        $this->array = $array;
-        $this->name = $name;
+        parent::__construct($name, $value);
     }
 
-    function __toString(): string
+    private function translateToString($value)
     {
         $string = '';
-        foreach ($this->array as $item) {
+        foreach ($value as $_ => $item) {
             $string .= ';' . $item;
         }
         return $string;
     }
 
-    function getValue()
+    public function getValue()
     {
-        if (gettype($this->array) === 'string') {
-            return $this->toArray();
-        } else return $this->__toString();
+        return (string) $this->translateToString($this->value);
     }
 
-    public function toArray()
+    public static function parseType(string $value): array
     {
-        $items = explode(';', $this->array);
+        $items = explode(';', $value);
         unset($items[0]);
         return array_values($items);
     }
+    // public $array;
+    // private string $name;
 
-    function validate():void
-    {
+    // function __construct(string $name, $array)
+    // {
+    //     if (
+    //         gettype($array) === 'int' || gettype($array) === 'boolean'
+    //     ) throw new \models\HttpBadRequestException('Value `' . $name . '` have to be a integer type.');
 
-    }
+    //     $this->array = $array;
+    //     $this->name = $name;
+    // }
+
+    // function __toString(): string
+    // {
+    // $string = '';
+    // foreach ($this->array as $item) {
+    //     $string .= ';' . $item;
+    // }
+    // return $string;
+    // }
+
+    // function getValue()
+    // {
+    //     if (gettype($this->array) === 'string') {
+    //         return $this->toArray();
+    //     } else return $this->__toString();
+    // }
+
+    // public function toArray()
+    // {
+    // $items = explode(';', $this->array);
+    // unset($items[0]);
+    // return array_values($items);
+    // }
+
+    // function validate():void
+    // {
+
+    // }
 }
