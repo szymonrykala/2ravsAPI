@@ -1,8 +1,8 @@
 <?php
 
 return function (Throwable $e) {
-    $respCode = $e->getCode() == 0 ? 500 : $e -> getCode();
-    http_response_code($respCode);
+    $respCode = $e->getCode();
+    http_response_code($respCode == 0 ? 500 : $respCode);
     header('content-type:application/json');
     echo json_encode([
         'error' => [
