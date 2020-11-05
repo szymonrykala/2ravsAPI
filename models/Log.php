@@ -8,7 +8,7 @@ use utils\types\MyString;
 final class Log extends GenericModel
 {
     protected string $tableName = 'logs';
-    protected array $SCHEMA= [
+    protected array $SCHEMA = [
         'id' => [
             'type' => MyInt::class,
         ],
@@ -44,4 +44,20 @@ final class Log extends GenericModel
             'type' => MyString::class,
         ]
     ];
+
+    public function create(array $createData): int
+    {
+        $this->DB->query(
+            'INSERT INTO `' . $this->tableName . '`(`message`,`user_id`,`reservation_id`,`building_id`,`room_id`)
+            VALUES(:message,:user_id,:reservation_id,:building_id,:room_id)',
+            [
+                ':message' => $createData['message'],
+                ':user_id' => $createData['user_id'],
+                ':reservation_id' => $createData['reservation_id'] ?? Null,
+                ':building_id' => $createData['building_id'] ?? Null,
+                ':room_id' => $createData['room_id'] ?? Null,
+            ]
+        );
+        return $this->DB->lastInsertID();
+    }
 }
