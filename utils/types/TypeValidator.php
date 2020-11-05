@@ -57,10 +57,12 @@ class TypeValidator
          * @param array $schemaParams
          * @return void
          */
-        unset($schemaParams['update'], $schemaParams['create'], $schemaParams['nullable']);
+        unset($schemaParams['update'],
+        $schemaParams['create'],
+        $schemaParams['nullable'],
+        $schemaParams['default']);
 
         // applying rules defined in schema
         foreach ($schemaParams as $rule => $value) $this->$rule($value);
-
     }
 }
