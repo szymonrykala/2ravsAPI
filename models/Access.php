@@ -17,7 +17,7 @@ final class Access extends GenericModel
             'create' => true,
             'update' => true,
             'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'rfid_action' => [
             'type' => MyBool::class,
@@ -85,12 +85,10 @@ final class Access extends GenericModel
             'update' => true,
         ],
         'created' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ],
         'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ]
     ];
 

@@ -18,14 +18,14 @@ final class Reservation extends GenericModel
             'create' => true,
             'update' => true,
             'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
-            'filter' => FILTER_SANITIZE_SPECIAL_CHARS
+            'sanitize' => FILTER_SANITIZE_SPECIAL_CHARS
         ],
         'description' => [
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'filter' => FILTER_SANITIZE_SPECIAL_CHARS,
-            'nullable' => true
+            'nullable' => true,
+            'sanitize' => FILTER_SANITIZE_SPECIAL_CHARS
         ],
         'room_id' => [
             'type' => MyInt::class,

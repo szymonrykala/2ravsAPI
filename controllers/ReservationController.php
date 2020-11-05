@@ -114,8 +114,8 @@ class ReservationController extends Controller
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $reservationData['id'],
-            'room_id' => $args['room_id'],
-            'building_id' => $args['building_id'],
+            'room_id' => (int)$args['room_id'],
+            'building_id' => (int)$args['building_id'],
             'message' => 'USER ' . $request->getAttribute('email') . ' CREATE reservation DATA ' . json_encode($reservationData)
         ]);
 

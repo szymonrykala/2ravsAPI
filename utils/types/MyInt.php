@@ -2,26 +2,24 @@
 
 namespace utils\types;
 
-class MyInt
+use utils\types\TypeValidator;
+
+final class MyInt extends TypeValidator
 {
-    public int $value;
-    private string $name;
+    public $type = 'integer';
 
-    function __construct(string $name, $int)
+    public function __construct(string $name, $value)
     {
-        $this->name = $name;
-        $this->value = $int;
+        parent::__construct($name, $value);
     }
 
-    function getValue(): int
+    public function getValue(): int
     {
-        return (int)$this->value;
+        return $this->value;
     }
 
-    function validate(): void
+    public static function parseType(int $value): int
     {
-        if (
-            !filter_var($this->value, FILTER_VALIDATE_INT)
-        ) throw new \models\HttpBadRequestException('Value `' . $this->name . '` have to be a integer type.');
+        return $value;
     }
 }

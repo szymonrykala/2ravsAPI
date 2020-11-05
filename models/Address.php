@@ -16,13 +16,15 @@ final class Address extends GenericModel
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u'
+            'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'town' => [
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u'
+            'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'postal_code' => [
             'type' => MyString::class,
@@ -34,7 +36,8 @@ final class Address extends GenericModel
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'pattern' => '/[A-z\.\-\s\p{L}]{3,}/u'
+            'pattern' => '/[A-z\.\-\s\p{L}]{3,}/u',
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'number' => [
             'type' => MyString::class,
@@ -43,12 +46,10 @@ final class Address extends GenericModel
             'pattern' => '/^\d+[A-z]?(\/\d+[A-z]?)?$/'
         ],
         'created' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ],
         'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ]
     ];
 }

@@ -28,15 +28,15 @@ class UserController extends Controller
         $this->User = $this->DIcontainer->get(User::class);
     }
 
-    private function generateToken(int $userID, int $accessID, string $email): string
+    private function generateToken(): string
     {
         //creating new token
         $tokenDecoded = new TokenDecoded(
             ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS512],
             [
-                'user_id' => $userID,
-                'access_id' => $accessID,
-                'email' => $email,
+                'user_id' => $this->User->data['user_id'],
+                'access_id' => $this->User->data['access_id'],
+                'email' => $this->User->data['email'],
                 'assigned' => time(),
                 'ip' => getHostByName(getHostName())
             ]
@@ -73,34 +73,37 @@ class UserController extends Controller
             'password' => $password
         ) = $this->getParsedData($request);
 
-        if(!isset($email,$password)) throw new HttpBadRequestException($request,'Fields `email` and `passowrd` are required');
-        
-        $this->User->setEmail($email);
+        if (!isset($email, $password)) {
+            throw new HttpBadRequestException($request, 'Fields `email` and `passowrd` are required');
+        }
 
-        try{
-            $this->User->login($password);
-        }catch(\models\HttpBadRequestException $e){
-            
+        try {
+            $this->User->login($email, $password);
+        } catch (HttpNotFoundException $e) {
+            // is user not found, User->id is not set so can't log activity
             throw $e;
-        }catch(\Throwable $e){
-            $this->Log->create(array(
-                'user_id' => $this->User->getID(),
-                'message' => 'USER ' . $email . ' NOT VERYFIED DATA '.$e->getMessage()
-            ));
+        } catch (\Throwable $e) {
+
+            $this->Log->create([
+                'user_id' => $this->User->data['id'],
+                'message' => 'USER ' . $email . ' NOT VERYFIED DATA ' . $e->getMessage()
+            ]);
             throw $e;
         }
-        
+
         $Access = $this->DIcontainer->get(Access::class);
         $data = [
-            'jwt' => $this->generateToken($this->User->getID(), $this->User->data['access_id'], $email),
-            'userID' => $this->User->getID(),
+            'jwt' => $this->generateToken(),
+            'userID' => $this->User->data['id'],
             'access' => $Access->read(['id' => $this->User->data['access_id']])
         ];
-        $this->User->update(array('login_fails' => 0));
-        $this->Log->create(array(
-            'user_id' => $this->User->getID(),
+
+        $this->User->update(['login_fails' => 0]);
+
+        $this->Log->create([
+            'user_id' => $this->User->data['id'],
             'message' => 'USER ' . $email . ' VERIFIED'
-        ));
+        ]);
 
         $response->getBody()->write(json_encode($data));
         return $response->withStatus(200);
@@ -117,7 +120,6 @@ class UserController extends Controller
          *    "surname":{"type":"string"},
          *    "email":{"type":"string"},
          *    "password":{}
-         *    "repeat_password":{}
          * }
          * 
          * @param Request $request
@@ -126,25 +128,15 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        // list(
-            // 'name' => $name,
-            // 'surname' => $surname,
-            // 'email' => $email,
-            // 'password' => $password,
-            // 'repeat_password' => $repeat_password
-        // )
-        $data = $this->getParsedData($request);
 
-        if ($data['password'] !== $data['repeat_password']) throw new HttpBadRequestException($request, 'Given fields `password` and `repeat_password` are required to have the same value');
-        unset($data['repeat_password']);
+        $data = $this->getParsedData($request);
 
         $data['access_id'] = $this->DIcontainer->get('settings')['default_params']['access'];
         $data['action_key'] = $this->getRandomKey(6);
 
-        $this->User->register($data);
-
-        $data['id'] = $this->User->create($data);
+        $data['id'] = $this->User->register($data);
         unset($data['password']);
+
         $this->Log->create(array(
             'user_id' => $data['id'],
             'message' => "USER " . $data['email'] . " CREATE user DATA " . json_encode($data)
@@ -184,16 +176,12 @@ class UserController extends Controller
             'key' => $key,
             'action' => $action
         ] = $this->getParsedData($request);
-        
-        if(
-            !isset($password,$email,$key,$action)
-        ) throw new HttpBadRequestException($request,'Fileds `password`, `email`, `key` and `action` are required');
 
-        if($key === 'NONE_NONE')throw new HttpBadRequestException($request,'Given `key` is not valid');
+        if (!isset($password, $email, $key, $action)) throw new HttpBadRequestException($request, 'Fileds `password`, `email`, `key` and `action` are required');
 
-        if (
-            !in_array($action, ['activate', 'resend', 'change_email'])
-        ) throw new HttpBadRequestException($request, 'You have to specified action to `activate`, `resend` or `change_email`');
+        if ($key === 'NONE_NONE') throw new HttpBadRequestException($request, 'Given `key` is not valid');
+
+        if (!in_array($action, ['activate', 'resend', 'change_email'])) throw new HttpBadRequestException($request, 'You have to specified action to `activate`, `resend` or `change_email`');
 
         if ($action === 'change_email') {
             $user = $this->User->read(['action_key' => $key])[0];
@@ -213,7 +201,7 @@ class UserController extends Controller
 
         $this->User->setID($user['id']);
         switch ($action) {
-            //send activation mail again
+                //send activation mail again
             case 'resend':
                 $user['action_key'] = $this->getRandomKey(6);
                 $this->User->update(['action_key' => $user['action_key']]);
@@ -334,13 +322,14 @@ class UserController extends Controller
 
         $editedUser = $this->User->read(['id' => $args['userID']])[0];
         $this->User->setID($editedUser['id']);
-        
+
         // Changing Password
         if (isset($data['old_password'], $data['new_password'])) {
             if ($data['old_password'] === $data['new_password']) {
                 throw new HttpBadRequestException($request, 'Incorrect passowrds values - old_password and new_password can not be the same');
             }
             if (password_verify($data['old_password'], $editedUser['password'])) {
+                $this->User->fieldUpdatePolicy('new_password', $data);
                 $data['password'] = password_hash($data['new_password'], PASSWORD_BCRYPT, ['cost' => 12]);
             }
             unset($data['new_password'], $data['old_password']);
@@ -354,6 +343,7 @@ class UserController extends Controller
                 throw new HttpConflictException('Given mail ' . $data['email'] . ' already exist.');
             }
             /* Just sending an action_key to user on his new email, but nod updating email */
+            $this->User->fieldUpdatePolicy('email', $data);
 
             $editedUser['action_key'] = $this->getRandomKey(6);
 
@@ -361,21 +351,20 @@ class UserController extends Controller
             $MailSender->setUser($editedUser);
             $MailSender->setMailSubject('Change email');
             $MailSender->send();
-            
+
             $this->User->update(['action_key' => $editedUser['action_key']]);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => 'User $userEmail (id=' . $editedUser['id'] . ') want to change mail - updated with data:' . json_encode($data)
+                'message' => 'USER ' . $userEmail . ' UPDATE email DATA ' . json_encode($data)
             ]);
-            $data['new_email'] = $data['email'];
             unset($data['email']);
         }
 
         if (!empty($data)) {
-            $this->User->update($data);
+            $this->User->update($data, $args['user_id']);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => 'USER ' . $userEmail . ' UPDATE user ' . $editedUser['email'] . ' DATA ' . json_encode($data)
+                'message' => 'USER ' . $userEmail . ' UPDATE USER ' . $editedUser['email'] . ' DATA ' . json_encode($data)
             ]);
         }
 

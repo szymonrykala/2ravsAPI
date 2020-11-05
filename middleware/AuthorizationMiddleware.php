@@ -15,7 +15,7 @@ checking if authenticated user have access to resources he want to perform
 
 class AuthorizationMiddleware
 {
-    private $accessTable = array();
+    private $accessTable = [];
     private $target = '';
     private $resourceNumber = null;
     private $Access = null;
@@ -84,9 +84,6 @@ class AuthorizationMiddleware
         $this->accessTable = array(
             'statistics' => array(
                 'GET' => $result['statistics_view']
-                // 'POST'=>1,
-                // 'PATCH'=>1,
-                // 'DELETE'=>1
             ),
             'reservations' => array(
                 'GET' => $result['reservations_access'],
@@ -129,8 +126,6 @@ class AuthorizationMiddleware
             ),
             'logs' => array(
                 'GET' => $result['logs_view'],
-                // 'POST' => 1,
-                // 'PATCH' => 1,
                 'DELETE' => $result['logs_edit']
             ),
             'access' => array(

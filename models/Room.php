@@ -18,14 +18,13 @@ final class Room extends GenericModel
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            // 'pattern' => '/^[\.\s0-9\wa-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/u'
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'rfid' => [
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'pattern' => '/[\w]+/u'
+            'pattern' => '/[\w]+/'
         ],
         'building_id' => [
             'type' => MyInt::class,
@@ -62,12 +61,10 @@ final class Room extends GenericModel
             'update' => true,
         ],
         'created' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ],
         'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ]
     ];
 }

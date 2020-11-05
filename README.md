@@ -364,8 +364,7 @@ By easy changing default settings for JWT authorization You can disable or enabl
     "name": "Jan",
     "surname": "Kowalski",
     "email": "jan.kowalski@exmail.com",
-    "password": "myPassS144$",
-    "repeat_password": "myPassS144$"
+    "password": "myPassS144$"
   }
   ```
 - PATCH /users/action
@@ -428,35 +427,38 @@ By easy changing default settings for JWT authorization You can disable or enabl
 
 ### #Room_types:
 
-- GET /rooms/types
+- GET /buildings/rooms/types
   > Pobieranie wszystkich typów pokoji (zgodnych z funkcją search).
-- POST /rooms/types
+- POST /buildings/rooms/types
   > Tworzenie nowego typu pokoji. Pole jest wymagane.
   ```json
   {
     "name": "laboratorium"
   }
   ```
-- PATCH /rooms/types
+- PATCH /buildings/rooms/types
   > Aktualizacja danych typu. Pole jest wymagane.
   ```json
   {
     "name": "laboratorium"
   }
   ```
-- DELETE /rooms/types
+- DELETE /buildings/rooms/types/{type_id}
   > Usunięcie typu - powiedzie się, jeśli nie ma pokoji z takim typem.
 
 ### #Rooms:
 
 - Pobieranie pokoji:
+
   > Pobieranie pokoji lub pokoju o danym `id` bez względu na budynek.
+
   - GET /rooms
   - GET /rooms/{id}
     > Pobieranie pokoji lub pokoju o danym `room_id`.
   - GET /buildings/{building_id}/rooms
   - GET /buildings/{building_id}/rooms/{id}
     > Pobieranie pokoji lub pokoju o danym `room_id` znajdującym się w danym budynku o danym `building_id`.
+
 - POST /buildings/{id}/rooms
   > Tworzenie nowego pokoju wewnątrz budynku o danym `id`. Wszystkie pola są wymagane.
   ```json
@@ -493,7 +495,6 @@ By easy changing default settings for JWT authorization You can disable or enabl
    .
    +-- \_config
    |    +-- defaults.php
-   |    +-- autoloader.php
    |    +-- bootstrap.php
    |    +-- router.php
    |    +-- container.php
@@ -529,11 +530,13 @@ By easy changing default settings for JWT authorization You can disable or enabl
    |    +-- MailSender.php
    |    +-- Database.php
    |    +-- error_handler.php
+   |    +-- autoloader.php
    |    +-- \_types
-   |    |    +-- MyArray.php 
-   |    |    +-- MyBool.php 
-   |    |    +-- MyInt.php 
-   |    |    +-- MyString.php 
+   |    |    +-- MyArray.php
+   |    |    +-- MyBool.php
+   |    |    +-- MyInt.php
+   |    |    +-- MyString.php
+   |    |    +-- TypeValidator.php
    +-- \_vendor
    |    +-- ...
    +-- .gitignore
