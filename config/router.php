@@ -21,7 +21,7 @@ use controllers\LogController;
 return function (App $app, Container $DIcontainer) {
 
     $app->get('/v1/info', function (Request $request, Response $response): Response {
-        $response->getBody()->write(require './info.json');
+        $response->getBody()->write(file_get_contents(__DIR__.'/info.json'));
         return $response->withHeader('content-type', 'application/json');
     });
 
