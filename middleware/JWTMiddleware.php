@@ -2,6 +2,7 @@
 
 namespace middleware;
 
+use Nowakowskir\JWT\Exceptions\EmptyTokenException;
 use Nowakowskir\JWT\Exceptions\TokenExpiredException;
 use Nowakowskir\JWT\Exceptions\TokenInactiveException;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -15,11 +16,8 @@ use Slim\Exception\HttpUnauthorizedException;
 class JWTMiddleware
 {
     private Request $request;
-    private int $userID;
-    private int $accessID;
-    private string $email;
-    private int $assigned;
-    private string $ip;
+    private array $JWTsettings;
+    private array $data;
 
     public function __construct(array $JWTsettings)
     {
@@ -33,17 +31,17 @@ class JWTMiddleware
 
         if (
             $this->JWTsettings['is_expire'] &&
-            ($this->assigned < (time() - $this->JWTsettings['valid_time']))
+            ($this->data['assigned'] < (time() - $this->JWTsettings['valid_time']))
         ) throw new TokenExpiredException("Token has been expired", 401);
 
         if (
-            $this->JWTsettings['ip_controll'] && $this->ip !== getHostByName(getHostName())
-        ) throw new TokenInactiveException("Token has incorrect informations.", 401);
+            $this->JWTsettings['ip_controll'] && $this->data['ip'] !== getHostByName(getHostName())
+        ) throw new TokenInactiveException("Token has invalid data", 401);
 
         $request = $this->request
-            ->withAttribute('user_id', $this->userID)
-            ->withAttribute('access_id', $this->accessID)
-            ->withAttribute('email', $this->email);
+            ->withAttribute('user_id', $this->data['user_id'])
+            ->withAttribute('access_id', $this->data['access_id'])
+            ->withAttribute('email', $this->data['email']);
 
         $response = $handler->handle($request); //handling request by API
 
@@ -56,17 +54,17 @@ class JWTMiddleware
         return $response->withStatus($code, $reason);
     }
 
-    public function recieveToken(): string
+    private function recieveToken(): string
     {
-        $authorization = $this->request->getHeader('Authorization');
-        if (empty($authorization)) {
+        $authorizationHeader = $this->request->getHeader('Authorization');
+        if (empty($authorizationHeader)) {
             throw new HttpUnauthorizedException($this->request, "No authorization header found");
         }
 
-        return explode(' ', $authorization[0])[1];
+        return explode(' ', $authorizationHeader[0])[1];
     }
 
-    public function loadData(string $token): void
+    private function loadData(string $token): void
     {
         try {
             $tokenEncoded = new TokenEncoded($token);
@@ -75,16 +73,14 @@ class JWTMiddleware
         } catch (\Exception $e) {
             throw new HttpUnauthorizedException($this->request, "JWT: " . $e->getMessage());
         }
-        if (!isset($tokenData['user_id'],
-        $tokenData['access_id'],
-        $tokenData['email'],
-        $tokenData['assigned'],
-        $tokenData['ip'])) throw new TokenInactiveException("Token has incorrect informations.", 401);
+        if (
+            !isset($tokenData['user_id'], $tokenData['access_id'], $tokenData['email'], $tokenData['assigned'], $tokenData['ip'])
+        ) throw new EmptyTokenException('Token has invalid data', 401);
 
-        $this->userID = (int)$tokenData['user_id'];
-        $this->accessID = (int)$tokenData['access_id'];
-        $this->email = (string)$tokenData['email'];
-        $this->assigned = (int)$tokenData['assigned'];
-        $this->ip = (string)$tokenData['ip'];
+        $this->data['user_id'] = (int)$tokenData['user_id'];
+        $this->data['access_id'] = (int)$tokenData['access_id'];
+        $this->data['email'] = (string)$tokenData['email'];
+        $this->data['assigned'] = (int)$tokenData['assigned'];
+        $this->data['ip'] = (string)$tokenData['ip'];
     }
 }
