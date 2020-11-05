@@ -14,49 +14,53 @@ class TypeValidator
     {
         $this->value = $value;
         $this->field = $field;
-        $this->validateType();
     }
 
-    public function validateType(): void
+    private function type(): void
     {
         if (gettype($this->value) !== $this->type) {
             throw new UnexpectedValueException('Value of `' . $this->field . '` have to be a type of ' . $this->type, 400);
         }
     }
 
+    private function sanitize($sanitizeFilter): void
+    {
+        // applying filter_validate
+        $this->value = filter_var($this->value, $sanitizeFilter);
+    }
+
+    private function pattern($regexPattern): void
+    {
+        //regex
+        if (
+            !filter_var($this->value, FILTER_VALIDATE_REGEXP, [
+                'options' => [
+                    'regexp' => $regexPattern
+                ]
+            ])
+        ) throw new UnexpectedValueException('Value `' . $this->field . '` do not match the pattern: ' . $regexPattern, 400);
+    }
+
+    private function validate($validationFilter): void
+    {
+        //aplying validation
+        if (
+            !filter_var($this->value, $validationFilter)
+        ) throw new UnexpectedValueException('Value `' . $this->field . '` do not pass applied validation:' . $validationFilter, 400);
+    }
+
     public function applyRules(array $schemaParams): void
     {
         /**
-         * check and apply rooles defined by the user
-         * rules to apply are:
-         * > pattern - regex
-         * > validate - FILTER_VALIDATE_*
-         * > sanitize - FILTER_SANITIZE_*
+         * Applying rules, where each rule have to be implemented as function, or be unsetted
          * 
          * @param array $schemaParams
          * @return void
          */
-        //regex
-        if (isset($schemaParams['pattern'])) {
-            if (
-                !filter_var($this->value, FILTER_VALIDATE_REGEXP, [
-                    'options' => [
-                        'regexp' => $schemaParams['pattern']
-                    ]
-                ])
-            ) throw new UnexpectedValueException('Value `' . $this->field . '` do not match the pattern: ' . $schemaParams['pattern'], 400);
-        }
+        unset($schemaParams['update'], $schemaParams['create'], $schemaParams['nullable']);
 
-        //aplying validation
-        if (isset($schemaParams['validate'])) {
-            if (
-                !filter_var($this->value, $schemaParams['validate'])
-            ) throw new UnexpectedValueException('Value `' . $this->field . '` do not pass applied validation:' . $schemaParams['validate'], 400);
-        }
+        // applying rules defined in schema
+        foreach ($schemaParams as $rule => $value) $this->$rule($value);
 
-        // applying filter_validate
-        if (isset($schemaParams['sanitize'])) {
-            $this->value = filter_var($this->value, $schemaParams['filter']);
-        }
     }
 }
