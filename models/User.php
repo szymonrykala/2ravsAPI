@@ -15,20 +15,21 @@ final class User extends GenericModel
         ],
         'access_id' => [
             'type' => MyInt::class,
+            'default' => 1
         ],
         'name' => [
             'type' => MyString::class,
             'create' => true,
             'update' => true,
             'pattern' => '/^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'surname' => [
             'type' => MyString::class,
             'create' => true,
             'update' => true,
             'pattern' => '/^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]{3,}$/',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'password' => [
             'type' => MyString::class,
@@ -44,7 +45,7 @@ final class User extends GenericModel
             'create' => true,
             'update' => true,
             'pattern' => '/.+{5,}/',
-            'filter' => FILTER_SANITIZE_EMAIL,
+            'sanitize' => FILTER_SANITIZE_EMAIL,
             'validate' => FILTER_VALIDATE_EMAIL
         ],
         'activated' => [
@@ -62,12 +63,10 @@ final class User extends GenericModel
             'pattern' => '/\w+/'
         ],
         'created' => [
-            'type' => MyString::class,
-            // 'pattern' => '/.+/'
+            'type' => MyString::class
         ],
         'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ]
     ];
 

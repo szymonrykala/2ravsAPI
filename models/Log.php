@@ -16,7 +16,7 @@ final class Log extends GenericModel
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'pattern' => '/.*/'
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'user_id' => [
             'type' => MyInt::class,
@@ -42,7 +42,6 @@ final class Log extends GenericModel
         ],
         'created' => [
             'type' => MyString::class,
-            'pattern' => '/.+/'
         ]
     ];
 }

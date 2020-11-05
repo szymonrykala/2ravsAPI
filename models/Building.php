@@ -20,7 +20,7 @@ final class Building extends GenericModel
             'create' => true,
             'update' => true,
             'pattern' => '/^[0-9A-z\.\-\s\p{L}]{3,}$/u',
-            'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
+            'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'rooms_count' => [
             'type' => MyInt::class
@@ -31,12 +31,10 @@ final class Building extends GenericModel
             'update' => true
         ],
         'created' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ],
         'updated' => [
-            'type' => MyString::class,
-            'pattern' => '/.+/'
+            'type' => MyString::class
         ]
     ];
 }
