@@ -105,17 +105,17 @@ final class Reservation extends GenericModel
             'SELECT COUNT(id) AS `conflict` FROM `' . $this->tableName . '` WHERE 
                `room_id`=:room_id AND
                     (
-                         `start_time` BETWEEN :start_time AND :end_time
-                         OR
-                         `end_time` BETWEEN :start_time AND :end_time
-                         OR (`start_time`<:start_time AND `end_time`>:end_time)
+                        `start_time` BETWEEN :start_time AND :end_time
+                        OR
+                        `end_time` BETWEEN :start_time AND :end_time
+                        OR (`start_time`<:start_time AND `end_time`>:end_time)
                     ) AND `date`=:date',
-            array(
+            [
                 ':start_time' => $data['start_time'],
                 ':end_time' => $data['end_time'],
                 ':room_id' => $data['room_id'],
                 ':date' => $data['date']
-            )
+            ]
         )[0];
 
         if ((int) $result['conflict'] > 0) {
@@ -124,42 +124,36 @@ final class Reservation extends GenericModel
     }
 
 
-    public function update(array $data, $id = null): void
+    public function update(array $data): void
     {
         //check time reservation - there can't be a collision
         $this->checkTimeSlot($data);
         //throws exception when time collision is occured
 
-        parent::update($data, $id ?? $this->getID());
+        parent::update($data);
     }
 
     public function create(array $data): int
     {
         //building exist?
-        $buildingExist = $this->DB->query(
-            'SELECT id FROM `buildings` WHERE `id`=:id',
-            [':id' => $data['building_id']]
-        );
-        if (empty($buildingExist)) { //if not exist
+        $Building = $this->DIContainer->get(Building::class);
+        $Room = $this->DIContainer->get(Room::class);
+
+        if (!$Building->exist(['id' => $data['building_id']])) { //if not exist
             throw new HttpNotFoundException("Specified building is not exist.");
         }
 
         //room exist in this building?
-        $room = $this->DB->query(
-            "SELECT id,blockade FROM `rooms` WHERE `id`=:room_id AND `building_id`=:building_id",
-            array(
-                ':room_id' => $data['room_id'],
-                ':building_id' => $data['building_id']
-            )
-        );
-        if (empty($room)) { //if not exist
+        $room = $Room->read(['room_id' => $data['room_id'], 'building_id' => $data['building_id']])[0];
+        if (!$room) { //if not exist
             throw new HttpNotFoundException('Specified room is not exist in given building.');
-        } else {
-            //room is bookable?
-            if ((bool)$room[0]['blockade']) {
-                throw new HttpConflictException('Specified room is not bookable. Room You want to reserve has blocked status.'); //conflict
-            }
         }
+
+        //room is bookable?
+        if ((bool)$room['blockade']) {
+            throw new HttpConflictException('Specified room is not bookable. Room You want to reserve has blocked status.'); //conflict
+        }
+
 
         //check time reservation - there can't be a collision
         $this->checkTimeSlot($data);

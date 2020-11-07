@@ -326,6 +326,7 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
+        $this->User->data = $this->User->read(['id' => $args['userID']])[0];
 
         $data = $this->getParsedData($request);
 
@@ -341,7 +342,6 @@ class UserController extends Controller
             ) throw new HttpUnauthorizedException($request, 'You do not have acces to edit user access_id');
         }
 
-        $this->User->data = $this->User->read(['id' => $args['userID']])[0];
 
         // Changing Password
         if (isset($data['old_password'], $data['new_password'])) {

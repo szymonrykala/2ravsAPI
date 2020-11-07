@@ -6,7 +6,6 @@ use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
-use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use models\Reservation;
 
@@ -67,11 +66,12 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
-        if ($reservation['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
+        if ($this->Reservation->data['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
 
-        $this->Reservation->update(['confirmed' => true], $reservation['id'],);
+        $this->Reservation->update(['confirmed' => true]);
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
@@ -102,21 +102,20 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        $data = $this->getParsedData($request);
 
-        $reservationData = array_merge($data, [
+        $data = array_merge($this->getParsedData($request), [
             'room_id' => (int)$args['room_id'],
             'building_id' => (int)$args['building_id'],
             'user_id' => $request->getAttribute('user_id')
         ]);
 
-        $reservationData['id'] = $this->Reservation->create($reservationData);
+        $data['id'] = $this->Reservation->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'reservation_id' => $reservationData['id'],
+            'reservation_id' => $data['id'],
             'room_id' => (int)$args['room_id'],
             'building_id' => (int)$args['building_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' CREATE reservation DATA ' . json_encode($reservationData)
+            'message' => 'USER ' . $request->getAttribute('email') . ' CREATE reservation DATA ' . json_encode($data)
         ]);
 
         return $response->withStatus(201, 'Created');
@@ -144,12 +143,13 @@ class ReservationController extends Controller
          * @return Response $response
          */
 
-        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
-        if ($reservation['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can not update confirmed Reservation');
+        $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+
+        if ($this->Reservation->data['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can not update confirmed Reservation');
 
         $data = $this->getParsedData($request);
 
-        $this->Reservation->update($data, $args['reservation_id']);
+        $this->Reservation->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -174,13 +174,13 @@ class ReservationController extends Controller
          * @return Response $response
          */
 
-        $reservation = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
-        $this->Reservation->delete((int) $args['reservation_id']);
+        $this->Reservation->delete();
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE reservation DATA ' . json_encode($reservation)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE reservation DATA ' . json_encode($this->Reservation->data)
         ]);
 
         return $response->withStatus(204, 'Deleted');

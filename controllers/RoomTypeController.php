@@ -62,8 +62,8 @@ class RoomTypeController extends Controller
          */
 
         $data = $this->getParsedData($request);
-
         $data['id'] = $this->Type->create($data);
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'message' => "USER " . $request->getAttribute('email') . " CREATE room_type DATA " . json_encode($data)
@@ -86,7 +86,7 @@ class RoomTypeController extends Controller
          */
         $data = $this->getParsedData($request);
 
-        $this->Type->setID($args['room_type_id']);
+        $this->Type->data = $this->Type->read(['id' => $args['room_type_id']]);
         $this->Type->update($data);
 
         $this->Log->create([
@@ -109,12 +109,12 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $type = $this->Type->read(['id' => $args['room_type_id']])[0];
+        $this->Type->data = $this->Type->read(['id' => $args['room_type_id']])[0];
+        $this->Type->delete();
 
-        $this->Type->delete((int)$args['room_type_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room_type DATA ' . json_encode($type)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room_type DATA ' . json_encode($this->Type->data)
         ]);
         return $response->withStatus(204, 'Deleted');
     }

@@ -23,7 +23,7 @@ class AccessController extends Controller
 
     // GET /access
     // GET /access/{id}
-    public function getAccessTypes(Request $request, Response $response, $args): Response
+    public function getAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Getting access types from database
@@ -48,7 +48,7 @@ class AccessController extends Controller
         return $response->withStatus(200);
     }
 
-    public function createNewAccessType(Request $request, Response $response, $args): Response
+    public function createNewAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Creating access type in database
@@ -87,7 +87,7 @@ class AccessController extends Controller
         return $response->withStatus(201, "Created");
     }
 
-    public function updateAccessType(Request $request, Response $response, $args): Response
+    public function updateAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Updating access type by given access_id
@@ -114,11 +114,12 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+        $this->Access->data = $this->Access->read(['id' => $args['access_id']])[0];
 
         $data = $this->getParsedData($request);
 
-        $this->Access->setID($args['access_id']);
         $this->Access->update($data);
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE access DATA ' . json_encode($data)
@@ -126,7 +127,7 @@ class AccessController extends Controller
         return $response->withStatus(204, "Updated");
     }
 
-    public function deleteAccessType(Request $request, Response $response, $args): Response
+    public function deleteAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Deleting access type by access_id
@@ -138,11 +139,12 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        $access = $this->Access->read(['id' => $args['access_id']])[0];
-        $this->Access->delete($args['access_id']);
+        $this->Access->data = $this->Access->read(['id' => $args['access_id']])[0];
+        $this->Access->delete();
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE access DATA ' . json_encode($access)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE access DATA ' . json_encode($this->Access->data)
         ]);
         return $response->withStatus(204, "Deleted");
     }
