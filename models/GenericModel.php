@@ -41,7 +41,7 @@ abstract class GenericModel
         $this->queryStringParams = $params;
     }
 
-    public function parseTypes(array &$readData): void
+    private function parseTypes(array &$readData): void
     {
         foreach ($readData as $key => &$value) {
             if (
@@ -54,6 +54,12 @@ abstract class GenericModel
                 $value = $this->SCHEMA[$key]['type']::parseType($value);
             }
         }
+    }
+
+    private function setData(array $readedData): void
+    {
+        foreach ($readedData as $record) $this->parseTypes($readedData);
+        $this->data = $readedData;
     }
 
     public function setSearch(string $mode = '=', array $params = []): void
@@ -210,7 +216,7 @@ abstract class GenericModel
             ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
         // ======== NORMAL READING ===========
-        $sql = 'SELECT * FROM `'.$this->tableName.'` WHERE 1=1';
+        $sql = 'SELECT * FROM `' . $this->tableName . '` WHERE 1=1';
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
 
         $sql .= $sqlData .= $searchSQL;
@@ -233,11 +239,16 @@ abstract class GenericModel
             throw new HttpNotFoundException('Nothing was found in ' . $this->tableName . ' with parameters:' . json_encode($queryParams));
         }
 
+        $this->setData($result);
+
+        // ###====== LEGACY ========##
         //parsing types
         foreach ($result as &$resource) {
             $this->parseTypes($resource);
         }
+
         return $result;
+        // ###====== LEGACY ========##
     }
 
     public function create(array $createData): int
