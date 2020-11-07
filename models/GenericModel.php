@@ -12,7 +12,6 @@ abstract class GenericModel
     protected array $searchParams;
     protected string $searchMode = '=';
 
-    public int $id;
     public array $data;
     protected array $SCHEMA;
 
@@ -41,7 +40,7 @@ abstract class GenericModel
         $this->queryStringParams = $params;
     }
 
-    public function parseTypes(array &$readData): void
+    private function parseTypes(array &$readData): void
     {
         foreach ($readData as $key => &$value) {
             if (
@@ -103,6 +102,7 @@ abstract class GenericModel
         return !empty($this->DB->query($sql, $queryParams));
     }
 
+    // LEGACY
     public function setID(int $id): void
     {
         if (!$this->exist(['id' => $id])) {
@@ -111,6 +111,7 @@ abstract class GenericModel
         $this->id = $id;
     }
 
+    // LEGACY
     public function getID(): int
     {
         return $this->id;
@@ -210,7 +211,7 @@ abstract class GenericModel
             ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
         }
         // ======== NORMAL READING ===========
-        $sql = 'SELECT * FROM `'.$this->tableName.'` WHERE 1=1';
+        $sql = 'SELECT * FROM `' . $this->tableName . '` WHERE 1=1';
         ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
 
         $sql .= $sqlData .= $searchSQL;
@@ -237,6 +238,7 @@ abstract class GenericModel
         foreach ($result as &$resource) {
             $this->parseTypes($resource);
         }
+
         return $result;
     }
 
@@ -291,7 +293,7 @@ abstract class GenericModel
 
         if (!empty($SQLqueryData)) {
             $sql .= ' WHERE `id`=:id';
-            $SQLqueryData[':id'] = $id ?? $this->id;
+            $SQLqueryData[':id'] = $id ?? $this->data['id'];
             $this->DB->query($sql, $SQLqueryData);
         }
     }
@@ -305,7 +307,7 @@ abstract class GenericModel
          */
         $this->DB->query(
             'DELETE FROM `' . $this->tableName . '` WHERE `id`=:id',
-            [':id' => $id ?? $this->id]
+            [':id' => $id ?? $this->data['id']]
         );
     }
 }
@@ -318,6 +320,7 @@ class HttpNotFoundException extends \Exception
         $this->code = $code;
     }
 }
+
 class HttpConflictException extends \Exception
 {
     public function __construct(string $message, int $code = 409)
@@ -326,6 +329,7 @@ class HttpConflictException extends \Exception
         $this->code = $code;
     }
 }
+
 class HttpBadRequestException extends \Exception
 {
     public function __construct(string $message, int $code = 400)

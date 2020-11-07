@@ -367,23 +367,22 @@ By easy changing default settings for JWT authorization You can disable or enabl
     "password": "myPassS144$"
   }
   ```
-- PATCH /users/action
-  > Akcja z użyciem kodu otrzymanego na maila. Pola `email` oraz `password` są wymagane w celach uwierzytelniania.
-  > Pole `action` może przyjmować trzy wartości:
-  - `resend` - prośba o ponowne wysłanie maila z kodem aktywacyjnym
-  - `activate` - aktywacja użytkownika
-  - `change_email` - zmiana emaila użytkownika. Pole `email` wówczas musi zawierać nowy email
+- PATCH /users/actions/{action}
+  > Akcja z użyciem kodu otrzymanego na maila. Pola `email` oraz `password` są wymagane w celach uwierzytelniania. Pole `key` przekazuje klucz otrzymany na maila i również jest wymagane.
+  > Zmienna `action` może przyjmować różne wartości:
+  - `new_key` - prośba o ponowne wysłanie maila z kodem aktywacyjnym użytkownika (zostaje wygenerowany nowy kod, stary jest już nieaktywny)
+  - `activation` - aktywacja użytkownika
+  - `email` - zmiana emaila użytkownika. Pole `email` powinno zawierać stary email użytkownika.
   ```json
   {
     "email": "my.email@exemail.com",
     "password": "myPassS144$",
     "key": "9t85v",
-    "action": "resend | activate | change_email"
   }
   ```
 - PATCH /users/{id}
   > Aktualizacja danych użytkownika. Pola `old_password` i `new_password` są wymagane tylko w przypadku, gdy użytkownik chce zmienić hasło. Aktualizacja klasy kodstępu użytkownika przez pole `access_id` jest możliwa tylko przez użytkownika mającego zezwalającą na to klasę dostępu. Reszta pól jest opcjonalna.
-  > Chcąc zmienić email, wpisujemy w pole `email` nową wartość. Na nowy adres email zostaje wysłany mail z kodem aktywacyjnym. Kod aktywacyjny potrzebny należy wykorzystać w `PATCH /users/action`
+  > Chcąc zmienić email, wpisujemy w pole `email` nową wartość. Na nowy adres email zostaje wysłany mail z kodem aktywacyjnym. Kod aktywacyjny potrzebny należy wykorzystać w `PATCH /users/actions/email`
   ```json
   {
     "name": "Jan",

@@ -25,9 +25,9 @@ return function (App $app, Container $DIcontainer) {
         return $response->withHeader('content-type', 'application/json');
     });
 
-    $app->post('/v1/auth', UserController::class . ':verifyUser'); //open endpoint
+    $app->post('/v1/auth', UserController::class . ':authUser'); //open endpoint
     $app->post('/v1/users', UserController::class . ':registerNewUser'); // open endpoint
-    $app->patch('/v1/users/action', UserController::class . ':userAction'); // open endpoint
+    $app->patch('/v1/users/actions/{action:.*[a-z]}', UserController::class . ':userAction'); // open endpoint
 
     $app->group('/v1', function (\Slim\Routing\RouteCollectorProxy $v1) {
         $v1->patch('/rfid', RoomController::class . ':rfidAction');
@@ -78,7 +78,7 @@ return function (App $app, Container $DIcontainer) {
 
             $user->group('/{userID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
                 $specUser->get('', UserController::class . ':getUsers');
-                $specUser->patch('', UserController::class . ':updateUserInformations');
+                $specUser->patch('', UserController::class . ':updateUser');
                 $specUser->delete('', UserController::class . ':deleteUser');
                 $specUser->get('/reservations', ReservationController::class . ':getReservations');
             });
