@@ -115,71 +115,66 @@ abstract class Controller
          */
         $extensions = $this->parsedQueryString($request, 'ext');
 
-        $roomMark = in_array('room_id', $extensions);
-        $buildingMark = in_array('building_id', $extensions);
-        $userMark = in_array('user_id', $extensions);
-        $reservationMark = in_array('reservation_id', $extensions);
-        $addressMark = in_array('address_id', $extensions);
-        $confirmedMark = in_array('confirming_user_id', $extensions);
-        $accessMark = in_array('access_id', $extensions);
-        $roomTypeMark = in_array('room_type_id', $extensions);
+        $arr = [
+            'room_id' => [
+                'present' => ($room_ext = in_array('room_id', $extensions)),
+                'new_name' => 'room',
+                'Object' => ($room_ext) ? $this->DIcontainer->get(Room::class) : Null,
+                'unset' => ['room_id']
+            ],
+            'building_id' => [
+                'present' => ($building_ext = in_array('building_id', $extensions)),
+                'new_name' => 'building',
+                'Object' => ($building_ext) ? $this->DIcontainer->get(Building::class) : Null,
+                'unset' => ['building_id']
+            ],
+            'user_id' => [
+                'present' => ($user_ext = in_array('user_id', $extensions)),
+                'new_name' => 'user',
+                'Object' => $user_ext ? $this->DIcontainer->get(User::class) : Null,
+                'unset' => ['user_id', 'password', 'login_fails', 'action_key']
+            ],
+            'reservation_id' => [
+                'present' => ($reservation_ext = in_array('reservation_id', $extensions)),
+                'new_name' => 'reservation',
+                'Object' => $reservation_ext ? $this->DIcontainer->get(Reservation::class) : Null,
+                'unset' => ['reservation_id']
+            ],
+            'address_id' => [
+                'present' => ($address_ext = in_array('address_id', $extensions)),
+                'new_name' => 'address',
+                'Object' => $address_ext ? $this->DIcontainer->get(Address::class) : Null,
+                'unset' => ['address_id']
+            ],
+            'confirming_user_id' => [
+                'present' => ($conf_ext = in_array('confirming_user_id', $extensions)),
+                'new_name' => 'confirming_user',
+                'Object' => $conf_ext ? $this->DIcontainer->get(User::class) : Null,
+                'unset' => ['confirming_user_id', 'password', 'login_fails', 'action_key']
+            ],
+            'room_type_id' => [
+                'present' => ($room_type_ext = in_array('room_type_id', $extensions)),
+                'new_name' => 'room_type',
+                'Object' => $room_type_ext ? $this->DIcontainer->get(RoomType::class) : Null,
+                'unset' => ['room_type_id']
+            ],
+            'access_id' => [
+                'present' => ($access_ext = in_array('access_id', $extensions)),
+                'new_name' => 'access',
+                'Object' => $access_ext ? $this->DIcontainer->get(Access::class) : Null,
+                'unset' => ['access_id']
+            ]
+        ];
 
-        if ($roomMark) $Room = $this->DIcontainer->get(Room::class);
-        if ($roomTypeMark) $RoomType = $this->DIcontainer->get(RoomType::class);
-        if ($buildingMark) $Building = $this->DIcontainer->get(Building::class);
-        if ($addressMark) $Address = $this->DIcontainer->get(Address::class);
-        if ($reservationMark) $Reservation = $this->DIcontainer->get(Reservation::class);
-        if ($userMark || $confirmedMark) $User = $this->DIcontainer->get(User::class);
-        if ($accessMark) $Access = $this->DIcontainer->get(Access::class);
+        foreach ($dataArray as &$record) {
+            foreach ($arr as $key => $params) {
+                if (!$params['present']) continue;
 
-        foreach ($dataArray as &$dataEntry) {
-            if ($roomMark && $dataEntry['room_id'] !== null) {
-                $dataEntry['room'] = $Room->read(['id' => $dataEntry['room_id']])[0];
-                unset($dataEntry['room_id']);
-            }
+                $item = $params['Object']->read(['id' => $record[$key]])[0];
 
-            if ($roomTypeMark && $dataEntry['room_type_id'] !== null) {
-                $dataEntry['room_type'] = $RoomType->read(['id' => $dataEntry['room_type_id']])[0];
-                unset($dataEntry['room_type_id']);
-            }
-
-            if ($buildingMark && $dataEntry['building_id'] !== null) {
-                $dataEntry['building'] = $Building->read(['id' => $dataEntry['building_id']])[0];
-                unset($dataEntry['building_id']);
-            }
-
-            if ($addressMark && $dataEntry['address_id'] !== null) {
-                $dataEntry['address'] = $Address->read(['id' => $dataEntry['address_id']])[0];
-                unset($dataEntry['address_id']);
-            }
-
-            if ($reservationMark && $dataEntry['reservation_id'] !== null) {
-                $dataEntry['reservation'] = $Reservation->read(['id' => $dataEntry['reservation_id']])[0];
-                unset($dataEntry['reservation_id']);
-            }
-
-            if ($userMark && $dataEntry['user_id'] !== null) {
-                $dataEntry['user'] = $User->read(['id' => $dataEntry['user_id']])[0];
-                unset($dataEntry['user_id'],
-                $dataEntry['user']['password'],
-                $dataEntry['user']['action_key'],
-                $dataEntry['user']['login_fails']);
-            }
-
-            if ($accessMark && $dataEntry['access_id'] !== null) {
-                $dataEntry['access'] = $Access->read(['id' => $dataEntry['access_id']])[0];
-                unset($dataEntry['access_id']);
-            }
-
-            if ($confirmedMark && $dataEntry['confirming_user_id'] !== 0) {
-                var_dump($dataEntry);
-                $dataEntry['confirming_user'] = $User->read(['id' => $dataEntry['confirming_user_id']])[0];
-                unset($dataEntry['confirming_user_id'],
-                $dataEntry['confirming_user']['password'],
-                $dataEntry['confirming_user']['action_key'],
-                $dataEntry['confirming_user']['login_fails']);
-            } elseif (isset($dataEntry['confirmed'])) {
-                $dataEntry['confirming_user_id'] = null;
+                foreach ($params['unset'] as $field) unset($record[$field]);
+                
+                $record[$params['new_name']] = $item;
             }
         }
         return $dataArray;
