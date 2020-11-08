@@ -23,31 +23,22 @@ class RoomController extends Controller
         $this->Room = $this->DIcontainer->get(Room::class);
     }
 
-    // PATCH /buildings/rooms/rfid
+    // PATCH /buildings/rooms/rfid/{rfid}
     public function toggleOccupied(Request $request, Response $response, $args): Response
     {
         /**
          * Toggle the state of room with rfid in "rfid"
-         * {
-         *      "rfid" : ""
-         * }
          */
-        $rfid = $this->getParsedData($request)['rfid'];
-
-        if (!isset($rfid[0])) {
-            throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
-        }
-
-        $this->Room->data = $this->Room->read(['rfid' => $rfid])[0];
+        $this->Room->data = $this->Room->read($args)[0];
 
         $this->Room->data['occupied'] = !$this->Room->data['occupied']; //toggle occupation of the room
 
-        $this->Room->update(['state' => $this->Room->data['state']]);
+        $this->Room->update(['occupied' => $this->Room->data['occupied']]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $this->Room->data['id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['state' => $this->Room->data['occupied']])
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['occupied' => $this->Room->data['occupied']])
         ]);
 
         $response->getBody()->write('Room toggled to ' . ($this->Room->data['occupied'] ? 'true' : 'false'));
@@ -89,9 +80,9 @@ class RoomController extends Controller
         /**
          * Getting room by rfid code
          */
-        $data = $this->handleExtensions($this->Room->read(['rfid' => $args['rfid']]), $request);
+        $data = $this->handleExtensions($this->Room->read($args), $request);
 
-        $response->getBody()->write(json_encode($this->Room->data));
+        $response->getBody()->write(json_encode($data));
 
         return $response->withStatus(200);
     }

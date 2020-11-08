@@ -171,11 +171,12 @@ By easy changing default settings for JWT authorization You can disable or enabl
 
 ### #RFID
 
-- PATCH /rfid
+- PATCH buildings/rooms/rfid/{rfid}
   > Przełączanie stanu zajętości pokoju o danym "rfid" w ciele wiadomości
-  ```json
-  { "rfid": "j5jbkdg98i4u59ogfdo84" }
-  ```
+
+
+- PATCH buildings/rooms/rfid/{rfid}
+  > Odczytywanie pokoju z podanym (rfid_code)
 
 ### #Logs:
 
@@ -377,7 +378,7 @@ By easy changing default settings for JWT authorization You can disable or enabl
   {
     "email": "my.email@exemail.com",
     "password": "myPassS144$",
-    "key": "9t85v",
+    "key": "9t85v"
   }
   ```
 - PATCH /users/{id}
@@ -451,8 +452,8 @@ By easy changing default settings for JWT authorization You can disable or enabl
 
   > Pobieranie pokoji lub pokoju o danym `id` bez względu na budynek.
 
-  - GET /rooms
-  - GET /rooms/{id}
+  - GET buildings/rooms
+  - GET buildings/rooms/{id}
     > Pobieranie pokoji lub pokoju o danym `room_id`.
   - GET /buildings/{building_id}/rooms
   - GET /buildings/{building_id}/rooms/{id}

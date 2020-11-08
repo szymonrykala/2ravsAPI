@@ -52,7 +52,7 @@ class ReservationController extends Controller
         return $response->withStatus(200);
     }
 
-    // PATCH reservations/{reservation_id} 
+    // PATCH reservations/{reservation_id}/confirm
     public function confirmReservation(Request $request, Response $response, $args): Response
     {
         /**
@@ -66,19 +66,20 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
+        $data = $this->getParsedData($request);
+
         $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
 
         if ($this->Reservation->data['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
 
-        $this->Reservation->update(['confirmed' => true]);
+        $this->Reservation->update(['confirmed' => $data['confirmed'], 'confirming_user_id' => $request->getAttribute('user_id')]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
             'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE reservation DATA ' . json_encode(['confirmed' => true])
         ]);
-        $response->getBody()->write("Reservation confirmed");
-        return $response;
+        return $response->withStatus(204,'Updated');
     }
 
     // POST /buildings/{building_id}/rooms/{room_id}/reservations

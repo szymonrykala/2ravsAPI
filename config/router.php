@@ -89,6 +89,10 @@ return function (App $app, Container $DIcontainer) {
 
             $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
                 $rooms->get('', RoomController::class . ':getRooms');
+
+                $rooms->patch('/rfid/{rfid:[0-9]+}', RoomController::class . ':toggleOccupied');
+                $rooms->get('/rfid/{rfid:[0-9]+}', RoomController::class . ':getRoomByRFID');
+
                 $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
                     $room->get('', RoomController::class . ':getRooms');
                     $room->patch('', RoomController::class . ':updateRoom');
@@ -110,9 +114,6 @@ return function (App $app, Container $DIcontainer) {
                 $specBuilding->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
                     $rooms->get('', RoomController::class . ':getRooms');
                     $rooms->post('', RoomController::class . ':createRoom');
-
-                    $rooms->patch('/rfid', RoomController::class . ':toggleOccupied');
-                    $rooms->get('/rfid/{rfid}', RoomController::class . ':getRoomByRFID');
 
                     $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
                         $room->get('', RoomController::class . ':getRooms');
