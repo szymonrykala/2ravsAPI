@@ -168,12 +168,12 @@ abstract class Controller
 
         foreach ($dataArray as &$record) {
             foreach ($arr as $key => $params) {
-                if (!$params['present']) continue;
+                if (!$params['present'] || !$record[$key]) continue;
 
                 $item = $params['Object']->read(['id' => $record[$key]])[0];
 
-                foreach ($params['unset'] as $field) unset($record[$field]);
-                
+                foreach ($params['unset'] as $field) unset($item[$field]);
+
                 $record[$params['new_name']] = $item;
             }
         }
