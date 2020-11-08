@@ -5,7 +5,6 @@ namespace controllers;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
-use Slim\Exception\HttpBadRequestException;
 use models\Address;
 
 class AddressController extends Controller
@@ -21,7 +20,6 @@ class AddressController extends Controller
         parent::__construct($DIcontainer);
         $this->Address = $this->DIcontainer->get(Address::class);
     }
-
 
     // GET /addresses
     // GET /addresses/{id}
@@ -73,6 +71,7 @@ class AddressController extends Controller
         $data = $this->getParsedData($request);
 
         $data['id'] = $this->Address->create($data);
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'message' => 'USER ' . $request->getAttribute('user_id') . ' CREATE address DATA ' . json_encode($data)
@@ -93,10 +92,10 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
+        $this->Address->data = $this->Address->read(['id' => 'address_id'])[0];
 
         $data = $this->getParsedData($request);
-
-        $this->Address->setID($args['address_id']);
+        
         $this->Address->update($data);
 
         $this->Log->create([
@@ -119,12 +118,12 @@ class AddressController extends Controller
          * 
          * @return Response
          */
-        $address = $this->Address->read(['id' => $args['address_id']])[0];
+        $this->Address->data = $this->Address->read(['id' => $args['address_id']])[0];
 
-        $this->Address->delete($args['address_id']);
+        $this->Address->delete();
         $this->Log->create([
             'user_id' => (int)$request->getAttribute('user_id'),
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE address DATA ' . json_encode($address)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE address DATA ' . json_encode($this->Address->data)
         ]);
         return $response->withStatus(204, "Deleted");
     }

@@ -1,5 +1,7 @@
 <?php
+
 namespace controllers;
+
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
@@ -67,14 +69,14 @@ class LogController extends Controller
             $data = $request->getParsedBody();
 
             if ($data == null || !isset($data['ids'])) {
-                throw new HttpBadRequestException($request,"No data has been passed - 'ids' param is required when 'log_id' in query string is below 0.");
+                throw new HttpBadRequestException($request, "No data has been passed - 'ids' param is required when 'log_id' in query string is below 0.");
             }
             foreach ($data['ids'] as $logID) {
-                $this->Log->setID($logID);
+                $this->Log->data['id'] = $logID;
                 $this->Log->delete();
             }
         } else {
-            $this->Log->setID($logID);
+            $this->Log->data['id'] = $logID;
             $this->Log->delete();
         }
 

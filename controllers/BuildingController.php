@@ -96,8 +96,10 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $this->Building->setID($args['building_id']);
+        $this->Building->data = $this->Building->read(['id' => $args['building_id']])[0];
+
         $data = $this->getParsedData($request);
+
         $this->Building->update($data);
 
         $this->Log->create([
@@ -121,13 +123,13 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $building = $this->Building->read(['id' => $args['building_id']])[0];
-        $this->Building->setID($args['building_id']);
+        $this->Building->data = $this->Building->read(['id' => $args['building_id']])[0];
         $this->Building->delete();
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'building_id' => $args['building_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE building DATA ' . json_encode($building)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE building DATA ' . json_encode($this->Building->data)
         ]);
 
         return $response->withStatus(204, "Deleted");

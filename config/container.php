@@ -34,7 +34,7 @@ return [
         );
     },
     JWTMiddleware::class => function (ContainerInterface $container) {
-        $JWTsettings = $container->get('settings')['jwt'];
+        $JWTsettings = $container->get('settings')['UserController']['jwt'];
         return new JWTMiddleware($JWTsettings);
     },
     JSONMiddleware::class => function (ContainerInterface $container) {

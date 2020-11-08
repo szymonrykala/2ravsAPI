@@ -106,7 +106,7 @@ abstract class GenericModel
     public function setID(int $id): void
     {
         if (!$this->exist(['id' => $id])) {
-            throw new HttpNotFoundException("$this->tableName with id=$id do not exist.");
+            throw new HttpNotFoundException($this->tableName .' with id='.$id.' do not exist.');
         }
         $this->id = $id;
     }
@@ -269,7 +269,7 @@ abstract class GenericModel
         return $this->DB->lastInsertID();
     }
 
-    public function update(array $updateData, int $id = null): void
+    public function update(array $updateData): void
     {
         /**
          * Updating item with seted Model::id by Model::setID(int $id):void
@@ -293,12 +293,12 @@ abstract class GenericModel
 
         if (!empty($SQLqueryData)) {
             $sql .= ' WHERE `id`=:id';
-            $SQLqueryData[':id'] = $id ?? $this->data['id'];
+            $SQLqueryData[':id'] = $this->data['id'];
             $this->DB->query($sql, $SQLqueryData);
         }
     }
 
-    public function delete(int $id = null): void
+    public function delete(): void
     {
         /**
          * Delete collection Item
@@ -307,7 +307,7 @@ abstract class GenericModel
          */
         $this->DB->query(
             'DELETE FROM `' . $this->tableName . '` WHERE `id`=:id',
-            [':id' => $id ?? $this->data['id']]
+            [':id' => $this->data['id']]
         );
     }
 }

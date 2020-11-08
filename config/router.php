@@ -21,7 +21,7 @@ use controllers\LogController;
 return function (App $app, Container $DIcontainer) {
 
     $app->get('/v1/info', function (Request $request, Response $response): Response {
-        $response->getBody()->write(file_get_contents(__DIR__.'/info.json'));
+        $response->getBody()->write(file_get_contents(__DIR__ . '/info.json'));
         return $response->withHeader('content-type', 'application/json');
     });
 
@@ -30,7 +30,6 @@ return function (App $app, Container $DIcontainer) {
     $app->patch('/v1/users/actions/{action:.*[a-z]}', UserController::class . ':userAction'); // open endpoint
 
     $app->group('/v1', function (\Slim\Routing\RouteCollectorProxy $v1) {
-        $v1->patch('/rfid', RoomController::class . ':rfidAction');
 
         $v1->group('/logs', function (\Slim\Routing\RouteCollectorProxy $logs) {
             $logs->get('', LogController::class . ':getLogs');
@@ -50,13 +49,13 @@ return function (App $app, Container $DIcontainer) {
         });
 
         $v1->group('/access', function (\Slim\Routing\RouteCollectorProxy $accesses) {
-            $accesses->get('', AccessController::class . ':getAccessTypes');
-            $accesses->post('', AccessController::class . ':createNewAccessType');
+            $accesses->get('', AccessController::class . ':getAccessClass');
+            $accesses->post('', AccessController::class . ':createNewAccessClass');
 
             $accesses->group('/{access_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $access) {
-                $access->get('', AccessController::class . ':getAccessTypes');
-                $access->patch('', AccessController::class . ':updateAccessType');
-                $access->delete('', AccessController::class . ':deleteAccessType');
+                $access->get('', AccessController::class . ':getAccessClass');
+                $access->patch('', AccessController::class . ':updateAccessClass');
+                $access->delete('', AccessController::class . ':deleteAccessClass');
             });
         });
 
@@ -101,7 +100,7 @@ return function (App $app, Container $DIcontainer) {
                 $rooms->patch('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':updateType');
                 $rooms->delete('/types/{room_type_id:[0-9]+}', RoomTypeController::class . ':deleteType');
             });
-            
+
             $buildings->group('/{building_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specBuilding) {
                 $specBuilding->get('', BuildingController::class . ':getBuildings');
                 $specBuilding->patch('', BuildingController::class . ':updateBuilding');
@@ -111,6 +110,9 @@ return function (App $app, Container $DIcontainer) {
                 $specBuilding->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
                     $rooms->get('', RoomController::class . ':getRooms');
                     $rooms->post('', RoomController::class . ':createRoom');
+
+                    $rooms->patch('/rfid', RoomController::class . ':toggleOccupied');
+                    $rooms->get('/rfid/{rfid}', RoomController::class . ':getRoomByRFID');
 
                     $rooms->group('/{room_id:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $room) {
                         $room->get('', RoomController::class . ':getRooms');

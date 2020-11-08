@@ -23,8 +23,8 @@ class RoomController extends Controller
         $this->Room = $this->DIcontainer->get(Room::class);
     }
 
-    // PATCH /rfid
-    public function rfidAction(Request $request, Response $response, $args): Response
+    // PATCH /buildings/rooms/rfid
+    public function toggleOccupied(Request $request, Response $response, $args): Response
     {
         /**
          * Toggle the state of room with rfid in "rfid"
@@ -33,23 +33,24 @@ class RoomController extends Controller
          * }
          */
         $rfid = $this->getParsedData($request)['rfid'];
-        $rfid = str_replace(' ', '', $rfid);
-        if (empty($rfid)) {
+
+        if (!isset($rfid[0])) {
             throw new HttpBadRequestException($request, 'Bad variable value - `rfid` can not be empty');
         }
 
-        $room = $this->Room->read(['rfid' => $rfid])[0];
+        $this->Room->data = $this->Room->read(['rfid' => $rfid])[0];
 
-        $this->Room->setID($room['id']);
-        $this->Room->update(['state' => (bool)!$room['state']]);
+        $this->Room->data['occupied'] = !$this->Room->data['occupied']; //toggle occupation of the room
+
+        $this->Room->update(['state' => $this->Room->data['state']]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $room['id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['state' => !$room['state']])
+            'room_id' => $this->Room->data['id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['state' => $this->Room->data['occupied']])
         ]);
 
-        $response->getBody()->write('toggled to ' . (!$room['state'] ? 'true' : 'false'));
+        $response->getBody()->write('Room toggled to ' . ($this->Room->data['occupied'] ? 'true' : 'false'));
         return $response->withStatus(200);
     }
 
@@ -79,6 +80,19 @@ class RoomController extends Controller
         $data = $this->handleExtensions($this->Room->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
+    }
+
+    // GET /buildings/rooms/rfid/{rfid}
+    public function getRoomByRFID(Request $request, Response $response, $args): Response
+    {
+        /**
+         * Getting room by rfid code
+         */
+        $data = $this->handleExtensions($this->Room->read(['rfid' => $args['rfid']]), $request);
+
+        $response->getBody()->write(json_encode($this->Room->data));
+
         return $response->withStatus(200);
     }
 
@@ -142,12 +156,12 @@ class RoomController extends Controller
 
         $data = $this->getParsedData($request);
 
-        $this->Room->setID($args['room_id']);
+        $this->Room->data = $this->Room->read(['id' => $args['room_id']])[0];
         $this->Room->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => (int) $args['room_id'],
+            'room_id' => $args['room_id'],
             'message' => "USER " . $request->getAttribute('email') . " UPDATE room DATA " . json_encode($data)
         ]);
 
@@ -164,14 +178,13 @@ class RoomController extends Controller
          * 
          */
 
-        $room = $this->Room->read(['id' => $args['room_id']])[0];
+        $this->Room->data = $this->Room->read(['id' => $args['room_id']])[0];
+        $this->Room->delete();
 
-        $this->Room->setID($args['room_id']);
-        $this->Room->delete($args['room_id']);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $args['room_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room DATA ' . json_encode($room)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room DATA ' . json_encode($this->Room->data)
         ]);
         return $response->withStatus(204, "Deleted");
     }
