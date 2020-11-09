@@ -19,7 +19,7 @@ class AuthorizationMiddleware
 {
     private array $accessTable;
     private string $target;
-    private int $resourceNumber;
+    private int $resourceNumber = -1;
     private Access $Access;
 
     public function __construct(\DI\Container $container)
@@ -63,8 +63,13 @@ class AuthorizationMiddleware
         $arr = explode('/', $URI);
 
         $item = array_pop($arr);
-        if (is_numeric($item))  $this->resourceNumber = $item;
-        $this->target = array_pop($arr);
+        if (is_numeric($item)) {
+            $this->resourceNumber = $item;
+            $this->target = array_pop($arr);
+        } else {
+            $this->resourceNumber = -1;
+            $this->target = $item;
+        }
     }
 
     public function fillAccessTable(Request $request): void
