@@ -8,6 +8,7 @@ use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use models\Building;
 use models\Address;
+use models\GenericModel;
 
 class BuildingController extends Controller
 {
@@ -15,12 +16,10 @@ class BuildingController extends Controller
      * Implement endpoints related with buildings paths
      * 
      */
-    protected Building $Building;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Building = $this->DIcontainer->get(Building::class);
+        $this->Model = $this->DIcontainer->get(Building::class);
     }
 
     // GET /buildings | {id}
@@ -37,16 +36,8 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Building->setSearch($mode, $params);
-
-        $this->Building->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'building_id', 'id');
-        $data = $this->handleExtensions($this->Building->read($args), $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // POST /buildings
@@ -55,11 +46,6 @@ class BuildingController extends Controller
         /**
          * Creating new Building with data from request body
          * POST /buildings
-         * {
-         *      "name":"",
-         *      "rooms_count":20,
-         *      "address_id":2
-         * }
          * 
          * @param Request $request 
          * @param Response $response 
@@ -68,7 +54,7 @@ class BuildingController extends Controller
          * @return Response 
          */
         $data = $this->getParsedData($request);
-        $data['id'] = $this->Building->create($data);
+        $data['id'] = $this->Model->create($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -84,11 +70,6 @@ class BuildingController extends Controller
         /**
          * Updating sepcific BUilding with data from request body
          * PATCH /building/{building_id}
-         * {
-         *      "name":"",
-         *      "rooms_count":20,
-         *      "address_id":2
-         * }
          * 
          * @param Request $request 
          * @param Response $response 
@@ -96,11 +77,11 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $this->Building->data = $this->Building->read(['id' => $args['building_id']])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['building_id']])[0];
 
         $data = $this->getParsedData($request);
 
-        $this->Building->update($data);
+        $this->Model->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -123,13 +104,13 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $this->Building->data = $this->Building->read(['id' => $args['building_id']])[0];
-        $this->Building->delete();
+        $this->Model->data = $this->Model->read(['id' => $args['building_id']])[0];
+        $this->Model->delete();
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'building_id' => $args['building_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE building DATA ' . json_encode($this->Building->data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE building DATA ' . json_encode($this->Model->data)
         ]);
 
         return $response->withStatus(204, "Deleted");

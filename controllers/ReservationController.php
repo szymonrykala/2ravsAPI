@@ -2,6 +2,7 @@
 
 namespace controllers;
 
+use models\GenericModel;
 use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
@@ -14,12 +15,10 @@ class ReservationController extends Controller
     /**
      * Implement endpoints related with reservations
      */
-    private Reservation $Reservation;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Reservation = $this->DIcontainer->get(Reservation::class);
+        $this->Model = $this->DIcontainer->get(Reservation::class);
     }
 
     public function getReservations(Request $request, Response $response, $args): Response
@@ -39,17 +38,9 @@ class ReservationController extends Controller
          * 
          * @return Response $response
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Reservation->setSearch($mode, $params);
-
-        $this->Reservation->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'reservation_id', 'id');
         $this->switchKey($args, 'userID', 'user_id');
-        $data = $this->handleExtensions($this->Reservation->read($args), $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // PATCH reservations/{reservation_id}/confirm
@@ -58,7 +49,6 @@ class ReservationController extends Controller
         /**
          * Confirm reservation,
          * PATCH reservations/{reservation_id}
-         * { "confirmed":true }
          * 
          * @param Request $request
          * @param Response $response
@@ -68,11 +58,11 @@ class ReservationController extends Controller
          */
         $data = $this->getParsedData($request);
 
-        $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['reservation_id']])[0];
 
-        if ($this->Reservation->data['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
+        if ($this->Model->data['confirmed']) throw new HttpConflictException('Reservation is already confirmed');
 
-        $this->Reservation->update(['confirmed' => $data['confirmed'], 'confirming_user_id' => $request->getAttribute('user_id')]);
+        $this->Model->update(['confirmed' => $data['confirmed'], 'confirming_user_id' => $request->getAttribute('user_id')]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -89,13 +79,6 @@ class ReservationController extends Controller
          * Creating new reservation
          * returning 201
          * POST /buildings/{building_id}/rooms/{room_id}/reservations
-         * {
-         *     "title":"rezerwacja v1",
-         *     "subtitle":"podtytuł rezerwacji, opis",
-         *     "start_time":"10:00",
-         *     "end_time":"11:15",
-         *     "date":"2020-08-28"
-         * }
          * 
          * @param Request $request
          * @param Response $response
@@ -110,7 +93,7 @@ class ReservationController extends Controller
             'user_id' => $request->getAttribute('user_id')
         ]);
 
-        $data['id'] = $this->Reservation->create($data);
+        $data['id'] = $this->Model->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $data['id'],
@@ -129,13 +112,6 @@ class ReservationController extends Controller
          * Updating reservation by reservation_id
          * returning 204
          * PATCH /reservations/{reservation_id}
-         * {
-         *     "title":"rezerwacja v1 update",
-         *     "subtitle":"podtytuł rezerwacji, opis",
-         *     "start_time":"10:00",
-         *     "end_time":"11:15",
-         *     "date":"2020-08-28"
-         * }
          * 
          * @param Request $request
          * @param Response $response
@@ -144,13 +120,13 @@ class ReservationController extends Controller
          * @return Response $response
          */
 
-        $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['reservation_id']])[0];
 
-        if ($this->Reservation->data['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can not update confirmed Reservation');
+        if ($this->Model->data['confirmed']) throw new HttpForbiddenException($request, 'Reservation You want to update is confirmed already. You can not update confirmed Reservation');
 
         $data = $this->getParsedData($request);
 
-        $this->Reservation->update($data);
+        $this->Model->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -175,13 +151,13 @@ class ReservationController extends Controller
          * @return Response $response
          */
 
-        $this->Reservation->data = $this->Reservation->read(['id' => $args['reservation_id']])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['reservation_id']])[0];
 
-        $this->Reservation->delete();
+        $this->Model->delete();
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'reservation_id' => $args['reservation_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE reservation DATA ' . json_encode($this->Reservation->data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE reservation DATA ' . json_encode($this->Model->data)
         ]);
 
         return $response->withStatus(204, 'Deleted');

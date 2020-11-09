@@ -13,6 +13,7 @@ use models\Reservation;
 use models\Room;
 use models\RoomType;
 use models\User;
+use models\Statistics;
 use utils\Database;
 use utils\MailSender;
 
@@ -42,6 +43,9 @@ return [
     },
     AuthorizationMiddleware::class => function (ContainerInterface $container) {
         return new AuthorizationMiddleware($container);
+    },
+    Statistics::class => function (ContainerInterface $container) {
+        return new Statistics($container->get(Database::class));
     },
     Building::class => function (ContainerInterface $container) {
         return new Building($container->get(Database::class));

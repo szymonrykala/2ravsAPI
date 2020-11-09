@@ -2,6 +2,7 @@
 
 namespace controllers;
 
+use models\GenericModel;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
@@ -14,12 +15,10 @@ class RoomTypeController extends Controller
      * Implement endpoints related with buildings/rooms/types paths
      * 
      */
-    private RoomType $Type;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Type = $this->DIcontainer->get(RoomType::class);
+        $this->Model = $this->DIcontainer->get(RoomType::class);
     }
 
     // GET /buildings/rooms/types
@@ -36,15 +35,8 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Type->setSearch($mode, $params);
-
-        $this->Type->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'room_type_id', 'id');
-        $data = $this->Type->read($args);
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // POST /buildings/rooms/types
@@ -62,7 +54,7 @@ class RoomTypeController extends Controller
          */
 
         $data = $this->getParsedData($request);
-        $data['id'] = $this->Type->create($data);
+        $data['id'] = $this->Model->create($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -86,8 +78,8 @@ class RoomTypeController extends Controller
          */
         $data = $this->getParsedData($request);
 
-        $this->Type->data = $this->Type->read(['id' => $args['room_type_id']]);
-        $this->Type->update($data);
+        $this->Model->data = $this->Model->read(['id' => $args['room_type_id']]);
+        $this->Model->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -109,12 +101,12 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $this->Type->data = $this->Type->read(['id' => $args['room_type_id']])[0];
-        $this->Type->delete();
+        $this->Model->data = $this->Model->read(['id' => $args['room_type_id']])[0];
+        $this->Model->delete();
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room_type DATA ' . json_encode($this->Type->data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room_type DATA ' . json_encode($this->Model->data)
         ]);
         return $response->withStatus(204, 'Deleted');
     }
