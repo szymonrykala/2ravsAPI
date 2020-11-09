@@ -15,6 +15,7 @@ Reservation and Visualisation System API
 2. [Responses](#Responses)
 3. [Endpoints](Endpoints)
    - [Info](#Info)
+   - [Statictics](#Statictics)
    - [RFID](#RFID)
    - [Logs](#Logs)
    - [Addresses](#Addresses)
@@ -153,6 +154,64 @@ By easy changing default settings for JWT authorization You can disable or enabl
 
 ## #Endpoints
 
+### #Statictics
+
+- GET /reservation/statistics
+- GET /users/statistics
+- GET /buildings/statistics
+- GET /buildings/rooms/statistics
+
+> Zwraca rekordy słóżące do pokazywaina statystyk rezerwacji względem użytkownika, budynku, pokoju. Rekordy grupować można wszystkimi polami dostępnymi zwracanymi w danej kolejkcji. Domyślnie zrwacane wartości grupowane są po `id` zasobu.
+> zawartość zapytania:
+
+```json
+{
+  "date": {
+    "from": "2000-01-01",
+    "to": "2020-11-30"
+  },
+  "time": {
+    "from": "01:00",
+    "to": "24:00"
+  },
+  "order": {
+    "key": "id",
+    "direction": "DESC"
+  },
+  "group": "id",
+  "limit": 12
+}
+```
+
+Warto zanotować, że zapytanie nie może być puste, inaczej zwrócony zostanie błąd.
+
+> Przykładowa odpowiedź na /buildings/rooms/statistics:
+
+````json
+{
+"items": [
+         {
+            "id": 15,
+            "name": "E101",
+            "room_type_id": 5,
+            "rfid": "12345236",
+            "floor": 1,
+            "reservations_count": 16,
+            "reserved_time": "08:16:00"
+        },
+        {
+            "id": 14,
+            "name": "E001",
+            "room_type_id": 1,
+            "rfid": "657586",
+            "floor": 0,
+            "reservations_count": 1,
+            "reserved_time": "00:45:00"
+        },
+        ...
+]
+}```
+
 ### Info
 
 - Zwraca informacje an temat wersji API oraz autora.
@@ -167,15 +226,16 @@ By easy changing default settings for JWT authorization You can disable or enabl
     "github": "https://github.com/szymonrykala"
   }
 }
-```
+````
 
 ### #RFID
 
 - PATCH buildings/rooms/rfid/{rfid}
+
   > Przełączanie stanu zajętości pokoju o danym "rfid" w ciele wiadomości
 
-
 - PATCH buildings/rooms/rfid/{rfid}
+
   > Odczytywanie pokoju z podanym (rfid_code)
 
 - PATCH buildings/rooms/rfid/{rfid_code}
