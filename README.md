@@ -178,6 +178,9 @@ By easy changing default settings for JWT authorization You can disable or enabl
 - PATCH buildings/rooms/rfid/{rfid}
   > Odczytywanie pokoju z podanym (rfid_code)
 
+- PATCH buildings/rooms/rfid/{rfid_code}
+  > Odczytywanie pokoju z podanym (rfid_code)
+
 ### #Logs:
 
 - GET /logs
