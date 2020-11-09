@@ -1,5 +1,7 @@
 <?php
+
 namespace middleware;
+
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -15,10 +17,10 @@ checking if authenticated user have access to resources he want to perform
 
 class AuthorizationMiddleware
 {
-    private $accessTable = [];
-    private $target = '';
-    private $resourceNumber = null;
-    private $Access = null;
+    private array $accessTable;
+    private string $target;
+    private int $resourceNumber;
+    private Access $Access;
 
     public function __construct(\DI\Container $container)
     {
@@ -29,14 +31,12 @@ class AuthorizationMiddleware
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
         $method = $request->getMethod();
-        $this->target = $this->getTarget($request);
+        $this->setTarget($request->getRequestTarget());
 
-        $userAccessID = $request->getAttribute("access_id");
-        $userID = $request->getAttribute("user_id");
-        ["access_id" => $currentAccessID] = $this->User->read(['id' => $userID])[0];
+        $this->User->data = $this->User->read(['id' => $request->getAttribute("user_id")])[0];
 
-        if ($userAccessID !== $currentAccessID) {
-            throw new HttpUnauthorizedException($request,"Your access has changed - please login again");
+        if ($request->getAttribute("access_id") !== $this->User->data['access_id']) {
+            throw new HttpUnauthorizedException($request, "Your access has changed - please login again");
         }
 
         $this->fillAccessTable($request);
@@ -45,30 +45,26 @@ class AuthorizationMiddleware
         if (!isset($this->accessTable[$this->target][$method])) {
             throw new HttpMethodNotAllowedException($request, "Given Method is not allowed on this resource");
         }
+
         if ($this->accessTable[$this->target][$method] === false) {
             throw new HttpForbiddenException($request, "You don't have access to perform this action on given resource");
         }
 
         $response = $handler->handle($request); //handling request by API
-        $existingContent = (string) $response->getBody();
-        $code = $response->getStatusCode();
-        $reason = $response->getReasonPhrase();
 
-        $response = new Response();
-        $response->getBody()->write($existingContent);
-        return $response->withStatus($code, $reason);
+        $newResponse = new Response();
+        $newResponse->getBody()->write((string)$response->getBody());
+        return $newResponse->withStatus($response->getStatusCode(), $response->getReasonPhrase());
     }
 
-    public function getTarget(Request $request): string
+    public function setTarget(string $URL): void
     {
-        $uri = explode('?', $request->getRequestTarget())[0];
-        $path = explode('/', $uri);
-        $len = count($path) - 1;
-        if (is_numeric($path[$len])) {
-            $this->resourceNumber = array_pop($path);
-        }
-        $resource =  array_pop($path);
-        return $resource;
+        [$URI, $queryString] = explode('?', $URL);
+        $arr = explode('/', $URI);
+
+        $item = array_pop($arr);
+        if (is_numeric($item))  $this->resourceNumber = $item;
+        $this->target = array_pop($arr);
     }
 
     public function fillAccessTable(Request $request): void
@@ -78,7 +74,7 @@ class AuthorizationMiddleware
 
         $sameUser = false;
         if ($this->target === 'users') {
-            $sameUser = ((int) $this->resourceNumber === (int) $userID);
+            $sameUser = ($this->resourceNumber === $userID);
         }
 
         $this->accessTable = array(
@@ -134,8 +130,9 @@ class AuthorizationMiddleware
                 'PATCH' => $result['access_edit'],
                 'DELETE' => $result['access_edit']
             ),
-            'rfid' =>[
-                'PATCH' => $result['rfid_action']
+            'rfid' => [
+                'GET' => $result['rfid_action'],
+                'PATCH' => $result['rfid_action'],
             ]
         );
     }
