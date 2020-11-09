@@ -13,12 +13,10 @@ class AddressController extends Controller
      * Implement endpoints related with saddresses paths
      * 
      */
-    private Address $Address;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Address = $this->DIcontainer->get(Address::class);
+        $this->Model = $this->DIcontainer->get(Address::class);
     }
 
     // GET /addresses
@@ -35,16 +33,9 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Address->setSearch($mode, $params);
-
-        $this->Address->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'address_id', 'id');
-        $data = $this->Address->read($args);
 
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // POST /addresses
@@ -53,13 +44,6 @@ class AddressController extends Controller
         /**
          * Creating new Address from request body data
          * POST /addresses
-         * {
-         *      "country":"",
-         *      "town":"",
-         *      "postal_code":"",
-         *      "street":"",
-         *      "number":""
-         * } 
          * 
          * @param Request $request 
          * @param Response $response 
@@ -70,7 +54,7 @@ class AddressController extends Controller
 
         $data = $this->getParsedData($request);
 
-        $data['id'] = $this->Address->create($data);
+        $data['id'] = $this->Model->create($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -92,11 +76,11 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        $this->Address->data = $this->Address->read(['id' => 'address_id'])[0];
+        $this->Model->data = $this->Model->read(['id' => 'address_id'])[0];
 
         $data = $this->getParsedData($request);
         
-        $this->Address->update($data);
+        $this->Model->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -118,12 +102,12 @@ class AddressController extends Controller
          * 
          * @return Response
          */
-        $this->Address->data = $this->Address->read(['id' => $args['address_id']])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['address_id']])[0];
 
-        $this->Address->delete();
+        $this->Model->delete();
         $this->Log->create([
             'user_id' => (int)$request->getAttribute('user_id'),
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE address DATA ' . json_encode($this->Address->data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE address DATA ' . json_encode($this->Model->data)
         ]);
         return $response->withStatus(204, "Deleted");
     }

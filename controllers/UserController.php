@@ -12,18 +12,18 @@ use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpUnauthorizedException;
 use models\Access;
+use models\GenericModel;
 use models\User;
 use utils\MailSender;
 
 class UserController extends Controller
 {
-    private User $User;
     private array $config;
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->User = $this->DIcontainer->get(User::class);
+        $this->Model = $this->DIcontainer->get(User::class);
         $this->config = $this->DIcontainer->get('settings')['UserController'];
     }
 
@@ -33,9 +33,9 @@ class UserController extends Controller
         $tokenDecoded = new TokenDecoded(
             ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS512],
             [
-                'user_id' => $this->User->data['user_id'],
-                'access_id' => $this->User->data['access_id'],
-                'email' => $this->User->data['email'],
+                'user_id' => $this->Model->data['user_id'],
+                'access_id' => $this->Model->data['access_id'],
+                'email' => $this->Model->data['email'],
                 'assigned' => time(),
                 'ip' => getHostByName(getHostName())
             ]
@@ -57,25 +57,25 @@ class UserController extends Controller
          * 
          * @param string $email new email
          */
-        if ($this->User->exist(['email'])) {
-            throw new HttpConflictException('Given mail ' . $this->User->data['email'] . ' already exist.');
+        if ($this->Model->exist(['email'])) {
+            throw new HttpConflictException('Given mail ' . $this->Model->data['email'] . ' already exist.');
         }
 
         // mail will be send on new email
-        $this->User->data['email'] = $email;
+        $this->Model->data['email'] = $email;
 
         // this code will be delivered to user
-        $this->User->data['action_key'] = $this->getRandomKey(6);
+        $this->Model->data['action_key'] = $this->getRandomKey(6);
 
-        $this->User->fieldUpdatePolicy('email', $this->User->data);
+        $this->Model->fieldUpdatePolicy('email', $this->Model->data);
 
         $MailSender = $this->DIcontainer->get(MailSender::class);
-        $MailSender->setUser($this->User->data);
+        $MailSender->setUser($this->Model->data);
         $MailSender->setMailSubject('Change email');
         $MailSender->send();
 
         // action key is for ex.: szymon1256@somemail.com::skufhi
-        $this->User->update(['action_key' => $email . '::' . $this->User->data['action_key']]);
+        $this->Model->update(['action_key' => $email . '::' . $this->Model->data['action_key']]);
     }
 
     public function finishEmailChange(string $userKey): void
@@ -83,14 +83,14 @@ class UserController extends Controller
         /**
          * Change email when $userKey is correct
          */
-        [$newEmail, $key] = explode('::', $this->User->data['action_key']);
+        [$newEmail, $key] = explode('::', $this->Model->data['action_key']);
 
         if ($key !== $userKey) {
             throw new \models\HttpBadRequestException('Given key `' . $userKey . '` is not valid');
         }
 
-        $this->User->data['email'] = $newEmail;
-        $this->User->update(['action_key' => Null, 'email' => $newEmail], $this->User->data['id']);
+        $this->Model->data['email'] = $newEmail;
+        $this->Model->update(['action_key' => Null, 'email' => $newEmail], $this->Model->data['id']);
     }
 
     // POST /auth
@@ -120,19 +120,19 @@ class UserController extends Controller
         }
 
         try {
-            $this->User->login($email, $password);
+            $this->Model->login($email, $password);
 
             //check is user activated
-            if ($this->User->data['activated'] === false) {
+            if ($this->Model->data['activated'] === false) {
                 throw new HttpConflictException("Can not authenticate because user is not activated");
             };
         } catch (HttpNotFoundException $e) {
-            // is user not found, User->id is not set so can't log activity
+            // is user not found, Model->id is not set so can't log activity
             throw $e;
         } catch (\Throwable $e) {
 
             $this->Log->create([
-                'user_id' => $this->User->data['id'],
+                'user_id' => $this->Model->data['id'],
                 'message' => 'USER ' . $email . ' NOT VERIFIED DATA ' . $e->getMessage()
             ]);
             throw $e;
@@ -141,12 +141,12 @@ class UserController extends Controller
         $Access = $this->DIcontainer->get(Access::class);
         $data = [
             'jwt' => $this->generateToken(),
-            'userID' => $this->User->data['id'],
-            'access' => $Access->read(['id' => $this->User->data['access_id']])
+            'user_id' => $this->Model->data['id'],
+            'access' => $Access->read(['id' => $this->Model->data['access_id']])
         ];
 
         $this->Log->create([
-            'user_id' => $this->User->data['id'],
+            'user_id' => $this->Model->data['id'],
             'message' => 'USER ' . $email . ' VERIFIED'
         ]);
 
@@ -179,7 +179,7 @@ class UserController extends Controller
         $data['access_id'] = $this->DIcontainer->get('settings')['default_params']['access'];
         $data['action_key'] = $this->getRandomKey(6);
 
-        $data['id'] = $this->User->register($data);
+        $data['id'] = $this->Model->register($data);
         unset($data['password']);
 
         $this->Log->create(array(
@@ -221,33 +221,33 @@ class UserController extends Controller
             throw new HttpBadRequestException($request, 'Fileds `password`, `email`and `key` are required');
         }
 
-        $this->User->login((string)$data['email'], (string)$data['password']);
+        $this->Model->login((string)$data['email'], (string)$data['password']);
         $this->Log->create([
             'message' => 'USER ' . $data['email'] . ' VERIFIED IN actions DATA ' . json_encode(['action' => $args['action']]),
-            'user_id' => $this->User->data['id']
+            'user_id' => $this->Model->data['id']
         ]);
 
         switch ($args['action']) {
             case 'activation':
 
-                $this->User->activate((string)$data['key']);
+                $this->Model->activate((string)$data['key']);
                 $this->Log->create([
-                    'user_id' => $this->User->data['id'],
+                    'user_id' => $this->Model->data['id'],
                     'message' => 'USER ' . $data['email'] . ' ACTIVATED DATA ' . json_encode(['activated' => true])
                 ]);
                 break;
 
             case 'new_key':
-                $this->User->setActionKey($this->getRandomKey(6));
+                $this->Model->setActionKey($this->getRandomKey(6));
 
                 $MailSender = $this->DIcontainer->get(MailSender::class);
-                $MailSender->setUser($this->User->data);
+                $MailSender->setUser($this->Model->data);
                 $MailSender->setMailSubject('User Activation');
                 $MailSender->send();
 
                 $this->Log->create([
-                    'message' => 'USER ' . $data['email'] . ' UPDATE action_key DATA ' . json_encode(['action_key' => $this->User->data['action_key']]),
-                    'user_id' => $this->User->data['id']
+                    'message' => 'USER ' . $data['email'] . ' UPDATE action_key DATA ' . json_encode(['action_key' => $this->Model->data['action_key']]),
+                    'user_id' => $this->Model->data['id']
                 ]);
                 break;
 
@@ -257,15 +257,15 @@ class UserController extends Controller
                 //started in UserController::updateUser()
 
                 $this->Log->create([
-                    'message' => 'USER ' . $data['email'] . ' UPDATE email DATA ' . json_encode(array_merge($data, ['new_email' => $this->User->data['email']])),
-                    'user_id' => $this->User->data['id']
+                    'message' => 'USER ' . $data['email'] . ' UPDATE email DATA ' . json_encode(array_merge($data, ['new_email' => $this->Model->data['email']])),
+                    'user_id' => $this->Model->data['id']
                 ]);
                 break;
 
             default:
                 $this->Log->create([
                     'message' => 'USER ' . $data['email'] . ' PERFORMED BAD ACTION DATA' . $args['action'],
-                    'user_id' => $this->User->data['id']
+                    'user_id' => $this->Model->data['id']
                 ]);
                 throw new HttpBadRequestException($request, 'Requested action `' . $args['action'] . '` is not allowed. Allowed actions: `activation`, `new_key`, `email`');
                 break;
@@ -291,18 +291,8 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->User->setSearch($mode, $params);
-
-        $this->User->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'userID', 'id');
-        $data = $this->handleExtensions($this->User->read($args), $request);
-
-        foreach ($data as &$user) unset($user['password'], $user['action_key']);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // PATCH /users/{user_id}
@@ -311,14 +301,6 @@ class UserController extends Controller
         /**
          * Updating user informations by user_id
          * PATCH /users/{user_id}
-         * {
-         *    "name":{string},
-         *    "surname":{string},
-         *    "email":{string}
-         *    "old_password":{string},
-         *    "new_password":{string},
-         *    "access_id":{integer}
-         * } 
          * 
          * @param Request $request
          * @param Response $response
@@ -326,7 +308,7 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $this->User->data = $this->User->read(['id' => $args['userID']])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['userID']])[0];
 
         $data = $this->getParsedData($request);
 
@@ -346,7 +328,7 @@ class UserController extends Controller
         // Changing Password
         if (isset($data['old_password'], $data['new_password'])) {
 
-            $this->User->changePassword($data['old_password'], $data['new_password']);
+            $this->Model->changePassword($data['old_password'], $data['new_password']);
 
             $this->Log->create([
                 'user_id' => $currentUser,
@@ -368,10 +350,10 @@ class UserController extends Controller
         }
 
         if (!empty($data)) {
-            $this->User->update($data, $args['user_id']);
+            $this->Model->update($data, $args['user_id']);
             $this->Log->create([
                 'user_id' => $currentUser,
-                'message' => 'USER ' . $userEmail . ' UPDATE USER ' . $this->User->data['email'] . ' DATA ' . json_encode($data)
+                'message' => 'USER ' . $userEmail . ' UPDATE USER ' . $this->Model->data['email'] . ' DATA ' . json_encode($data)
             ]);
         }
 
@@ -391,13 +373,13 @@ class UserController extends Controller
          * 
          * @return Response $response
          */
-        $this->User->data = $this->User->read(['id' => $args['userID']])[0];
-        unset($this->User->data['password']);
+        $this->Model->data = $this->Model->read(['id' => $args['userID']])[0];
+        unset($this->Model->data['password']);
 
-        $this->User->delete((int) $args['userID']);
+        $this->Model->delete((int) $args['userID']);
         $this->Log->create([
             'user_id' => $args['userID'],
-            "message" => 'USER ' . $request->getAttribute('email') . ' DELETE user DATA ' . json_encode($this->User->data)
+            "message" => 'USER ' . $request->getAttribute('email') . ' DELETE user DATA ' . json_encode($this->Model->data)
         ]);
 
         return $response->withStatus(204, "Deleted");

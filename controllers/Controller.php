@@ -2,8 +2,8 @@
 
 namespace controllers;
 
-use Invoker\Exception\NotEnoughParametersException;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 
 use Psr\Container\ContainerInterface;
 use Slim\Exception\HttpBadRequestException;
@@ -15,10 +15,16 @@ use models\Building;
 use models\User;
 use models\Access;
 use models\Address;
+use models\Statistics;
+use models\GenericModel;
 
 abstract class Controller
 {
     protected ContainerInterface $DIcontainer;
+    protected GenericModel $Model;
+    protected Log $Log;
+
+    protected $CACHE = [];
 
     public function __construct(ContainerInterface $DIcontainer)
     {
@@ -75,7 +81,6 @@ abstract class Controller
          * Getting Search params from request body['search']['mode'] and body['search']['params'] array if it exist
          * 
          * @param Request $request
-         * 
          * @return array $queryParams
          */
         $searchParams = $request->getParsedBody();
@@ -101,6 +106,38 @@ abstract class Controller
         }
     }
 
+    protected function get(Request $request, Response $response, $args): Response
+    {
+        /**
+         *  Getting the resources in depends on 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
+        if (isset($params) && isset($mode))  $this->Model->setSearch($mode, $params);
+
+        $this->Model->setQueryStringParams($this->parsedQueryString($request));
+
+        $data = $this->handleExtensions($this->Model->read($args), $request);
+        $response->getBody()->write(json_encode($data));
+        return $response->withStatus(200);
+    }
+
+    public function getStatistics(Request $request, Response $response): Response
+    {
+        $Statistics = $this->DIcontainer->get(Statistics::class);
+        $data = $this->getParsedData($request);
+        $data['table'] = $this->Model->getTableName();
+
+        $Statistics->loadChartData($data);
+
+        $response->getBody()->write(json_encode($Statistics->getChartData()));
+        return $response;
+    }
+
     // ?ext=user_id,building_id,room_id...
     protected function handleExtensions(array $dataArray, Request $request): array
     {
@@ -117,64 +154,64 @@ abstract class Controller
 
         $arr = [
             'room_id' => [
-                'present' => ($room_ext = in_array('room_id', $extensions)),
                 'new_name' => 'room',
-                'Object' => ($room_ext) ? $this->DIcontainer->get(Room::class) : Null,
-                'unset' => ['room_id']
+                'Object' => in_array('room_id', $extensions) ? $this->DIcontainer->get(Room::class) : Null,
+                'unset' => []
             ],
             'building_id' => [
-                'present' => ($building_ext = in_array('building_id', $extensions)),
                 'new_name' => 'building',
-                'Object' => ($building_ext) ? $this->DIcontainer->get(Building::class) : Null,
-                'unset' => ['building_id']
+                'Object' => in_array('building_id', $extensions) ? $this->DIcontainer->get(Building::class) : Null,
+                'unset' => []
             ],
             'user_id' => [
-                'present' => ($user_ext = in_array('user_id', $extensions)),
                 'new_name' => 'user',
-                'Object' => $user_ext ? $this->DIcontainer->get(User::class) : Null,
+                'Object' => in_array('user_id', $extensions) ? $this->DIcontainer->get(User::class) : Null,
                 'unset' => ['user_id', 'password', 'login_fails', 'action_key']
             ],
             'reservation_id' => [
-                'present' => ($reservation_ext = in_array('reservation_id', $extensions)),
                 'new_name' => 'reservation',
-                'Object' => $reservation_ext ? $this->DIcontainer->get(Reservation::class) : Null,
-                'unset' => ['reservation_id']
+                'Object' => in_array('reservation_id', $extensions) ? $this->DIcontainer->get(Reservation::class) : Null,
+                'unset' => []
             ],
             'address_id' => [
-                'present' => ($address_ext = in_array('address_id', $extensions)),
                 'new_name' => 'address',
-                'Object' => $address_ext ? $this->DIcontainer->get(Address::class) : Null,
-                'unset' => ['address_id']
+                'Object' => in_array('address_id', $extensions) ? $this->DIcontainer->get(Address::class) : Null,
+                'unset' => []
             ],
             'confirming_user_id' => [
-                'present' => ($conf_ext = in_array('confirming_user_id', $extensions)),
                 'new_name' => 'confirming_user',
-                'Object' => $conf_ext ? $this->DIcontainer->get(User::class) : Null,
+                'Object' => in_array('confirming_user_id', $extensions) ? $this->DIcontainer->get(User::class) : Null,
                 'unset' => ['confirming_user_id', 'password', 'login_fails', 'action_key']
             ],
             'room_type_id' => [
-                'present' => ($room_type_ext = in_array('room_type_id', $extensions)),
                 'new_name' => 'room_type',
-                'Object' => $room_type_ext ? $this->DIcontainer->get(RoomType::class) : Null,
-                'unset' => ['room_type_id']
+                'Object' => in_array('room_type_id', $extensions) ? $this->DIcontainer->get(RoomType::class) : Null,
+                'unset' => []
             ],
             'access_id' => [
-                'present' => ($access_ext = in_array('access_id', $extensions)),
                 'new_name' => 'access',
-                'Object' => $access_ext ? $this->DIcontainer->get(Access::class) : Null,
-                'unset' => ['access_id']
+                'Object' => in_array('access_id', $extensions) ? $this->DIcontainer->get(Access::class) : Null,
+                'unset' => []
             ]
         ];
 
+        $CACHERead = function ($Object, $key) {
+            $cacheKey = $Object->getTableName() . implode($key);
+
+            if (isset($this->CACHE[$cacheKey])) return $this->CACHE[$cacheKey];
+            $data = $Object->read($key)[0];
+            $this->CACHE[$cacheKey] = $data;
+            return $data;
+        };
+
         foreach ($dataArray as &$record) {
-            foreach ($arr as $key => $params) {
-                if (!$params['present'] || !$record[$key]) continue;
-
-                $item = $params['Object']->read(['id' => $record[$key]])[0];
-
-                foreach ($params['unset'] as $field) unset($item[$field]);
-
-                $record[$params['new_name']] = $item;
+            foreach ($extensions as $ext) {
+                if (isset($record[$ext])) {
+                    $item = $CACHERead($arr[$ext]['Object'], ['id' => $record[$ext]]);
+                    foreach ($arr[$ext]['unset'] as $field) unset($item[$field]);
+                    $record[$arr[$ext]['new_name']] = $item;
+                    unset($record[$ext]);
+                }
             }
         }
         return $dataArray;

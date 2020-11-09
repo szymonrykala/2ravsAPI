@@ -2,6 +2,7 @@
 
 namespace controllers;
 
+use models\GenericModel;
 use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
 use Slim\Psr7\Response;
@@ -15,12 +16,10 @@ class RoomController extends Controller
     /**
      * Responsible for operation with /rooms table in database
      */
-    private Room $Room;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Room = $this->DIcontainer->get(Room::class);
+        $this->Model = $this->DIcontainer->get(Room::class);
     }
 
     // PATCH /buildings/rooms/rfid/{rfid}
@@ -29,19 +28,19 @@ class RoomController extends Controller
         /**
          * Toggle the state of room with rfid in "rfid"
          */
-        $this->Room->data = $this->Room->read($args)[0];
+        $this->Model->data = $this->Model->read($args)[0];
 
-        $this->Room->data['occupied'] = !$this->Room->data['occupied']; //toggle occupation of the room
+        $this->Model->data['occupied'] = !$this->Model->data['occupied']; //toggle occupation of the room
 
-        $this->Room->update(['occupied' => $this->Room->data['occupied']]);
+        $this->Model->update(['occupied' => $this->Model->data['occupied']]);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'room_id' => $this->Room->data['id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['occupied' => $this->Room->data['occupied']])
+            'room_id' => $this->Model->data['id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room DATA ' . json_encode(['occupied' => $this->Model->data['occupied']])
         ]);
 
-        $response->getBody()->write('Room toggled to ' . ($this->Room->data['occupied'] ? 'true' : 'false'));
+        $response->getBody()->write('Room toggled to ' . ($this->Model->data['occupied'] ? 'true' : 'false'));
         return $response->withStatus(200);
     }
 
@@ -62,16 +61,8 @@ class RoomController extends Controller
          * 
          * @return Response 
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Room->setSearch($mode, $params);
-
-        $this->Room->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'room_id', 'id');
-        $data = $this->handleExtensions($this->Room->read($args), $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // GET /buildings/rooms/rfid/{rfid}
@@ -80,7 +71,7 @@ class RoomController extends Controller
         /**
          * Getting room by rfid code
          */
-        $data = $this->handleExtensions($this->Room->read($args), $request);
+        $data = $this->handleExtensions($this->Model->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
 
@@ -94,14 +85,6 @@ class RoomController extends Controller
          * creating room in specified building
          * returning 201
          * POST /buildings/{building_id}/rooms
-         * {
-         *      "name":"",
-         *      "rfid":"sdafgw435tgwtr",
-         *      "room_type_id":1,
-         *      "seats_count":1,
-         *      "floor":1,
-         *      "equipment":"umywalka,kreda,tablica"
-         * }
          * @param Request $request 
          * @param Response $response
          * @param array $args
@@ -113,7 +96,7 @@ class RoomController extends Controller
         $data['blockade'] = $this->DIcontainer->get('settings')['default_params']['room_blockade'];
 
         $data['building_id'] = (int) $args['building_id'];
-        $lastIndex = $this->Room->create($data);
+        $lastIndex = $this->Model->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'building_id' => $args['building_id'],
@@ -130,14 +113,6 @@ class RoomController extends Controller
          * creating room in specified building
          * returning 204
          * PATCH /buildings/{building_id}/rooms/{room_id}
-         * {
-         *      "name":"",
-         *      "room_type_id":1,
-         *      "seats_count":1,
-         *      "floor":1,
-         *      "equipment":"umywalka,kreda,tablica",
-         *      "blockade":true
-         * }
          * @param Request $request 
          * @param Response $response
          * @param array $args
@@ -147,8 +122,8 @@ class RoomController extends Controller
 
         $data = $this->getParsedData($request);
 
-        $this->Room->data = $this->Room->read(['id' => $args['room_id']])[0];
-        $this->Room->update($data);
+        $this->Model->data = $this->Model->read(['id' => $args['room_id']])[0];
+        $this->Model->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -169,13 +144,13 @@ class RoomController extends Controller
          * 
          */
 
-        $this->Room->data = $this->Room->read(['id' => $args['room_id']])[0];
-        $this->Room->delete();
+        $this->Model->data = $this->Model->read(['id' => $args['room_id']])[0];
+        $this->Model->delete();
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
             'room_id' => $args['room_id'],
-            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room DATA ' . json_encode($this->Room->data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room DATA ' . json_encode($this->Model->data)
         ]);
         return $response->withStatus(204, "Deleted");
     }

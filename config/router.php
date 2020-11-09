@@ -61,6 +61,7 @@ return function (App $app, Container $DIcontainer) {
 
         $v1->group('/reservations', function (\Slim\Routing\RouteCollectorProxy $reservations) {
             $reservations->get('', ReservationController::class . ':getReservations');
+            $reservations->get('/statistics', ReservationController::class . ':getStatistics');
 
             $reservations->delete('/{reservation_id:.*[0-9]+}', ReservationController::class . ':deleteReservationsByID');
 
@@ -74,6 +75,7 @@ return function (App $app, Container $DIcontainer) {
         $v1->group('/users', function (\Slim\Routing\RouteCollectorProxy $user) {
 
             $user->get('', UserController::class . ':getUsers');
+            $user->get('/statistics', UserController::class . ':getStatistics');
 
             $user->group('/{userID:[0-9]+}', function (\Slim\Routing\RouteCollectorProxy $specUser) {
                 $specUser->get('', UserController::class . ':getUsers');
@@ -85,10 +87,13 @@ return function (App $app, Container $DIcontainer) {
 
         $v1->group('/buildings', function (\Slim\Routing\RouteCollectorProxy $buildings) {
             $buildings->get('', BuildingController::class . ':getBuildings');
+            $buildings->get('/statistics', BuildingController::class . ':getStatistics');
+
             $buildings->post('', BuildingController::class . ':createBuilding');
 
             $buildings->group('/rooms', function (\Slim\Routing\RouteCollectorProxy $rooms) {
                 $rooms->get('', RoomController::class . ':getRooms');
+                $rooms->get('/statistics', RoomController::class . ':getStatistics');
 
                 $rooms->patch('/rfid/{rfid:[0-9]+}', RoomController::class . ':toggleOccupied');
                 $rooms->get('/rfid/{rfid:[0-9]+}', RoomController::class . ':getRoomByRFID');

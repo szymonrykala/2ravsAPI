@@ -3,6 +3,7 @@
 namespace models;
 
 use utils\DBInterface;
+use models\ModelInterface;
 
 abstract class GenericModel
 {
@@ -19,6 +20,11 @@ abstract class GenericModel
     {
         $this->DB = $DBInterface;
         $this->DB->connect();
+    }
+
+    public function getTableName(): string
+    {
+        return $this->tableName;
     }
 
     public function setQueryStringParams(array $params): void
@@ -40,7 +46,7 @@ abstract class GenericModel
         $this->queryStringParams = $params;
     }
 
-    private function parseTypes(array &$readData): void
+    public function parseTypes(array &$readData): void
     {
         foreach ($readData as $key => &$value) {
             if (
@@ -102,20 +108,6 @@ abstract class GenericModel
         return !empty($this->DB->query($sql, $queryParams));
     }
 
-    // LEGACY
-    public function setID(int $id): void
-    {
-        if (!$this->exist(['id' => $id])) {
-            throw new HttpNotFoundException($this->tableName .' with id='.$id.' do not exist.');
-        }
-        $this->id = $id;
-    }
-
-    // LEGACY
-    public function getID(): int
-    {
-        return $this->id;
-    }
 
     public function fieldUpdatePolicy(string $field, array &$updateData): bool
     {
