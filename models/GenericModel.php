@@ -3,23 +3,20 @@
 namespace models;
 
 use utils\DBInterface;
-use models\ModelInterface;
+use utils\ModelRead;
 
 abstract class GenericModel
 {
     protected DBInterface $DB;
     protected string $tableName;
-    protected array $queryStringParams = [];
-    protected array $searchParams;
-    protected string $searchMode = '=';
-
-    public array $data;
     protected array $SCHEMA;
+    public array $data;
 
     public function __construct(DBInterface $DBInterface)
     {
         $this->DB = $DBInterface;
         $this->DB->connect();
+        $this->Reader = new ModelRead($this);
     }
 
     public function getTableName(): string
@@ -27,23 +24,9 @@ abstract class GenericModel
         return $this->tableName;
     }
 
-    public function setQueryStringParams(array $params): void
+    public function getSchema(): array
     {
-        /**
-         * Set $queryStringParams to make avaliabe
-         * sorting, limits and paging of read results from database
-         *
-         * @param array $params
-         * @return void
-         */
-        // checking right format of variables
-        if (isset($params['limit'])     && !is_numeric($params['limit']))                           unset($params['limit']);
-        if (isset($params['on_page'])   && !is_numeric($params['on_page']))                         unset($params['on_page']);
-        if (isset($params['page'])      && ($params['page'] < 0 || !is_numeric($params['page'])))   unset($params['page']);
-        if (isset($params['sort_key'])  && !in_array($params['sort_key'], array_keys($this->SCHEMA)))          unset($params['sort_key']);
-        if (isset($params['sort'])      && !in_array(strtoupper($params['sort']), ['DESC', 'ASC'])) unset($params['sort']);
-
-        $this->queryStringParams = $params;
+        return $this->SCHEMA;
     }
 
     public function parseTypes(array &$readData): void
@@ -61,38 +44,6 @@ abstract class GenericModel
         }
     }
 
-    public function setSearch(string $mode = '=', array $params = []): void
-    {
-        $regex = strtoupper($mode) === 'REGEXP' ? '/[\w\s%-:\.\*\|\{\}\[\]\(\)\?\+\\\,]*/' : '/[\w\s:%-]*/';
-
-        foreach ($params as $key => &$value) {
-            if (!in_array($key, $this->columns)) unset($params[$key]);
-
-            preg_match($regex, $value, $output_array);
-            $value = $output_array[0];
-        }
-        $this->searchMode = $mode;
-        $this->searchParams = $params;
-    }
-
-    private function buildDataString(array $params, string $connector = null): array
-    {
-        /**
-         * Building data array and SQL string to PDO
-         *
-         * @param array $params - array data
-         * @param string $connector=null - LIKE, =, <, >, REGEXP
-         */
-        if (!isset($connector)) $connector = $this->searchMode; // by default: '='
-        $queryParams = [];
-        $sql = '';
-        foreach ($params as $key => $value) {
-            $sql .= " AND `$this->tableName`.`$key` $connector :$key";
-            $queryParams[":$key"] = $value;
-        }
-        return ['sql' => $sql, 'params' => $queryParams];
-    }
-
     public function exist(array $params): bool
     {
         /**
@@ -102,10 +53,16 @@ abstract class GenericModel
          * @return bool
          */
         $sql = 'SELECT id FROM ' . $this->tableName . ' WHERE 1=1 ';
-        ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, "=");
-        $sql .= $sqlData;
+        $queryParams = [];
+        $sqlParams = [];
 
-        return !empty($this->DB->query($sql, $queryParams));
+        foreach ($params as $param => $value) {
+            $sqlParams[':' . $param] = $value;
+            array_push($queryParams, $param . '=:' . $param);
+        }
+        $sql .= join(' AND ', $queryParams);
+
+        return !empty($this->DB->query($sql, $sqlParams));
     }
 
 
@@ -181,7 +138,6 @@ abstract class GenericModel
         return true;
     }
 
-
     public function read(array $params = []): array
     {
         /**
@@ -192,38 +148,12 @@ abstract class GenericModel
          * @throws HttpNotFoundException when nothing found
          * @return array $result
          */
-        foreach ($params as $key => $value) {
-            if (!isset($this->SCHEMA[$key])) unset($params[$key]);
-        }
 
-        // =========MENAGE SEARCHING=========
-        $searchSQL = '';
-        $searchParams = [];
-        if (!empty($this->searchParams)) {
-            ['sql' => $searchSQL, 'params' => $searchParams] = $this->buildDataString($this->searchParams);
-        }
-        // ======== NORMAL READING ===========
-        $sql = 'SELECT * FROM `' . $this->tableName . '` WHERE 1=1';
-        ['sql' => $sqlData, 'params' => $queryParams] = $this->buildDataString($params, '=');
-
-        $sql .= $sqlData .= $searchSQL;
-        $queryParams = array_merge($searchParams, $queryParams);
-
-        // =======PARSING SORTING, PAGING AND LIMIT=======
-        extract($this->queryStringParams); //extracting variables
-
-        if (isset($sort_key, $sort))   $sql .= ' ORDER BY ' . $sort_key . ' ' . $sort;
-        elseif (isset($sort_key))               $sql .= ' ORDER BY ' . $sort_key;
-        elseif (isset($sort))                   $sql .= ' ORDER BY id ' . $sort;
-
-
-        if (isset($page, $on_page)) $sql .= ' LIMIT ' . ((int)$page * (int)$on_page) . ', ' . (int)$on_page;
-        elseif (isset($limit))      $sql .= ' LIMIT ' . (int)$limit;
-        // =======================================================
-
-        $result = $this->DB->query($sql, $queryParams);
+        [$sql, $sqlParams] = $this->Reader->getSQL($params);
+        $result = $this->DB->query($sql, $sqlParams);
         if (empty($result)) {
-            throw new HttpNotFoundException('Nothing was found in ' . $this->tableName . ' with parameters:' . json_encode($queryParams));
+            throw new HttpNotFoundException('Nothing was found in ' . $this->tableName . ' with parameters:' .
+                json_encode(array_merge($params, $this->Reader->getConfigs())));
         }
 
         //parsing types

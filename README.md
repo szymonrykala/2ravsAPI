@@ -100,20 +100,22 @@ Jak widać, powyższy wynik ma pola `building_id` oraz `room_type_id`. Mogą one
 
 ### #Search
 
-Wszędzie gdzie używana jest metoda `GET`, możliwe jest zastosowanie trybu wyszukiwania. Zostaje on aktywowany, gdy w ciele wiadomości w formacie JSON umieścimy następującą strukturę:
+Przy pobieraniu listy zasobów, możliwe jest zastosowanie trybu wyszukiwania. Zostaje on aktywowany, gdy w query string zostaje ustawiona zmienna `mode=search`. Wówczas wymagana jest zawartość wiadomości w pokazana poniżej. 
 
 ```json
 {
-  "search": {
-    "mode": "< | > | = | LIKE | REGEXP",
-    "params": {
-      "key": "value"
-    }
+  "fieldName1": {
+    "mode": "LIKE", //'LIKE' by default if is not set
+    "value": "%001%"
+  },
+  "fieldName2": {
+    "mode": "REGEXP",
+    "value": "B[0-9]+"
   }
-}
+  ...
 ```
 
-Zarówno pole "mode" jak i "params" są wymagane. Dostępne tryby wyszukiwania ("mode") to:
+Dostępne tryby wyszukiwania ("mode") to:
 
 - `<` - mniejsze od podanej wartości
 - `>` - większe od podanej wartości
@@ -190,25 +192,25 @@ Warto zanotować, że zapytanie nie może być puste, inaczej zwrócony zostanie
 ````json
 {
 "items": [
-         {
-            "id": 15,
-            "name": "E101",
-            "room_type_id": 5,
-            "rfid": "12345236",
-            "floor": 1,
-            "reservations_count": 16,
-            "reserved_time": "08:16:00"
-        },
-        {
-            "id": 14,
-            "name": "E001",
-            "room_type_id": 1,
-            "rfid": "657586",
-            "floor": 0,
-            "reservations_count": 1,
-            "reserved_time": "00:45:00"
-        },
-        ...
+     {
+        "id": 15,
+        "name": "E101",
+        "room_type_id": 5,
+        "rfid": "12345236",
+        "floor": 1,
+        "reservations_count": 16,
+        "reserved_time": "08:16:00"
+    },
+    {
+        "id": 14,
+        "name": "E001",
+        "room_type_id": 1,
+        "rfid": "657586",
+        "floor": 0,
+        "reservations_count": 1,
+        "reserved_time": "00:45:00"
+    },
+    ...
 ]
 }```
 
@@ -589,11 +591,12 @@ Warto zanotować, że zapytanie nie może być puste, inaczej zwrócony zostanie
    +-- \_public
    |    +-- index.php
    +-- \_utils
+   |    +-- error_handler.php
+   |    +-- autoloader.php
    |    +-- DBInterface.php
    |    +-- MailSender.php
    |    +-- Database.php
-   |    +-- error_handler.php
-   |    +-- autoloader.php
+   |    +-- ModelRead.php
    |    +-- \_types
    |    |    +-- MyArray.php
    |    |    +-- MyBool.php
