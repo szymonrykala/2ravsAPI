@@ -1,9 +1,13 @@
 <?php
+
 namespace controllers;
+
+use models\GenericModel;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\RequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
+use models\Log;
 
 class LogController extends Controller
 {
@@ -11,12 +15,10 @@ class LogController extends Controller
      * Implement endpoints related with logs routs
      * 
      */
-    public $Log = null;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Log = $this->DIcontainer->get('Log');
+        $this->Model = $this->DIcontainer->get(Log::class);
     }
 
     // GET /logs
@@ -33,16 +35,8 @@ class LogController extends Controller
          * 
          * @return Response 
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Log->setSearch($mode, $params);
-
-        $this->Log->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'log_id', 'id');
-        $data = $this->handleExtensions($this->Log->read($args), $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // DELETE /logs/{log_id}
@@ -65,14 +59,16 @@ class LogController extends Controller
         if ($logID < 0) {
             $data = $request->getParsedBody();
 
-            if ($data == null || !isset($data['IDs'])) {
-                throw new HttpBadRequestException($request,"No data has been passed - 'IDs' param is required when 'log_id' in query string is below 0.");
+            if ($data == null || !isset($data['ids'])) {
+                throw new HttpBadRequestException($request, "No data has been passed - 'ids' param is required when 'log_id' in query string is below 0.");
             }
-            foreach ($data['IDs'] as $logID) {
-                $this->Log->delete($logID);
+            foreach ($data['ids'] as $logID) {
+                $this->Model->data['id'] = $logID;
+                $this->Model->delete();
             }
         } else {
-            $this->Log->delete($logID);
+            $this->Model->data['id'] = $logID;
+            $this->Model->delete();
         }
 
         return $response->withStatus(204, "Deleted");

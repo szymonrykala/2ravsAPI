@@ -1,10 +1,14 @@
 <?php
-namespace controllers;
-use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpBadRequestException;
 
+namespace controllers;
+
+use Psr\Container\ContainerInterface;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
+use Slim\Exception\HttpBadRequestException;
+use models\Building;
+use models\Address;
+use models\GenericModel;
 
 class BuildingController extends Controller
 {
@@ -12,28 +16,10 @@ class BuildingController extends Controller
      * Implement endpoints related with buildings paths
      * 
      */
-    protected $Building;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Building = $this->DIcontainer->get('Building');
-    }
-
-    public function validateBuilding(Request $request, array &$data): void
-    {
-        /**
-         * Validate Building
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-        if (isset($data['name'])) {
-            if (!$Validator->validateClearString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect building name value; pattern: ' . $Validator->clearString);
-            }
-        }
+        $this->Model = $this->DIcontainer->get(Building::class);
     }
 
     // GET /buildings | {id}
@@ -50,16 +36,8 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Building->setSearch($mode, $params);
-
-        $this->Building->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'building_id', 'id');
-        $data = $this->handleExtensions($this->Building->read($args), $request);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // POST /buildings
@@ -68,11 +46,6 @@ class BuildingController extends Controller
         /**
          * Creating new Building with data from request body
          * POST /buildings
-         * {
-         *      "name":"",
-         *      "rooms_count":20,
-         *      "address_id":2
-         * }
          * 
          * @param Request $request 
          * @param Response $response 
@@ -80,28 +53,13 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
+        $data = $this->getParsedData($request);
+        $data['id'] = $this->Model->create($data);
 
-        $data = $this->getFrom(
-            $request,
-            ['name' => 'string', 'address_id' => 'integer'],
-            true
-        );
-
-        $this->validateBuilding($request, $data);
-
-        $Address = $this->DIcontainer->get("Address");
-        if (!$Address->exist(['id' => $data['address_id']])) {
-            throw new HttpBadRequestException($request, "Address with id=" . $data['address_id'] . " do not exist. You cannot create building with data:" . json_encode($data));
-        }
-
-        $userMail = $request->getAttribute('email');
-        $userID = $request->getAttribute('user_id');
-
-        $lastIndex = $this->Building->create($data);
         $this->Log->create([
-            'user_id' => $userID,
-            'building_id' => $lastIndex,
-            'message' => "User $userMail created Building id=$lastIndex; data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'building_id' => $data['id'],
+            'message' => "USER " . $request->getAttribute('email') . " CREATE building DATA " . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -112,11 +70,6 @@ class BuildingController extends Controller
         /**
          * Updating sepcific BUilding with data from request body
          * PATCH /building/{building_id}
-         * {
-         *      "name":"",
-         *      "rooms_count":20,
-         *      "address_id":2
-         * }
          * 
          * @param Request $request 
          * @param Response $response 
@@ -124,26 +77,16 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
+        $this->Model->data = $this->Model->read(['id' => $args['building_id']])[0];
 
-        $data = $this->getFrom(
-            $request,
-            ['name' => 'string', 'rooms_count' => 'integer', 'address_id' => 'integer'],
-            false
-        );
+        $data = $this->getParsedData($request);
 
-        $this->validateBuilding($request, $data);
-
-        $userMail = $request->getAttribute('email');
-        $userID = $request->getAttribute('user_id');
-        $buildingID = (int)$args['building_id'];
-
-
-        $this->Building->update($buildingID, $data);
+        $this->Model->update($data);
 
         $this->Log->create([
-            'user_id' => $userID,
-            'building_id' => $buildingID,
-            'message' => "user $userMail updated Building id=$buildingID data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'building_id' => $args['building_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE building DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -161,15 +104,13 @@ class BuildingController extends Controller
          * 
          * @return Response 
          */
-        $userMail = $request->getAttribute('email');
-        $userID = $request->getAttribute('user_id');
-        $buildingID = (int)$args['building_id'];
+        $this->Model->data = $this->Model->read(['id' => $args['building_id']])[0];
+        $this->Model->delete();
 
-        $this->Building->delete((int)$args['building_id']);
         $this->Log->create([
-            'user_id' => $userID,
-            'building_id' => $buildingID,
-            'message' => "User $userMail deleted Building id=$buildingID"
+            'user_id' => $request->getAttribute('user_id'),
+            'building_id' => $args['building_id'],
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE building DATA ' . json_encode($this->Model->data)
         ]);
 
         return $response->withStatus(204, "Deleted");

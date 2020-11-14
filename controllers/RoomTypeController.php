@@ -1,10 +1,13 @@
 <?php
-namespace controllers;
-use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Exception\HttpBadRequestException;
 
+namespace controllers;
+
+use models\GenericModel;
+use Psr\Container\ContainerInterface;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
+use Slim\Exception\HttpBadRequestException;
+use models\RoomType;
 
 class RoomTypeController extends Controller
 {
@@ -12,30 +15,10 @@ class RoomTypeController extends Controller
      * Implement endpoints related with buildings/rooms/types paths
      * 
      */
-    private $Type = null;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Type = $this->DIcontainer->get('RoomType');
-    }
-
-    public function validateRoomType(Request $request, array &$data): void
-    {
-        /**
-         * Validate Room type
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-        foreach (['name'] as $item) {
-            if (isset($data[$item])) {
-                if (!$Validator->validateClearString($data[$item])) {
-                    throw new HttpBadRequestException($request, 'Incorrect room type' . $item . ' value; pattern: ' . $Validator->clearString);
-                }
-            }
-        }
+        $this->Model = $this->DIcontainer->get(RoomType::class);
     }
 
     // GET /buildings/rooms/types
@@ -52,15 +35,8 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Type->setSearch($mode, $params);
-
-        $this->Type->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'room_type_id', 'id');
-        $data = $this->Type->read($args);
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
     // POST /buildings/rooms/types
@@ -77,14 +53,12 @@ class RoomTypeController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, ["name" => "string"], true);
+        $data = $this->getParsedData($request);
+        $data['id'] = $this->Model->create($data);
 
-        $this->validateRoomType($request, $data);
-
-        $lastIndex = $this->Type->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " created new room type id=$lastIndex; data:" . json_encode($data)
+            'message' => "USER " . $request->getAttribute('email') . " CREATE room_type DATA " . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
@@ -102,17 +76,14 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $typeID = (int)$args['room_type_id'];
+        $data = $this->getParsedData($request);
 
-        $data = $this->getFrom($request, ["name" => "string"], false);
-
-        $this->validateRoomType($request, $data);
-
-        $this->Type->update($typeID, $data);
+        $this->Model->data = $this->Model->read(['id' => $args['room_type_id']]);
+        $this->Model->update($data);
 
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID . " data:" . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE room_type DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
@@ -130,12 +101,13 @@ class RoomTypeController extends Controller
          * 
          * @return Response $response
          */
-        $typeID = (int)$args['room_type_id'];
-        $this->Type->delete($typeID);
+        $this->Model->data = $this->Model->read(['id' => $args['room_type_id']])[0];
+        $this->Model->delete();
+
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => "User " . $request->getAttribute('email') . " updated room type id=" . $typeID
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE room_type DATA ' . json_encode($this->Model->data)
         ]);
-        return $response->withStatus(204, "Deleted");
+        return $response->withStatus(204, 'Deleted');
     }
 }

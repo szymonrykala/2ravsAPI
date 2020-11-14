@@ -1,23 +1,40 @@
 <?php
+
 namespace controllers;
 
-use Invoker\Exception\NotEnoughParametersException;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use DI\NotFoundException;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 
 use Psr\Container\ContainerInterface;
 use Slim\Exception\HttpBadRequestException;
+use models\Log;
+use models\Room;
+use models\RoomType;
+use models\Reservation;
+use models\Building;
+use models\User;
+use models\Access;
+use models\Address;
+use models\Statistics;
+use models\GenericModel;
 
 abstract class Controller
 {
-    protected $DIcontainer = null;
+    protected ContainerInterface $DIcontainer;
+    protected GenericModel $Model;
+    protected Log $Log;
+    protected array $queryString;
+
+    protected $CACHE = [];
 
     public function __construct(ContainerInterface $DIcontainer)
     {
         $this->DIcontainer = $DIcontainer;
-        $this->Log = $this->DIcontainer->get("Log");
+        $this->Log = $this->DIcontainer->get(Log::class);
     }
 
-    protected function parsedQueryString(Request $request, string $queryKey = null): array
+    protected function parseQueryString(Request $request): void
     {
         /**
          * parsing query string to get parameters into assoc array
@@ -37,54 +54,24 @@ abstract class Controller
                 continue;
             }
             // filtering variables keys
-            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key', 'action_key']))  continue;
+            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key', 'action_key', 'mode']))  continue;
 
-            //filtering variables values
-            preg_match('/[a-z0-9_,]*/', $regexOut[2][$num], $output_array);
-            $result[$key] = $output_array[0];
+            $result[$key] = $regexOut[2][$num];
+            // //filtering variables values
+            // preg_match('/[a-z0-9_,]*/', $regexOut[2][$num], $output_array);
+            // $result[$key] = $output_array[0];
         }
 
-        if (isset($queryKey)) {
-            if (!isset($result[$queryKey])) return [];
-            return $result[$queryKey];
-        }
-        return $result;
+        $this->queryString = $result;
     }
 
-    protected function getFrom(Request $request, array $parameters, bool $required = false): array
+    protected function getParsedData(Request $request): array
     {
-        /**
-         * Getting data defined in $parameters with given type
-         * 
-         * @param Request $request
-         * @param array $parameters param => type, ...
-         * 
-         * @return array $data - requested parameters with requested type
-         */
         $data = $request->getParsedBody();
         if (empty($data) || $data === NULL) {
-            throw new \models\HttpBadRequestException("Request body is empty or is not in right format", 400);
+            throw new HttpBadRequestException($request, "Request body is empty or is not in right format");
         }
-
-        //skipping unnessesry values
-        $outputData = [];
-        foreach ($data as $key => $value) {
-            if (!in_array($key, array_keys($parameters))) continue;
-            if (gettype($value) !== $parameters[$key]) {
-                throw new HttpBadRequestException($request, "Bad variable type passed. Variable '$key' need to be a type of " . $parameters[$key]);
-            }
-
-            $outputData[$key] = $value;
-        }
-        if ($required) {
-            //checking required parameters
-            foreach ($parameters as $param => $type) {
-                if (!isset($outputData[$param])) {
-                    throw new NotEnoughParametersException("Parameter '$param' with typeof '$type' is required to perform this action", 400);
-                }
-            }
-        }
-        return $outputData;
+        return $data;
     }
 
     protected function getSearchParams(Request $request): array
@@ -93,22 +80,21 @@ abstract class Controller
          * Getting Search params from request body['search']['mode'] and body['search']['params'] array if it exist
          * 
          * @param Request $request
-         * 
          * @return array $queryParams
          */
-        $searchParams = $request->getParsedBody();
-        if (isset($searchParams['search']) && $searchParams['search'] !== null) {
-            extract($searchParams['search']);
-            if (!isset($mode) || !isset($params)) {
-                throw new HttpBadRequestException($request, "When search is enabled fields 'mode' and 'params' in search are required. Pattern:search:{mode:'REGEXP', params:{field:val, field2:val2}}");
+        $searchParams = $this->getParsedData($request);
+        $params = [];
+        foreach ($searchParams as $param => ['mode' => $mode, 'value' => $value]) {
+            if (isset($mode) && !in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
+                throw new HttpBadRequestException($request, 'In search mode, avaliable options are: REGEXP, LIKE, =, <, >');
             }
 
-            if (!in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
-                throw new HttpBadRequestException($request, 'In search, avaliable options are: REGEXP, LIKE, =, <, >');
-            }
-            return ['params' => $params, 'mode' => $mode];
+            $params[$param] = [
+                'mode' => $mode ?? 'LIKE',
+                'value' => $value
+            ];
         }
-        return ['params' => null, 'mode' => null];
+        return $params;
     }
 
     protected function switchKey(array &$array, string $oldKey, string $newKey): void
@@ -117,6 +103,55 @@ abstract class Controller
             $array[$newKey] = $array[$oldKey];
             unset($array[$oldKey]);
         }
+    }
+
+    protected function get(Request $request, Response $response, $args): Response
+    {
+        /**
+         *  Getting the resources in depends on 
+         * @param Request $request 
+         * @param Response $response 
+         * @param $args
+         * 
+         * @return Response 
+         */
+        $this->parseQueryString($request);
+
+        $this->Model->Reader->setConfigs([
+            'sort_key' => $this->queryString['sort_key'],
+            'sort' => $this->queryString['sort'],
+            'on_page' => $this->queryString['on_page'],
+            'page' => $this->queryString['page'],
+            'limit' => $this->queryString['limit'],
+        ]);
+
+        //  URI?mode=search -> wyszukiwanie
+        if ($this->queryString['mode'] === 'search') {
+            // zmiana silnika w This->Model->reader->switchToSearch
+            $this->Model->Reader->switchToSearch();
+            try{
+                $args = $this->getSearchParams($request);
+            }catch(HttpBadRequestException $e){
+                throw new HttpBadRequestException($request, 'When `mode`=`search`, request body have to be provided in specific format. '.$e->getMessage());
+            }
+        }
+
+        $data = $this->Model->read($args);
+
+        $response->getBody()->write(json_encode($this->handleExtensions($data, $request)));
+        return $response->withStatus(200);
+    }
+
+    public function getStatistics(Request $request, Response $response): Response
+    {
+        $Statistics = $this->DIcontainer->get(Statistics::class);
+        $data = $this->getParsedData($request);
+        $data['table'] = $this->Model->getTableName();
+
+        $Statistics->loadChartData($data);
+
+        $response->getBody()->write(json_encode($Statistics->getChartData()));
+        return $response;
     }
 
     // ?ext=user_id,building_id,room_id...
@@ -131,73 +166,70 @@ abstract class Controller
          * 
          * @return array $dataArray 
          */
-        $extensions = $this->parsedQueryString($request, 'ext');
+        $this->parseQueryString($request);
+        $extensions = $this->queryString['ext'];
+        if (empty($extensions)) return $dataArray;
 
-        $roomMark = in_array('room_id', $extensions);
-        $buildingMark = in_array('building_id', $extensions);
-        $userMark = in_array('user_id', $extensions);
-        $reservationMark = in_array('reservation_id', $extensions);
-        $addressMark = in_array('address_id', $extensions);
-        $confirmedMark = in_array('confirming_user_id', $extensions);
-        $accessMark = in_array('access_id', $extensions);
-        $roomTypeMark = in_array('room_type_id', $extensions);
+        $arr = [
+            'room_id' => [
+                'new_name' => 'room',
+                'Object' => in_array('room_id', $extensions) ? $this->DIcontainer->get(Room::class) : Null,
+                'unset' => []
+            ],
+            'building_id' => [
+                'new_name' => 'building',
+                'Object' => in_array('building_id', $extensions) ? $this->DIcontainer->get(Building::class) : Null,
+                'unset' => []
+            ],
+            'user_id' => [
+                'new_name' => 'user',
+                'Object' => in_array('user_id', $extensions) ? $this->DIcontainer->get(User::class) : Null,
+                'unset' => ['user_id', 'password', 'login_fails', 'action_key']
+            ],
+            'reservation_id' => [
+                'new_name' => 'reservation',
+                'Object' => in_array('reservation_id', $extensions) ? $this->DIcontainer->get(Reservation::class) : Null,
+                'unset' => []
+            ],
+            'address_id' => [
+                'new_name' => 'address',
+                'Object' => in_array('address_id', $extensions) ? $this->DIcontainer->get(Address::class) : Null,
+                'unset' => []
+            ],
+            'confirming_user_id' => [
+                'new_name' => 'confirming_user',
+                'Object' => in_array('confirming_user_id', $extensions) ? $this->DIcontainer->get(User::class) : Null,
+                'unset' => ['confirming_user_id', 'password', 'login_fails', 'action_key']
+            ],
+            'room_type_id' => [
+                'new_name' => 'room_type',
+                'Object' => in_array('room_type_id', $extensions) ? $this->DIcontainer->get(RoomType::class) : Null,
+                'unset' => []
+            ],
+            'access_id' => [
+                'new_name' => 'access',
+                'Object' => in_array('access_id', $extensions) ? $this->DIcontainer->get(Access::class) : Null,
+                'unset' => []
+            ]
+        ];
 
-        if ($roomMark) $Room = $this->DIcontainer->get('Room');
-        if ($roomTypeMark) $RoomType = $this->DIcontainer->get('RoomType');
-        if ($buildingMark) $Building = $this->DIcontainer->get('Building');
-        if ($addressMark) $Address = $this->DIcontainer->get('Address');
-        if ($reservationMark) $Reservation = $this->DIcontainer->get('Reservation');
-        if ($userMark || $confirmedMark) $User = $this->DIcontainer->get('User');
-        if ($accessMark) $Access = $this->DIcontainer->get('Access');
+        $CACHERead = function ($Object, $key) {
+            $cacheKey = $Object->getTableName() . implode($key);
 
-        foreach ($dataArray as &$dataEntry) {
-            if ($roomMark && $dataEntry['room_id'] !== null) {
-                $dataEntry['room'] = $Room->read(['id' => $dataEntry['room_id']])[0];
-                unset($dataEntry['room_id']);
-            }
+            if (isset($this->CACHE[$cacheKey])) return $this->CACHE[$cacheKey];
+            $data = $Object->read($key)[0];
+            $this->CACHE[$cacheKey] = $data;
+            return $data;
+        };
 
-            if ($roomTypeMark && $dataEntry['room_type_id'] !== null) {
-                $dataEntry['room_type'] = $RoomType->read(['id' => $dataEntry['room_type_id']])[0];
-                unset($dataEntry['room_type_id']);
-            }
-
-            if ($buildingMark && $dataEntry['building_id'] !== null) {
-                $dataEntry['building'] = $Building->read(['id' => $dataEntry['building_id']])[0];
-                unset($dataEntry['building_id']);
-            }
-
-            if ($addressMark && $dataEntry['address_id'] !== null) {
-                $dataEntry['address'] = $Address->read(['id' => $dataEntry['address_id']])[0];
-                unset($dataEntry['address_id']);
-            }
-
-            if ($reservationMark && $dataEntry['reservation_id'] !== null) {
-                $dataEntry['reservation'] = $Reservation->read(['id' => $dataEntry['reservation_id']])[0];
-                unset($dataEntry['reservation_id']);
-            }
-
-            if ($userMark && $dataEntry['user_id'] !== null) {
-                $dataEntry['user'] = $User->read(['id' => $dataEntry['user_id']])[0];
-                unset($dataEntry['user_id'],
-                $dataEntry['user']['password'],
-                $dataEntry['user']['action_key'],
-                $dataEntry['user']['login_fails']);
-            }
-
-            if ($accessMark && $dataEntry['access_id'] !== null) {
-                $dataEntry['access'] = $Access->read(['id' => $dataEntry['access_id']])[0];
-                unset($dataEntry['access_id']);
-            }
-
-            if ($confirmedMark && $dataEntry['confirming_user_id'] !== 0) {
-                var_dump($dataEntry);
-                $dataEntry['confirming_user'] = $User->read(['id' => $dataEntry['confirming_user_id']])[0];
-                unset($dataEntry['confirming_user_id'],
-                $dataEntry['confirming_user']['password'],
-                $dataEntry['confirming_user']['action_key'],
-                $dataEntry['confirming_user']['login_fails']);
-            } elseif (isset($dataEntry['confirmed'])) {
-                $dataEntry['confirming_user_id'] = null;
+        foreach ($dataArray as &$record) {
+            foreach ($extensions as $ext) {
+                if (isset($record[$ext])) {
+                    $item = $CACHERead($arr[$ext]['Object'], ['id' => $record[$ext]]);
+                    foreach ($arr[$ext]['unset'] as $field) unset($item[$field]);
+                    $record[$arr[$ext]['new_name']] = $item;
+                    unset($record[$ext]);
+                }
             }
         }
         return $dataArray;

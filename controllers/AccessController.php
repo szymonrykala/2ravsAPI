@@ -1,43 +1,27 @@
 <?php
+
 namespace controllers;
 
-use App\Models\HttpConflictException;
+use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request;
 use Slim\Exception\HttpBadRequestException;
+use models\Access;
+use models\User;
 
 
 class AccessController extends Controller
 {
-    private $Access;
-
     public function __construct(ContainerInterface $DIcontainer)
     {
         parent::__construct($DIcontainer);
-        $this->Access = $DIcontainer->get('Access');
-    }
-
-    public function validateAccess(Request $request, array &$data): void
-    {
-        /**
-         * Validate Access
-         * 
-         * @param array $data
-         * @throws HttpBadRequestException
-         */
-        $Validator = $this->DIcontainer->get('Validator');
-        if (isset($data['name'])) {
-            if (!$Validator->validateString($data['name'])) {
-                throw new HttpBadRequestException($request, 'Incorrect access name format; pattern: '.$Validator->clearString);
-            }
-            $data['name'] = $Validator->sanitizeString($data['name']);
-        }
+        $this->Model = $DIcontainer->get(Access::class);
     }
 
     // GET /access
     // GET /access/{id}
-    public function getAccessTypes(Request $request, Response $response, $args): Response
+    public function getAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Getting access types from database
@@ -50,39 +34,15 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Access->setSearch($mode, $params);
-
-        $this->Access->setQueryStringParams($this->parsedQueryString($request));
-
         $this->switchKey($args, 'access_id', 'id');
-        $data = $this->Access->read($args);
-
-        $response->getBody()->write(json_encode($data));
-        return $response->withStatus(200);
+        return parent::get($request,$response,$args);
     }
 
-    public function createNewAccessType(Request $request, Response $response, $args): Response
+    public function createNewAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Creating access type in database
          * POST /access/{access_id}
-         * {
-         *     "name":"",
-         *     "rfid_action":"",
-         *     "access_edit":"",
-         *     "buildings_view":"",
-         *     "buildings_edit":"",
-         *     "logs_view":"",
-         *     "logs_edit":"",
-         *     "rooms_view":"",
-         *     "rooms_edit":"",
-         *     "reservations_access":"",
-         *     "reservations_confirm":"",
-         *     "reservations_edit":"",
-         *     "users_edit":"",
-         *     "statistics_view":""
-         * } 
          * 
          * @param Request $request
          * @param Response $response
@@ -91,52 +51,21 @@ class AccessController extends Controller
          * @return Response $response
          */
 
-        $data = $this->getFrom($request, [
-            "name" => 'string',
-            "access_edit" => 'boolean',
-            "buildings_view" => 'boolean',
-            "buildings_edit" => 'boolean',
-            "logs_view" => 'boolean',
-            "logs_edit" => 'boolean',
-            "rooms_view" => 'boolean',
-            "rooms_edit" => 'boolean',
-            "reservations_access" => 'boolean',
-            "reservations_confirm" => 'boolean',
-            "reservations_edit" => 'boolean',
-            "users_edit" => 'boolean',
-            "statistics_view" => 'boolean',
-        ], true);
+        $data = $this->getParsedData($request);
 
-        $this->validateAccess($request, $data);
-
-        $newID = $this->Access->create($data);
+        $data['id'] = $this->Model->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
-            'message' => 'User ' . $request->getAttribute('email') . ' created new access class id=' . $newID . ' data:' . json_encode($data)
+            'message' => 'USER ' . $request->getAttribute('email') . ' CREATE access DATA ' . json_encode($data)
         ]);
         return $response->withStatus(201, "Created");
     }
 
-    public function updateAccessType(Request $request, Response $response, $args): Response
+    public function updateAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Updating access type by given access_id
          * PATCH /access/{access_id}
-         * {
-         *     "name":"",
-         *     "access_edit":"",
-         *     "buildings_view":"",
-         *     "buildings_edit":"",
-         *     "logs_view":"",
-         *     "logs_edit":"",
-         *     "rooms_view":"",
-         *     "rooms_edit":"",
-         *     "reservations_access":"",
-         *     "reservations_confirm":"",
-         *     "reservations_edit":"",
-         *     "users_edit":"",
-         *     "statistics_view":""
-         * }
          * 
          * @param Request $request
          * @param Response $response
@@ -144,34 +73,20 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
+        $this->Model->data = $this->Model->read(['id' => $args['access_id']])[0];
 
-        $data = $this->getFrom($request, [
-            "name" => 'string',
-            "access_edit" => 'boolean',
-            "buildings_view" => 'boolean',
-            "buildings_edit" => 'boolean',
-            "logs_view" => 'boolean',
-            "logs_edit" => 'boolean',
-            "rooms_view" => 'boolean',
-            "rooms_edit" => 'boolean',
-            "reservations_access" => 'boolean',
-            "reservations_confirm" => 'boolean',
-            "reservations_edit" => 'boolean',
-            "users_edit" => 'boolean',
-            "statistics_view" => 'boolean',
-        ], false);
+        $data = $this->getParsedData($request);
 
-        $this->validateAccess($request, $data);
+        $this->Model->update($data);
 
-        $this->Access->update($args['access_id'], $data);
         $this->Log->create([
-            "user_id" => $request->getAttribute('user_id'),
-            "message" => "User " . $request->getAttribute('email') . " updated data:" . json_encode($data)
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('email') . ' UPDATE access DATA ' . json_encode($data)
         ]);
         return $response->withStatus(204, "Updated");
     }
 
-    public function deleteAccessType(Request $request, Response $response, $args): Response
+    public function deleteAccessClass(Request $request, Response $response, $args): Response
     {
         /**
          * Deleting access type by access_id
@@ -183,17 +98,13 @@ class AccessController extends Controller
          * 
          * @return Response $response
          */
-        // each user with current access have to 
-        $User = $this->DIcontainer->get('User');
-        if ($User->exist(['access_id' => $args['access_id']])) {
-            throw new HttpConflictException("Some Users stil have this access class. You can't delete it", 409); //conflict
-        } else {
-            $this->Access->delete($args['access_id']);
-            $this->Log->create([
-                "user_id" => $request->getAttribute('user_id'),
-                "message" => "User " . $request->getAttribute('email') . " deleted access id=" . $args['access_id']
-            ]);
-        }
+        $this->Model->data = $this->Model->read(['id' => $args['access_id']])[0];
+        $this->Model->delete();
+
+        $this->Log->create([
+            'user_id' => $request->getAttribute('user_id'),
+            'message' => 'USER ' . $request->getAttribute('email') . ' DELETE access DATA ' . json_encode($this->Model->data)
+        ]);
         return $response->withStatus(204, "Deleted");
     }
 }
