@@ -2,6 +2,7 @@
 
 namespace controllers;
 
+use DI\NotFoundException;
 use Slim\Psr7\Response;
 use Slim\Psr7\Request;
 
@@ -23,6 +24,7 @@ abstract class Controller
     protected ContainerInterface $DIcontainer;
     protected GenericModel $Model;
     protected Log $Log;
+    protected array $queryString;
 
     protected $CACHE = [];
 
@@ -32,7 +34,7 @@ abstract class Controller
         $this->Log = $this->DIcontainer->get(Log::class);
     }
 
-    protected function parsedQueryString(Request $request, string $queryKey = null): array
+    protected function parseQueryString(Request $request): void
     {
         /**
          * parsing query string to get parameters into assoc array
@@ -52,18 +54,15 @@ abstract class Controller
                 continue;
             }
             // filtering variables keys
-            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key', 'action_key']))  continue;
+            if (!in_array(strtolower($key), ['limit', 'page', 'on_page', 'sort', 'sort_key', 'action_key', 'mode']))  continue;
 
-            //filtering variables values
-            preg_match('/[a-z0-9_,]*/', $regexOut[2][$num], $output_array);
-            $result[$key] = $output_array[0];
+            $result[$key] = $regexOut[2][$num];
+            // //filtering variables values
+            // preg_match('/[a-z0-9_,]*/', $regexOut[2][$num], $output_array);
+            // $result[$key] = $output_array[0];
         }
 
-        if (isset($queryKey)) {
-            if (!isset($result[$queryKey])) return [];
-            return $result[$queryKey];
-        }
-        return $result;
+        $this->queryString = $result;
     }
 
     protected function getParsedData(Request $request): array
@@ -83,19 +82,19 @@ abstract class Controller
          * @param Request $request
          * @return array $queryParams
          */
-        $searchParams = $request->getParsedBody();
-        if (isset($searchParams['search']) && $searchParams['search'] !== null) {
-            extract($searchParams['search']);
-            if (!isset($mode) || !isset($params)) {
-                throw new HttpBadRequestException($request, "When search is enabled fields 'mode' and 'params' in search are required. Pattern:search:{mode:'REGEXP', params:{field:val, field2:val2}}");
+        $searchParams = $this->getParsedData($request);
+        $params = [];
+        foreach ($searchParams as $param => ['mode' => $mode, 'value' => $value]) {
+            if (isset($mode) && !in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
+                throw new HttpBadRequestException($request, 'In search mode, avaliable options are: REGEXP, LIKE, =, <, >');
             }
 
-            if (!in_array(strtoupper($mode), ['REGEXP', 'LIKE', '=', '>', '<'])) {
-                throw new HttpBadRequestException($request, 'In search, avaliable options are: REGEXP, LIKE, =, <, >');
-            }
-            return ['params' => $params, 'mode' => $mode];
+            $params[$param] = [
+                'mode' => $mode ?? 'LIKE',
+                'value' => $value
+            ];
         }
-        return ['params' => null, 'mode' => null];
+        return $params;
     }
 
     protected function switchKey(array &$array, string $oldKey, string $newKey): void
@@ -116,13 +115,30 @@ abstract class Controller
          * 
          * @return Response 
          */
-        ['params' => $params, 'mode' => $mode] = $this->getSearchParams($request);
-        if (isset($params) && isset($mode))  $this->Model->setSearch($mode, $params);
+        $this->parseQueryString($request);
 
-        $this->Model->setQueryStringParams($this->parsedQueryString($request));
+        $this->Model->Reader->setConfigs([
+            'sort_key' => $this->queryString['sort_key'],
+            'sort' => $this->queryString['sort'],
+            'on_page' => $this->queryString['on_page'],
+            'page' => $this->queryString['page'],
+            'limit' => $this->queryString['limit'],
+        ]);
 
-        $data = $this->handleExtensions($this->Model->read($args), $request);
-        $response->getBody()->write(json_encode($data));
+        //  URI?mode=search -> wyszukiwanie
+        if ($this->queryString['mode'] === 'search') {
+            // zmiana silnika w This->Model->reader->switchToSearch
+            $this->Model->Reader->switchToSearch();
+            try{
+                $args = $this->getSearchParams($request);
+            }catch(HttpBadRequestException $e){
+                throw new HttpBadRequestException($request, 'When `mode`=`search`, request body have to be provided in specific format. '.$e->getMessage());
+            }
+        }
+
+        $data = $this->Model->read($args);
+
+        $response->getBody()->write(json_encode($this->handleExtensions($data, $request)));
         return $response->withStatus(200);
     }
 
@@ -150,7 +166,9 @@ abstract class Controller
          * 
          * @return array $dataArray 
          */
-        $extensions = $this->parsedQueryString($request, 'ext');
+        $this->parseQueryString($request);
+        $extensions = $this->queryString['ext'];
+        if (empty($extensions)) return $dataArray;
 
         $arr = [
             'room_id' => [
