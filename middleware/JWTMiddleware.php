@@ -56,12 +56,13 @@ class JWTMiddleware
 
     private function recieveToken(): string
     {
-        $authorizationHeader = $this->request->getHeader('Authorization');
-        if (empty($authorizationHeader)) {
+        $authorizationHeader = explode(' ', $this->request->getHeader('Authorization')[0]);
+
+        if (strtolower($authorizationHeader[0]) !== 'bearer' || !isset($authorizationHeader[1])) {
             throw new HttpUnauthorizedException($this->request, "No authorization header found");
         }
 
-        return explode(' ', $authorizationHeader[0])[1];
+        return $authorizationHeader[1];
     }
 
     private function loadData(string $token): void
@@ -73,6 +74,7 @@ class JWTMiddleware
         } catch (\Exception $e) {
             throw new HttpUnauthorizedException($this->request, "JWT: " . $e->getMessage());
         }
+
         if (
             !isset($tokenData['user_id'], $tokenData['access_id'], $tokenData['email'], $tokenData['assigned'], $tokenData['ip'])
         ) throw new EmptyTokenException('Token has invalid data', 401);

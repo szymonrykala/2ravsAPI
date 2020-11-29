@@ -44,16 +44,17 @@ abstract class GenericModel
         }
     }
 
+
+    /**
+     * check is exist model with given params
+     *
+     * @param array $params
+     * @return bool
+     */
     public function exist(array $params): bool
     {
-        /**
-         * check is exist model with given params
-         *
-         * @param array $params
-         * @return bool
-         */
-        $sql = 'SELECT id FROM ' . $this->tableName . ' WHERE 1=1 ';
-        $queryParams = [];
+        $sql = 'SELECT `id` FROM `' . $this->tableName . '` WHERE ';
+        $queryParams = ['1=1'];
         $sqlParams = [];
 
         foreach ($params as $param => $value) {
@@ -66,16 +67,16 @@ abstract class GenericModel
     }
 
 
+    /**
+     * Check if field can be updated
+     * 
+     * @param array &$updateData reference
+     * @param string $filed as field name
+     * @throws HttpBadRequestException
+     * @return bool true when succes in applying policies
+     */
     public function fieldUpdatePolicy(string $field, array &$updateData): bool
     {
-        /**
-         * Check if field can be updated
-         * 
-         * @param array &$updateData reference
-         * @param string $filed as field name
-         * @throws HttpBadRequestException
-         * @return bool true when succes in applying policies
-         */
         if (
             !array_key_exists($field, $updateData) || // user don't want to update filed
             (!isset($this->SCHEMA[$field]['update']) || $this->SCHEMA[$field]['update'] !== true) // field is not updateable
@@ -98,17 +99,17 @@ abstract class GenericModel
         return true;
     }
 
+
+    /**
+     * Check if field can be created
+     * 
+     * @param array &$createData reference
+     * @param string $filed as field name
+     * @throws HttpBadRequestException
+     * @return bool true when succes in applying policies
+     */
     public function fieldCreatePolicy(string $field, array &$createData): bool
     {
-        /**
-         * Check if field can be created
-         * 
-         * @param array &$createData reference
-         * @param string $filed as field name
-         * @throws HttpBadRequestException
-         * @return bool true when succes in applying policies
-         */
-
         // if field isn't required to create
         if (
             (!isset($this->SCHEMA[$field]['create']) || (bool)$this->SCHEMA[$field]['create'] !== true)
@@ -138,17 +139,17 @@ abstract class GenericModel
         return true;
     }
 
+
+    /**
+     * Read collection with params in param array
+     *
+     * @param array $params=[] reading parameters
+     *
+     * @throws HttpNotFoundException when nothing found
+     * @return array $result
+     */
     public function read(array $params = []): array
     {
-        /**
-         * Read collection with params in param array
-         *
-         * @param array $params=[] reading parameters
-         *
-         * @throws HttpNotFoundException when nothing found
-         * @return array $result
-         */
-
         [$sql, $sqlParams] = $this->Reader->getSQL($params);
         $result = $this->DB->query($sql, $sqlParams);
         if (empty($result)) {
@@ -191,14 +192,15 @@ abstract class GenericModel
         return $this->DB->lastInsertID();
     }
 
+
+    /**
+     * Updating item with seted Model::id by Model::setID(int $id):void
+     * 
+     * @param array $updateData is assoc array [field => updateValue,...]
+     * 
+     */
     public function update(array $updateData): void
     {
-        /**
-         * Updating item with seted Model::id by Model::setID(int $id):void
-         * 
-         * @param array $updateData is assoc array [field => updateValue,...]
-         * 
-         */
         $sql = 'UPDATE ' . $this->tableName . ' SET';
         $SQLqueryData = [];
 
@@ -213,6 +215,8 @@ abstract class GenericModel
             $sql .= " $field=:$field";
         }
 
+        if (!isset($this->data['id'])) throw new \UnexpectedValueException('Model::data[\'id\'] must be set while updating', 500);
+
         if (!empty($SQLqueryData)) {
             $sql .= ' WHERE `id`=:id';
             $SQLqueryData[':id'] = $this->data['id'];
@@ -220,13 +224,13 @@ abstract class GenericModel
         }
     }
 
+    /**
+     * Delete collection Item
+     * 
+     * @param int $id is optional - if not passed, the Model::id is used
+     */
     public function delete(): void
     {
-        /**
-         * Delete collection Item
-         * 
-         * @param int $id is optional - if not passed, the Model::id is used
-         */
         $this->DB->query(
             'DELETE FROM `' . $this->tableName . '` WHERE `id`=:id',
             [':id' => $this->data['id']]
