@@ -19,7 +19,8 @@ class HttpClient
         $this->client = new Client([
             'timeout' => 10
         ]);
-        $this->baseUrl = 'http://localhost:8080/v1';
+        // $this->baseUrl = 'http://localhost:8080/v1';
+        $this->baseUrl = 'http://ravs.maciejkossowski.pl/v1';
     }
 
     private function setResponse(Response $response)

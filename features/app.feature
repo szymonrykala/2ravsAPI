@@ -25,6 +25,11 @@ Feature: Service pipeline
             | key   | value           |
             | email | behat@gmail.com |
 
+    @users @token
+    Scenario: getting admin auth tokens
+        Given I am an unauthenticated user
+        When I want to login with "szymonrykala@gmail.com" and "Rolekskejt121$"
+        Then write "admin" token into file
 
     @users @admin
     Scenario Outline: activating the users
@@ -45,7 +50,6 @@ Feature: Service pipeline
 
         Examples:
             | email                  | password         | tokenName        |
-            | szymonrykala@gmail.com | Rolekskejt121$   | admin            |
             | behat@gmail.com        | BehatPass12!$    | behatUser        |
             | another@gmail.com      | BehatAnother12!$ | anotherBehatUser |
 
