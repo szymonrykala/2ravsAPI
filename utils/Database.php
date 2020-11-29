@@ -54,7 +54,7 @@ class Database implements DBInterface
 
     public function query(string $sql, array $params = []): array
     {
-        $results = array();
+        $results = [];
         try {
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);

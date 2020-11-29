@@ -95,7 +95,6 @@ final class Reservation extends GenericModel
         ) throw new HttpBadRequestException('Reservation time is too late');
 
 
-
         if (
             $data['end_time'] && $data['start_time'] &&
             strtotime('+15 minutes', strtotime($data['start_time'])) >= strtotime($data['end_time'])
@@ -135,26 +134,6 @@ final class Reservation extends GenericModel
 
     public function create(array $data): int
     {
-        //building exist?
-        $Building = $this->DIContainer->get(Building::class);
-        $Room = $this->DIContainer->get(Room::class);
-
-        if (!$Building->exist(['id' => $data['building_id']])) { //if not exist
-            throw new HttpNotFoundException("Specified building is not exist.");
-        }
-
-        //room exist in this building?
-        $room = $Room->read(['room_id' => $data['room_id'], 'building_id' => $data['building_id']])[0];
-        if (!$room) { //if not exist
-            throw new HttpNotFoundException('Specified room is not exist in given building.');
-        }
-
-        //room is bookable?
-        if ((bool)$room['blockade']) {
-            throw new HttpConflictException('Specified room is not bookable. Room You want to reserve has blocked status.'); //conflict
-        }
-
-
         //check time reservation - there can't be a collision
         $this->checkTimeSlot($data);
         //throws exception when time collision is occured

@@ -35,7 +35,7 @@ class AddressController extends Controller
          */
         $this->switchKey($args, 'address_id', 'id');
 
-        return parent::get($request,$response,$args);
+        return parent::get($request, $response, $args);
     }
 
     // POST /addresses
@@ -76,10 +76,10 @@ class AddressController extends Controller
          * 
          * @return Response 
          */
-        $this->Model->data = $this->Model->read(['id' => 'address_id'])[0];
+        $this->Model->data = $this->Model->read(['id' => $args['address_id']])[0];
 
         $data = $this->getParsedData($request);
-        
+
         $this->Model->update($data);
 
         $this->Log->create([

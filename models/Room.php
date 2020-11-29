@@ -10,7 +10,7 @@ use utils\types\MyBool;
 final class Room extends GenericModel
 {
     protected string $tableName = 'rooms';
-    protected array $SCHEMA= [
+    protected array $SCHEMA = [
         'id' => [
             'type' => MyInt::class,
         ],

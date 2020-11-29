@@ -234,13 +234,9 @@ Warto zanotować, że zapytanie nie może być puste, inaczej zwrócony zostanie
 
 - PATCH buildings/rooms/rfid/{rfid}
 
-  > Przełączanie stanu zajętości pokoju o danym "rfid" w ciele wiadomości
+  > Przełączanie stanu zajętości pokoju o danym "rfid"
 
-- PATCH buildings/rooms/rfid/{rfid}
-
-  > Odczytywanie pokoju z podanym (rfid_code)
-
-- PATCH buildings/rooms/rfid/{rfid_code}
+- GET buildings/rooms/rfid/{rfid_code}
   > Odczytywanie pokoju z podanym (rfid_code)
 
 ### #Logs:
@@ -399,7 +395,7 @@ Warto zanotować, że zapytanie nie może być puste, inaczej zwrócony zostanie
   {
     "items": {
       "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzM4NCJ9.eyJ1c2VyX2lkIjo4LCJhY2Nlc3NfaWQiOjMsImVtYWlsIjoid2Vyb25pa2ExMjEyQGdtYWlsLmNvbSIsImV4IjoxNjAzMTM0NzI2fQ.a5LsMCkowiD94LFalWy_RqTUwoBQPYOcLQSqfGzMktjYJxCz56xe0W8D42caP1Lq",
-      "userID": 15,
+      "user_id": 15,
       "access": [
         {
           "id": 5,
