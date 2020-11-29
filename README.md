@@ -586,6 +586,13 @@ Warto zanotować, że zapytanie nie może być puste, inaczej zwrócony zostanie
    |    +-- User.php
    +-- \_public
    |    +-- index.php
+   +-- \_features
+   |    +-- app.feature
+   |    +-- tokens.json
+   |    +-- \_bootstrap
+   |    |    +-- FeatureContext.php
+   |    |    +-- HttpClient.php
+   |    |    +-- SharedContext.php
    +-- \_utils
    |    +-- error_handler.php
    |    +-- autoloader.php
