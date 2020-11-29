@@ -1,7 +1,2 @@
-/middleware.old
-/controllers.old
-/models.old
 /vendor
-*__pycache__
-.pytest_cache
-phpunit
+/features/tokens.json
