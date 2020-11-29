@@ -19,7 +19,7 @@ final class RoomType extends GenericModel
             'type' => MyString::class,
             'create' => true,
             'update' => true,
-            'pattern' => '/^[A-z\.\-\s\p{L}]{3,}$/u',
+            'pattern' => '/\w{3,}/',
             'sanitize' => FILTER_SANITIZE_FULL_SPECIAL_CHARS
         ],
         'created' => [

@@ -2,6 +2,7 @@
 
 namespace controllers;
 
+use Exception;
 use models\GenericModel;
 use models\HttpConflictException;
 use Psr\Container\ContainerInterface;
@@ -22,12 +23,19 @@ class RoomController extends Controller
         $this->Model = $this->DIcontainer->get(Room::class);
     }
 
-    // PATCH /buildings/rooms/rfid/{rfid}
+
+    /**
+     * Toggle the state of room with rfid in "rfid"
+     * PATCH /buildings/rooms/rfid/{rfid}
+     * 
+     * @param Request $request 
+     * @param Response $response
+     * @param array $args
+     * 
+     * @return Response
+     */
     public function toggleOccupied(Request $request, Response $response, $args): Response
     {
-        /**
-         * Toggle the state of room with rfid in "rfid"
-         */
         $this->Model->data = $this->Model->read($args)[0];
 
         $this->Model->data['occupied'] = !$this->Model->data['occupied']; //toggle occupation of the room
@@ -44,33 +52,39 @@ class RoomController extends Controller
         return $response->withStatus(200);
     }
 
-    // GET /buildings/rooms
-    // GET /buildings/rooms/{room_id}
-    // GET /buildings/{building_id}/rooms
-    // GET /buildings/{building_id}/rooms/{room_id}
+
+    /**
+     * Getting all rooms or all rooms in building
+     * GET /buildings/rooms
+     * GET /buildings/rooms/{room_id}
+     * GET /buildings/{building_id}/rooms
+     * GET /buildings/{building_id}/rooms/{room_id}
+     * 
+     * @param Request $request 
+     * @param Response $response
+     * @param array $args
+     * 
+     * @return Response 
+     */
     public function getRooms(Request $request, Response $response, $args): Response
     {
-        /**
-         * Getting all rooms or all rooms in building
-         * GET /buildings/rooms
-         * GET /buildings/{building_id}/rooms
-         * 
-         * @param Request $request 
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response 
-         */
         $this->switchKey($args, 'room_id', 'id');
-        return parent::get($request,$response,$args);
+        return parent::get($request, $response, $args);
     }
 
-    // GET /buildings/rooms/rfid/{rfid}
+
+    /**
+     * Getting room by rfid code
+     * GET /buildings/rooms/rfid/{rfid}
+     * 
+     * @param Request $request 
+     * @param Response $response
+     * @param array $args
+     * 
+     * @return Response
+     */
     public function getRoomByRFID(Request $request, Response $response, $args): Response
     {
-        /**
-         * Getting room by rfid code
-         */
         $data = $this->handleExtensions($this->Model->read($args), $request);
 
         $response->getBody()->write(json_encode($data));
@@ -78,24 +92,26 @@ class RoomController extends Controller
         return $response->withStatus(200);
     }
 
-    // POST /buildings/{building_id}/rooms
+
+    /**
+     * creating room in specified building
+     * returning 201
+     * POST /buildings/{building_id}/rooms
+     * 
+     * @param Request $request 
+     * @param Response $response
+     * @param array $args
+     * 
+     * @return Response 
+     */
     public function createRoom(Request $request, Response $response, $args): Response
     {
-        /**
-         * creating room in specified building
-         * returning 201
-         * POST /buildings/{building_id}/rooms
-         * @param Request $request 
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response 
-         */
-
         $data = $this->getParsedData($request);
         $data['blockade'] = $this->DIcontainer->get('settings')['default_params']['room_blockade'];
 
         $data['building_id'] = (int) $args['building_id'];
+        if (!isset($data['rfid'])) $data['rfid'] = random_bytes(10);
+
         $lastIndex = $this->Model->create($data);
         $this->Log->create([
             'user_id' => $request->getAttribute('user_id'),
@@ -106,20 +122,19 @@ class RoomController extends Controller
         return $response->withStatus(201, "Created");
     }
 
-    // PATCH /buildings/rooms/{room_id}
+
+    /**
+     * creating room in specified building
+     * returning 204
+     * PATCH /buildings/rooms/{room_id}
+     * @param Request $request 
+     * @param Response $response
+     * @param array $args
+     * 
+     * @return Response 
+     */
     public function updateRoom(Request $request, Response $response, $args): Response
     {
-        /**
-         * creating room in specified building
-         * returning 204
-         * PATCH /buildings/{building_id}/rooms/{room_id}
-         * @param Request $request 
-         * @param Response $response
-         * @param array $args
-         * 
-         * @return Response 
-         */
-
         $data = $this->getParsedData($request);
 
         $this->Model->data = $this->Model->read(['id' => $args['room_id']])[0];
@@ -134,16 +149,19 @@ class RoomController extends Controller
         return $response->withStatus(204, "Updated");
     }
 
-    // DELETE /building/rooms/{room_id}
+
+    /**
+     * Deleting room from building
+     * returning 204
+     * DELETE /building/rooms/{room_id}
+     * @param Request $request 
+     * @param Response $response
+     * @param array $args
+     * 
+     * @return Response 
+     */
     public function deleteRoom(Request $request, Response $response, $args): Response
     {
-        /**
-         * Deleting room from building
-         * returning 204
-         * DELETE /building/rooms/{room_id}
-         * 
-         */
-
         $this->Model->data = $this->Model->read(['id' => $args['room_id']])[0];
         $this->Model->delete();
 

@@ -33,7 +33,7 @@ class UserController extends Controller
         $tokenDecoded = new TokenDecoded(
             ['typ' => 'JWT', 'alg' => JWT::ALGORITHM_HS512],
             [
-                'user_id' => $this->Model->data['user_id'],
+                'user_id' => $this->Model->data['id'],
                 'access_id' => $this->Model->data['access_id'],
                 'email' => $this->Model->data['email'],
                 'assigned' => time(),
@@ -316,7 +316,7 @@ class UserController extends Controller
         $accessID = $request->getAttribute('access_id');
         $userEmail = $request->getAttribute('email');
 
-        // checking if user can change acces
+        // checking if user can change access
         if (isset($data['access_id'])) {
             $Access = $this->DIcontainer->get(Access::class);
             if (
@@ -350,7 +350,7 @@ class UserController extends Controller
         }
 
         if (!empty($data)) {
-            $this->Model->update($data, $args['user_id']);
+            $this->Model->update($data);
             $this->Log->create([
                 'user_id' => $currentUser,
                 'message' => 'USER ' . $userEmail . ' UPDATE USER ' . $this->Model->data['email'] . ' DATA ' . json_encode($data)

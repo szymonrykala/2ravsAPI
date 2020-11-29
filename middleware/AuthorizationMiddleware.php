@@ -68,7 +68,8 @@ class AuthorizationMiddleware
             $this->target = array_pop($arr);
         } else {
             $this->resourceNumber = -1;
-            $this->target = $item;
+            if (array_pop($arr) === 'rfid') $this->target = 'rfid';
+            else  $this->target = $item;
         }
     }
 
@@ -129,7 +130,7 @@ class AuthorizationMiddleware
                 'GET' => $result['logs_view'],
                 'DELETE' => $result['logs_edit']
             ),
-            'access' => array(
+            'accesses' => array(
                 'GET' => 1,
                 'POST' => $result['access_edit'],
                 'PATCH' => $result['access_edit'],

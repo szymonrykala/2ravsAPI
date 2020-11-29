@@ -14,7 +14,8 @@ final class User extends GenericModel
             'type' => MyInt::class,
         ],
         'access_id' => [
-            'type' => MyInt::class
+            'type' => MyInt::class,
+            'update' => true,
         ],
         'name' => [
             'type' => MyString::class,
